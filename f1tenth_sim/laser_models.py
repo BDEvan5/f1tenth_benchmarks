@@ -378,7 +378,7 @@ class ScanSimulator2D(object):
         self.sines = np.sin(theta_arr)
         self.cosines = np.cos(theta_arr)
     
-    def set_map(self, map_path):
+    def set_map(self, map_name):
         """
         Set the bitmap of the scan simulator by path
 
@@ -392,6 +392,8 @@ class ScanSimulator2D(object):
         # TODO: do we open the option to flip the images, and turn rgb into grayscale? or specify the exact requirements in documentation.
         # TODO: throw error if image specification isn't met
         # load map yaml
+        map_path = "maps/" + map_name + ".yaml"
+        
         with open(map_path, 'r') as yaml_stream:
             try:
                 map_metadata = yaml.safe_load(yaml_stream)

@@ -2,6 +2,7 @@
 
 from f1tenth_sim.dynamics_simulator import DynamicsSimulator
 from f1tenth_sim.laser_models import ScanSimulator2D
+from f1tenth_sim.utils import CenterLine, SimulatorHistory
 
 import datetime
 import numpy as np
@@ -31,7 +32,7 @@ from argparse import Namespace
     length: length of the vehicle in meters
 '''
 
-default_run_dict = {"random_seed": 12345, "n_sim_steps": 5}
+default_run_dict = {"random_seed": 12345, "n_sim_steps": 5, "num_beams": 20}
 #info: this is for parameters like seeds, noise, frequency etc
 #TODO: this can be loaded based on a mode and control sim behaviour, i.e. if position is included in the action....
 
@@ -41,53 +42,31 @@ class F1TenthSim:
     """
             seed (int, default=12345): seed for random state and reproducibility
     """
-    def __init__(self, map_name, run_dict=None, save_history=False):
-        if run_dict is None:
-            run_dict = Namespace(**default_run_dict)
-        self.seed = run_dict.random_seed
-        self.n_sim_steps = run_dict.n_sim_steps
-
-        # TODO: keep a single simulator class for runs with multiple maps
-        # possibly create a subfolder for each map used if the same planner runs the tests
-
+    def __init__(self, map_name, run_dict, save_history=False):
+        self.run_dict = run_dict
         self.map_name = map_name
-        self.map_path = "maps/" + self.map_name + ".yaml"
-        dt = datetime.datetime.now().strftime("%Y%m%d-%H%M%S") 
-        self.path = f"Logs/{dt}-{map_name}/"
-        if os.path.exists(self.path) == False:
-            os.mkdir(self.path)
+        self.timestep = self.run_dict.timestep
 
-        self.params = {'mu': 1.0489, 'C_Sf': 4.718, 'C_Sr': 5.4562, 'lf': 0.15875, 'lr': 0.17145, 'h': 0.074, 'm': 3.74, 'I': 0.04712, 's_min': -0.4189, 's_max': 0.4189, 'sv_min': -3.2, 'sv_max': 3.2, 'v_switch': 7.319, 'a_max': 9.51, 'v_min':-5.0, 'v_max': 20.0, 'width': 0.31, 'length': 0.58}
+        self.scan_simulator = ScanSimulator2D(self.run_dict.num_beams, self.run_dict.fov)
+        self.scan_simulator.set_map(self.map_name)
+        self.dynamics_simulator = DynamicsSimulator(self.run_dict.random_seed, self.timestep)
+        self.scan_rng = np.random.default_rng(seed=self.run_dict.random_seed)
+        self.center_line = CenterLine(map_name)
 
         self.current_time = 0.0
         self.current_state = np.zeros((7, ))
-
-        num_beams = 20
-        fov = 4.7
-        self.timestep = 0.01
-
-        self.scan_simulator = ScanSimulator2D(num_beams, fov)
-        self.scan_simulator.set_map(self.map_path)
-        self.dynamics_simulator = DynamicsSimulator(self.params, self.seed, self.timestep)
-        self.scan_rng = np.random.default_rng(seed=self.seed)
-
-        center_line = np.loadtxt("maps/" + self.map_name + "_centerline.csv", delimiter=',')[:, :2]
-        el_lengths = np.linalg.norm(np.diff(center_line, axis=0), axis=1)
-        old_s_track = np.insert(np.cumsum(el_lengths), 0, 0)
-        self.s_track = np.arange(0, old_s_track[-1], 0.01) # cm level resolution
-        tck = interpolate.splprep([center_line[:, 0], center_line[:, 1]], u=old_s_track, k=3, s=0)[0]
-        self.center_line = np.array(interpolate.splev(self.s_track, tck, ext=3)).T
-
         self.lap_number = -1
+
         self.history = None
         if save_history:
             self.history = SimulatorHistory(self.path)
+            self.history.set_map(self.map_name)
 
     def step(self, action):
         if self.history is not None:
             self.history.add_memory_entry(self.current_state, action)
 
-        mini_i = self.n_sim_steps
+        mini_i = self.run_dict.n_sim_steps
         while mini_i > 0:
             vehicle_state = self.dynamics_simulator.update_pose(action[0], action[1])
             self.current_time = self.current_time + self.timestep
@@ -119,8 +98,7 @@ class F1TenthSim:
         return observation, done
 
     def check_lap_complete(self, pose):
-        dists = np.linalg.norm(pose[:2] - self.center_line[:, :2], axis=1) # last 20 points.
-        progress = self.s_track[np.argmin(dists)] / self.s_track[-1]
+        progress = self.center_line.calculate_pose_progress(pose)
         
         done = False
         if progress > 0.99 and self.current_time > 5: done = True
@@ -134,10 +112,10 @@ class F1TenthSim:
     def check_vehicle_collision(self, pose):
         rotation_mtx = np.array([[np.cos(pose[2]), -np.sin(pose[2])], [np.sin(pose[2]), np.cos(pose[2])]])
 
-        pts = np.array([[self.params['length']/2, self.params['width']/2], 
-                        [self.params['length']/2, -self.params['width']/2], 
-                        [-self.params['length']/2, self.params['width']/2], 
-                        [-self.params['length']/2, -self.params['width']/2]])
+        pts = np.array([[self.run_dict.vehicle_length/2, self.run_dict.vehicle_width/2], 
+                        [self.run_dict.vehicle_length, -self.run_dict.vehicle_width/2], 
+                        [-self.run_dict.vehicle_length, self.run_dict.vehicle_width/2], 
+                        [-self.run_dict.vehicle_length, -self.run_dict.vehicle_width/2]])
         pts = np.matmul(pts, rotation_mtx.T) + pose[0:2]
 
         for i in range(4):
@@ -174,29 +152,4 @@ class F1TenthSim:
         return obs, done
 
 
-#TODO: change this to use arrays not lists.
-class SimulatorHistory:
-    def __init__(self, path):
-        self.path = path
-        self.states = []
-        self.actions = []
-    
-        self.lap_n = 0
-    
-    def add_memory_entry(self, state, action):
-        self.states.append(state)
-        self.actions.append(action)
-    
-    def save_history(self):
-        states = np.array(self.states)
-        actions = np.array(self.actions)
-
-        lap_history = np.concatenate((states, actions), axis=1)
-        
-        np.save(self.path + f"SimLog_{self.lap_n}.npy", lap_history)
-
-        self.states = []
-        self.actions = []
-        self.lap_n += 1
-        
     
