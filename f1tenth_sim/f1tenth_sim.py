@@ -55,8 +55,8 @@ class F1TenthSim:
 
         self.history = None
         if save_history:
-            self.history = SimulatorHistory(self.path)
-            self.history.set_map(self.map_name)
+            self.history = SimulatorHistory()
+            self.history.set_path(self.map_name)
 
     def step(self, action):
         if self.history is not None:

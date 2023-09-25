@@ -20,9 +20,10 @@ def run_simulation_loop_laps(env, planner, n_laps):
 
 def run_test():
     map_name = "aut"
+    print(f"Testing....")
     std_config = load_configuration("std_config")
 
-    simulator = F1TenthSim(map_name, std_config)
+    simulator = F1TenthSim(map_name, std_config, True)
     planner = Planner(simulator.map_name)
 
     run_simulation_loop_laps(simulator, planner, 1)
