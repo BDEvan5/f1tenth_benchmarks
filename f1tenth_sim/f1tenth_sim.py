@@ -4,11 +4,7 @@ from f1tenth_sim.dynamics_simulator import DynamicsSimulator
 from f1tenth_sim.laser_models import ScanSimulator2D
 from f1tenth_sim.utils import CenterLine, SimulatorHistory
 
-import datetime
 import numpy as np
-import os
-from scipy import interpolate, optimize, spatial
-from argparse import Namespace
 
 '''
     params (dict, default={'mu': 1.0489, 'C_Sf':, 'C_Sr':, 'lf': 0.15875, 'lr': 0.17145, 'h': 0.074, 'm': 3.74, 'I': 0.04712, 's_min': -0.4189, 's_max': 0.4189, 'sv_min': -3.2, 'sv_max': 3.2, 'v_switch':7.319, 'a_max': 9.51, 'v_min':-5.0, 'v_max': 20.0, 'width': 0.31, 'length': 0.58}): dictionary of vehicle parameters.
