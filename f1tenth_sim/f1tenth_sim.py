@@ -38,7 +38,7 @@ class F1TenthSim:
     """
             seed (int, default=12345): seed for random state and reproducibility
     """
-    def __init__(self, map_name, run_dict, save_history=False):
+    def __init__(self, map_name, run_dict, save_history=False, run_name=None):
         self.run_dict = run_dict
         self.map_name = map_name
         self.timestep = self.run_dict.timestep
@@ -55,7 +55,7 @@ class F1TenthSim:
 
         self.history = None
         if save_history:
-            self.history = SimulatorHistory()
+            self.history = SimulatorHistory(run_name)
             self.history.set_path(self.map_name)
 
     def step(self, action):
@@ -98,7 +98,7 @@ class F1TenthSim:
         
         done = False
         if progress > 0.99 and self.current_time > 5: done = True
-        if self.current_time > 150: 
+        if self.current_time > 250: 
             print("Time limit reached")
             done = True
 

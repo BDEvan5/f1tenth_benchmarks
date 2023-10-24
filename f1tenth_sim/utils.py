@@ -20,8 +20,10 @@ class CenterLine:
 
 #TODO: change this to use arrays not lists.
 class SimulatorHistory:
-    def __init__(self):
+    def __init__(self, run_name=None):
         dt = datetime.datetime.now().strftime("%y%m%d-%H%M%S") 
+        if run_name is not None:
+            dt = run_name
         self.path = f"Logs/{dt}/"
         if os.path.exists(self.path) == False:
             os.mkdir(self.path)
