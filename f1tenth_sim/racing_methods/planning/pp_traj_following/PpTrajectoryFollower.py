@@ -11,10 +11,14 @@ GRAVITY = 9.81
 LOOKAHEAD_DISTANCE = 0.8
 
 
-class Planner:
-    def __init__(self, map_name):
-        self.racetrack = RaceTrack(map_name)
+class PpTrajectoryFollower:
+    def __init__(self):
+        self.name = "pp_traj_following"
+        self.racetrack = None
         self.counter = 0
+
+    def set_map(self, map_name):
+        self.racetrack = RaceTrack(map_name)
 
     def plan(self, obs):
         state = obs["vehicle_state"]
