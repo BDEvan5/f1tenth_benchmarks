@@ -9,16 +9,24 @@ class CenterLine:
         el_lengths = np.linalg.norm(np.diff(center_line, axis=0), axis=1)
         old_s_track = np.insert(np.cumsum(el_lengths), 0, 0)
         self.s_track = np.arange(0, old_s_track[-1], 0.01) # cm level resolution
-        tck = interpolate.splprep([center_line[:, 0], center_line[:, 1]], u=old_s_track, k=3, s=0)[0]
-        self.center_line = np.array(interpolate.splev(self.s_track, tck, ext=3)).T
+        self.tck = interpolate.splprep([center_line[:, 0], center_line[:, 1]], u=old_s_track, k=3, s=0)[0]
+        self.center_line = np.array(interpolate.splev(self.s_track, self.tck, ext=3)).T
 
     def calculate_pose_progress(self, pose):
         dists = np.linalg.norm(pose[:2] - self.center_line[:, :2], axis=1) # last 20 points.
         progress = self.s_track[np.argmin(dists)] / self.s_track[-1]
 
         return progress
+    
+    def get_pose_from_progress(self, progress):
+        s_progress = progress * self.s_track[-1]
+        point = np.array(interpolate.splev(s_progress, self.tck, ext=3)).T
+        dx, dy = interpolate.splev(s_progress, self.tck, der=1, ext=3)
+        theta = np.arctan2(dy, dx)
+        pose = np.array([point[0], point[1], -theta])
+        return pose
 
-#TODO: change this to use arrays not lists.
+
 class SimulatorHistory:
     def __init__(self, run_name):
         self.path = f"Logs/{run_name}/"

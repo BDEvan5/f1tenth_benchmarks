@@ -47,7 +47,9 @@ class F1TenthSim:
         # state is [x, y, steer_angle, vel, yaw_angle, yaw_rate, slip_angle]
         self.current_state = np.zeros((7, ))
         self.current_time = 0.0
+        self.progress = 0 
         self.lap_number = -1 # so that it goes to 0 when reset
+        self.starting_progress = 0
 
         self.history = None
         if log_name != None:
@@ -84,7 +86,9 @@ class F1TenthSim:
         raise NotImplementedError("The build_observation method has not been implemented")
 
     def check_lap_complete(self, pose):
-        self.progress = self.center_line.calculate_pose_progress(pose)
+        self.progress = self.center_line.calculate_pose_progress(pose) - self.starting_progress
+        # if self.progress < 0:
+        #     print(f"progress negative: {self.progress}")
         
         done = False
         if self.progress > 0.99 and self.current_time > 5: done = True
@@ -110,8 +114,12 @@ class F1TenthSim:
         return False
     
 
-    def reset(self, poses):
-        self.dynamics_simulator.reset(poses)
+    def reset(self):
+        # self.starting_progress = np.random.random()
+        # start_pose = self.center_line.get_pose_from_progress(self.starting_progress)
+        # print(f"Resetting to {self.starting_progress:.2f} progress with pose: {start_pose}")
+        start_pose = np.zeros(3)
+        self.dynamics_simulator.reset(start_pose)
 
         self.current_time = 0.0
         action = np.zeros(2)

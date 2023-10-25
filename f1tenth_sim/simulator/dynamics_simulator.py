@@ -82,15 +82,6 @@ class DynamicsSimulator:
         return self.state
 
     def reset(self, pose):
-        """
-        Resets the vehicle to a pose
-        
-        Args:
-            pose (np.ndarray (3, )): pose to reset the vehicle to
-
-        Returns:
-            None
-        """
         # clear control inputs
         self.accel = 0.0
         self.steer_angle_vel = 0.0
