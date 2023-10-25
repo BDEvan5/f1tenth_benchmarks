@@ -33,6 +33,7 @@ class SimulatorHistory:
         if os.path.exists(self.path) == False:
             os.mkdir(self.path)
 
+        self.run_name = run_name
         self.map_name = ""
         self.lap_n = 0
         self.states = []

@@ -6,32 +6,7 @@ from f1tenth_sim.simulator.utils import CenterLine, SimulatorHistory
 import yaml
 from argparse import Namespace
 import numpy as np
-
-'''
-    params (dict, default={'mu': 1.0489, 'C_Sf':, 'C_Sr':, 'lf': 0.15875, 'lr': 0.17145, 'h': 0.074, 'm': 3.74, 'I': 0.04712, 's_min': -0.4189, 's_max': 0.4189, 'sv_min': -3.2, 'sv_max': 3.2, 'v_switch':7.319, 'a_max': 9.51, 'v_min':-5.0, 'v_max': 20.0, 'width': 0.31, 'length': 0.58}): dictionary of vehicle parameters.
-    mu: surface friction coefficient
-    C_Sf: Cornering stiffness coefficient, front
-    C_Sr: Cornering stiffness coefficient, rear
-    lf: Distance from center of gravity to front axle
-    lr: Distance from center of gravity to rear axle
-    h: Height of center of gravity
-    m: Total mass of the vehicle
-    I: Moment of inertial of the entire vehicle about the z axis
-    s_min: Minimum steering angle constraint
-    s_max: Maximum steering angle constraint
-    sv_min: Minimum steering velocity constraint
-    sv_max: Maximum steering velocity constraint
-    v_switch: Switching velocity (velocity at which the acceleration is no longer able to create wheel spin)
-    a_max: Maximum longitudinal acceleration
-    v_min: Minimum longitudinal velocity
-    v_max: Maximum longitudinal velocity
-    width: width of the vehicle in meters
-    length: length of the vehicle in meters
-'''
-
-default_run_dict = {"random_seed": 12345, "n_sim_steps": 5, "num_beams": 20}
-#info: this is for parameters like seeds, noise, frequency etc
-#TODO: this can be loaded based on a mode and control sim behaviour, i.e. if position is included in the action....
+import pandas as pd
 
 
 class F1TenthSim:
@@ -55,6 +30,9 @@ class F1TenthSim:
         if log_name != None:
             self.history = SimulatorHistory(log_name)
             self.history.set_map_name(map_name)
+            self.lap_history = []
+
+        self.map_name = map_name
 
     def step(self, action):
         if self.history is not None:
@@ -74,6 +52,7 @@ class F1TenthSim:
         done = self.collision or self.lap_complete
         if done and self.history is not None:
             self.history.save_history()
+            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.history.run_name, "Progress": self.progress, "Time": self.current_time})
 
         if self.collision:
             print(f"{self.lap_number} COLLISION: Time: {self.current_time:.2f}, Progress: {100*self.progress:.1f}")
@@ -87,8 +66,6 @@ class F1TenthSim:
 
     def check_lap_complete(self, pose):
         self.progress = self.center_line.calculate_pose_progress(pose) - self.starting_progress
-        # if self.progress < 0:
-        #     print(f"progress negative: {self.progress}")
         
         done = False
         if self.progress > 0.99 and self.current_time > 5: done = True
@@ -128,6 +105,12 @@ class F1TenthSim:
         self.lap_number += 1
         
         return obs, done
+
+    def save_data_frame(self):
+        if self.history is not None:
+            agent_df = pd.DataFrame(self.lap_history)
+            agent_df = agent_df.sort_values(by=["Lap"])
+            agent_df.to_csv(self.history.path + f"Results_{self.map_name}.csv", index=False, float_format='%.4f')
 
 
 class StdF1TenthSim(F1TenthSim):
