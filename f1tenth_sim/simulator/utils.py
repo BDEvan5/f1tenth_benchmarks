@@ -20,22 +20,18 @@ class CenterLine:
 
 #TODO: change this to use arrays not lists.
 class SimulatorHistory:
-    def __init__(self, run_name=None):
-        dt = datetime.datetime.now().strftime("%y%m%d-%H%M%S") 
-        if run_name is not None:
-            dt = run_name
-        self.path = f"Logs/{dt}/"
+    def __init__(self, run_name):
+        self.path = f"Logs/{run_name}/"
         if os.path.exists(self.path) == False:
             os.mkdir(self.path)
 
-        self.current_path = None
+        self.map_name = ""
+        self.lap_n = 0
         self.states = []
         self.actions = []
-    
-        self.lap_n = 0
 
-    def set_path(self, map_name):
-        self.current_path = self.path + map_name.upper() + "/"
+    def set_map_name(self, map_name):
+        self.map_name = map_name
     
     def add_memory_entry(self, state, action):
         self.states.append(state)
@@ -44,10 +40,9 @@ class SimulatorHistory:
     def save_history(self):
         states = np.array(self.states)
         actions = np.array(self.actions)
-
         lap_history = np.concatenate((states, actions), axis=1)
         
-        np.save(self.current_path + f"SimLog_{self.lap_n}.npy", lap_history)
+        np.save(self.path + f"SimLog_{self.map_name}_{self.lap_n}.npy", lap_history)
 
         self.states = []
         self.actions = []

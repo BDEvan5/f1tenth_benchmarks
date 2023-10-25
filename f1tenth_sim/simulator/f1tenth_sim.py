@@ -3,7 +3,8 @@
 from f1tenth_sim.simulator.dynamics_simulator import DynamicsSimulator
 from f1tenth_sim.simulator.laser_models import ScanSimulator2D
 from f1tenth_sim.simulator.utils import CenterLine, SimulatorHistory
-
+import yaml
+from argparse import Namespace
 import numpy as np
 
 '''
@@ -33,20 +34,18 @@ default_run_dict = {"random_seed": 12345, "n_sim_steps": 5, "num_beams": 20}
 #TODO: this can be loaded based on a mode and control sim behaviour, i.e. if position is included in the action....
 
 
-
 class F1TenthSim:
-    """
-            seed (int, default=12345): seed for random state and reproducibility
-    """
-    def __init__(self, map_name, run_dict, save_history=False, run_name=None):
-        self.run_dict = run_dict
+    def __init__(self, map_name, log_name=None):
+        with open(f"f1tenth_sim/simulator/simulator_params.yaml", 'r') as file:
+            params = yaml.load(file, Loader=yaml.FullLoader)
+        self.params = Namespace(**params)
         self.map_name = map_name
-        self.timestep = self.run_dict.timestep
+        self.timestep = self.params.timestep
 
-        self.scan_simulator = ScanSimulator2D(self.run_dict.num_beams, self.run_dict.fov)
+        self.scan_simulator = ScanSimulator2D(self.params.num_beams, self.params.fov)
         self.scan_simulator.set_map(self.map_name)
-        self.dynamics_simulator = DynamicsSimulator(self.run_dict.random_seed, self.timestep)
-        self.scan_rng = np.random.default_rng(seed=self.run_dict.random_seed)
+        self.dynamics_simulator = DynamicsSimulator(self.params.random_seed, self.timestep)
+        self.scan_rng = np.random.default_rng(seed=self.params.random_seed)
         self.center_line = CenterLine(map_name)
 
         self.current_time = 0.0
@@ -54,15 +53,15 @@ class F1TenthSim:
         self.lap_number = -1
 
         self.history = None
-        if save_history:
-            self.history = SimulatorHistory(run_name)
-            self.history.set_path(self.map_name)
+        if log_name != None:
+            self.history = SimulatorHistory(log_name)
+            self.history.set_map_name(self.map_name)
 
     def step(self, action):
         if self.history is not None:
             self.history.add_memory_entry(self.current_state, action)
 
-        mini_i = self.run_dict.n_sim_steps
+        mini_i = self.params.n_sim_steps
         while mini_i > 0:
             vehicle_state = self.dynamics_simulator.update_pose(action[0], action[1])
             self.current_time = self.current_time + self.timestep
@@ -84,6 +83,9 @@ class F1TenthSim:
                         "progress": progress}
         
         done = self.collision or self.lap_complete
+        if done:
+            if self.history is not None:
+                self.history.save_history()
 
         if self.collision:
             print(f"{self.lap_number} COLLISION: Time: {self.current_time:.2f}, Progress: {100*progress:.1f}")
@@ -108,10 +110,10 @@ class F1TenthSim:
     def check_vehicle_collision(self, pose):
         rotation_mtx = np.array([[np.cos(pose[2]), -np.sin(pose[2])], [np.sin(pose[2]), np.cos(pose[2])]])
 
-        pts = np.array([[self.run_dict.vehicle_length/2, self.run_dict.vehicle_width/2], 
-                        [self.run_dict.vehicle_length, -self.run_dict.vehicle_width/2], 
-                        [-self.run_dict.vehicle_length, self.run_dict.vehicle_width/2], 
-                        [-self.run_dict.vehicle_length, -self.run_dict.vehicle_width/2]])
+        pts = np.array([[self.params.vehicle_length/2, self.params.vehicle_width/2], 
+                        [self.params.vehicle_length, -self.params.vehicle_width/2], 
+                        [-self.params.vehicle_length, self.params.vehicle_width/2], 
+                        [-self.params.vehicle_length, -self.params.vehicle_width/2]])
         pts = np.matmul(pts, rotation_mtx.T) + pose[0:2]
 
         for i in range(4):
@@ -122,24 +124,11 @@ class F1TenthSim:
     
 
     def reset(self, poses):
-        """
-        Reset the gym environment by given poses
-
-        Args:
-            poses (np.ndarray (num_agents, 3)): poses to reset agents to
-
-        Returns:
-            obs (dict): observation of the current step
-            reward (float, default=self.timestep): step reward, currently is physics timestep
-            done (bool): if the simulation is done
-            info (dict): auxillary information dictionary
-        """
-        # reset counters and data members
-        self.current_time = 0.0
-
+        if self.history is not None:
+            self.history.set_map_name(self.map_name)
         self.dynamics_simulator.reset(poses)
 
-        # get no input observations
+        self.current_time = 0.0
         action = np.zeros(2)
         obs, done = self.step(action)
 
