@@ -1,5 +1,5 @@
-from f1tenth_sim import F1TenthSim 
-from Planner import Planner
+from f1tenth_sim.simulator import F1TenthSim 
+from f1tenth_sim.racing_methods.planning.pp_traj_following.Planner import Planner
 import numpy as np
 import yaml 
 from argparse import Namespace

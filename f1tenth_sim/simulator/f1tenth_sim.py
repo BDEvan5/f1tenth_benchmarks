@@ -1,8 +1,8 @@
 
 
-from f1tenth_sim.dynamics_simulator import DynamicsSimulator
-from f1tenth_sim.laser_models import ScanSimulator2D
-from f1tenth_sim.utils import CenterLine, SimulatorHistory
+from f1tenth_sim.simulator.dynamics_simulator import DynamicsSimulator
+from f1tenth_sim.simulator.laser_models import ScanSimulator2D
+from f1tenth_sim.simulator.utils import CenterLine, SimulatorHistory
 
 import numpy as np
 

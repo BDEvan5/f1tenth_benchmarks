@@ -1,7 +1,7 @@
 import csv
 import numpy as np
 from numba import njit
-
+import os
 
 @njit(fastmath=False, cache=True)
 def get_actuation(pose_theta, lookahead_point, position, lookahead_distance, wheelbase):
@@ -23,7 +23,7 @@ class RaceTrack:
 
     def load_racetrack(self, map_name):
         track = []
-        filename = "test_planner/" + map_name + "_raceline.csv"
+        filename = os.path.realpath(os.path.dirname(__file__)) + "/" + map_name + "_raceline.csv"
         with open(filename, 'r') as csvfile:
             csvFile = csv.reader(csvfile, quoting=csv.QUOTE_NONNUMERIC)  
         

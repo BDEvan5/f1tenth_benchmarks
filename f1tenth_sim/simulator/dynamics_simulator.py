@@ -1,7 +1,7 @@
 import numpy as np
 from numba import njit
 
-from f1tenth_sim.dynamic_models import vehicle_dynamics_st, pid
+from f1tenth_sim.simulator.dynamic_models import vehicle_dynamics_st, pid
 
 
 

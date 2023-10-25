@@ -1,7 +1,8 @@
 
 import numpy as np
 import os
-from planner_utils import RaceTrack, get_actuation
+from f1tenth_sim.racing_methods.planning.pp_traj_following.planner_utils import RaceTrack, get_actuation
+
 
 WHEELBASE = 0.33
 MAX_STEER = 0.4
