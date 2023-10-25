@@ -355,7 +355,7 @@ class ScanSimulator2D(object):
         max_range (float, default=30.0): maximum range of the laser
     """
 
-    def __init__(self, num_beams, fov, eps=0.0001, theta_dis=2000, max_range=30.0):
+    def __init__(self, num_beams, fov, map_name, random_seed, eps=0.0001, theta_dis=2000, max_range=30.0):
         # initialization 
         self.num_beams = num_beams
         self.fov = fov
@@ -372,26 +372,15 @@ class ScanSimulator2D(object):
         self.map_width = None
         self.map_resolution = None
         self.dt = None
+        self.scan_rng = np.random.default_rng(seed=random_seed)
         
         # precomputing corresponding cosines and sines of the angle array
         theta_arr = np.linspace(0.0, 2*np.pi, num=theta_dis)
         self.sines = np.sin(theta_arr)
         self.cosines = np.cos(theta_arr)
+        self.set_map(map_name)
     
     def set_map(self, map_name):
-        """
-        Set the bitmap of the scan simulator by path
-
-            Args:
-                map_path (str): path to the map yaml file
-                map_ext (str): extension (image type) of the map image
-
-            Returns:
-                flag (bool): if image reading and loading is successful
-        """
-        # TODO: do we open the option to flip the images, and turn rgb into grayscale? or specify the exact requirements in documentation.
-        # TODO: throw error if image specification isn't met
-        # load map yaml
         map_path = "maps/" + map_name + ".yaml"
         
         with open(map_path, 'r') as yaml_stream:
@@ -425,7 +414,7 @@ class ScanSimulator2D(object):
 
         return True
 
-    def scan(self, pose, rng, std_dev=0.01):
+    def scan(self, pose, std_dev=0.01):
         """
         Perform simulated 2D scan by pose on the given map
 
@@ -446,9 +435,8 @@ class ScanSimulator2D(object):
         
         scan = get_scan(pose, self.theta_dis, self.fov, self.num_beams, self.theta_index_increment, self.sines, self.cosines, self.eps, self.orig_x, self.orig_y, self.orig_c, self.orig_s, self.map_height, self.map_width, self.map_resolution, self.dt, self.max_range)
 
-        if rng is not None:
-            noise = rng.normal(0., std_dev, size=self.num_beams)
-            scan += noise
+        noise = self.scan_rng.normal(0., std_dev, size=self.num_beams)
+        scan += noise
             
         return scan
 

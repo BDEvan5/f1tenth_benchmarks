@@ -39,23 +39,20 @@ class F1TenthSim:
         with open(f"f1tenth_sim/simulator/simulator_params.yaml", 'r') as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
         self.params = Namespace(**params)
-        self.map_name = map_name
-        self.timestep = self.params.timestep
 
-        self.scan_simulator = ScanSimulator2D(self.params.num_beams, self.params.fov)
-        self.scan_simulator.set_map(self.map_name)
-        self.dynamics_simulator = DynamicsSimulator(self.params.random_seed, self.timestep)
-        self.scan_rng = np.random.default_rng(seed=self.params.random_seed)
+        self.scan_simulator = ScanSimulator2D(self.params.num_beams, self.params.fov, map_name, self.params.random_seed)
+        self.dynamics_simulator = DynamicsSimulator(self.params.random_seed, self.params.timestep)
         self.center_line = CenterLine(map_name)
 
-        self.current_time = 0.0
+        # state is [x, y, steer_angle, vel, yaw_angle, yaw_rate, slip_angle]
         self.current_state = np.zeros((7, ))
-        self.lap_number = -1
+        self.current_time = 0.0
+        self.lap_number = -1 # so that it goes to 0 when reset
 
         self.history = None
         if log_name != None:
             self.history = SimulatorHistory(log_name)
-            self.history.set_map_name(self.map_name)
+            self.history.set_map_name(map_name)
 
     def step(self, action):
         if self.history is not None:
@@ -63,50 +60,40 @@ class F1TenthSim:
 
         mini_i = self.params.n_sim_steps
         while mini_i > 0:
-            vehicle_state = self.dynamics_simulator.update_pose(action[0], action[1])
-            self.current_time = self.current_time + self.timestep
+            self.current_state = self.dynamics_simulator.update_pose(action[0], action[1])
+            self.current_time = self.current_time + self.params.timestep
             mini_i -= 1
         
-        pose = np.append(vehicle_state[0:2], vehicle_state[4])
-        scan = self.scan_simulator.scan(np.append(vehicle_state[0:2], vehicle_state[4]), self.scan_rng)
-
-        self.current_state = vehicle_state
+        pose = np.append(self.current_state[0:2], self.current_state[4])
         self.collision = self.check_vehicle_collision(pose)
-        self.lap_complete, progress = self.check_lap_complete(pose)
-
-        # state is [x, y, steer_angle, vel, yaw_angle, yaw_rate, slip_angle]
-        observation = {"scan": scan,
-                        "vehicle_state": self.dynamics_simulator.state,
-                        "collision": self.collision,
-                        "lap_complete": self.lap_complete,
-                        "laptime": self.current_time,
-                        "progress": progress}
+        self.lap_complete = self.check_lap_complete(pose)
+        observation = self.build_observation(pose)
         
         done = self.collision or self.lap_complete
-        if done:
-            if self.history is not None:
-                self.history.save_history()
+        if done and self.history is not None:
+            self.history.save_history()
 
         if self.collision:
-            print(f"{self.lap_number} COLLISION: Time: {self.current_time:.2f}, Progress: {100*progress:.1f}")
+            print(f"{self.lap_number} COLLISION: Time: {self.current_time:.2f}, Progress: {100*self.progress:.1f}")
         elif self.lap_complete:
-            print(f"{self.lap_number} LAP COMPLETE: Time: {self.current_time:.2f}, Progress: {(100*progress):.1f}")
-
+            print(f"{self.lap_number} LAP COMPLETE: Time: {self.current_time:.2f}, Progress: {(100*self.progress):.1f}")
 
         return observation, done
 
+    def build_observation(self, pose):
+        raise NotImplementedError("The build_observation method has not been implemented")
+
     def check_lap_complete(self, pose):
-        progress = self.center_line.calculate_pose_progress(pose)
+        self.progress = self.center_line.calculate_pose_progress(pose)
         
         done = False
-        if progress > 0.99 and self.current_time > 5: done = True
+        if self.progress > 0.99 and self.current_time > 5: done = True
         if self.current_time > 250: 
             print("Time limit reached")
             done = True
 
-        return done, progress
+        return done
         
-
     def check_vehicle_collision(self, pose):
         rotation_mtx = np.array([[np.cos(pose[2]), -np.sin(pose[2])], [np.sin(pose[2]), np.cos(pose[2])]])
 
@@ -124,8 +111,6 @@ class F1TenthSim:
     
 
     def reset(self, poses):
-        if self.history is not None:
-            self.history.set_map_name(self.map_name)
         self.dynamics_simulator.reset(poses)
 
         self.current_time = 0.0
@@ -137,4 +122,30 @@ class F1TenthSim:
         return obs, done
 
 
+class StdF1TenthSim(F1TenthSim):
+    def __init__(self, map_name, log_name=None):
+        super().__init__(map_name, log_name)
     
+    def build_observation(self, pose):
+        scan = self.scan_simulator.scan(pose)
+        observation = {"scan": scan,
+                "vehicle_speed": self.dynamics_simulator.state[3],
+                "collision": self.collision,
+                "lap_complete": self.lap_complete,
+                "laptime": self.current_time}
+        return observation
+
+class PlanningF1TenthSim(F1TenthSim):
+    def __init__(self, map_name, log_name=None):
+        super().__init__(map_name, log_name)
+    
+    def build_observation(self, pose):
+        scan = self.scan_simulator.scan(pose)
+        observation = {"scan": scan,
+                "vehicle_state": self.dynamics_simulator.state,
+                "collision": self.collision,
+                "lap_complete": self.lap_complete,
+                "laptime": self.current_time,
+                "progress": self.progress}
+        return observation
+
