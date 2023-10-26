@@ -1,19 +1,17 @@
 
 import json
-import sys
 from time import time_ns
-from foxglove_schemas_protobuf import Pose_pb2
 
 from mcap.writer import Writer
 from mcap.well_known import SchemaEncoding, MessageEncoding
 import numpy as np
-import yaml, csv
+import yaml
 from PIL import Image
 
-import struct 
 import base64
 
 vehicle_name = "pp_traj_following"
+# map_name = "esp"
 map_name = "aut"
 file_name = f"Logs/{vehicle_name}/test_{map_name}.mcap"
 schema_path = "f1tenth_sim/data_tools/schemas/"
@@ -34,7 +32,6 @@ class MapData:
         self.map_width = None
 
         self.load_map_img()
-        self.load_centerline()
 
     def load_map_img(self):
         with open(self.path + self.map_name + ".yaml", 'r') as file:
@@ -52,11 +49,27 @@ class MapData:
         self.map_height = self.map_img.shape[0]
         self.map_width = self.map_img.shape[1]
         
-    def load_centerline(self):
-        track = np.loadtxt(self.path + self.map_name + "_centerline.csv", delimiter=',', skiprows=1)
-        self.wpts = track[:, :2]
-        self.N = len(self.wpts)
-        
+import os
+import trajectory_planning_helpers as tph
+class Trajectory:
+    def __init__(self, map_name) -> None:
+        filename = f"f1tenth_sim/racing_methods/planning/pp_traj_following/" + map_name + "_raceline.csv"
+        self.track = np.loadtxt(filename, delimiter=',', skiprows=1)
+
+class TrackPath:
+    def __init__(self, map_name) -> None:
+        self.track = np.loadtxt("maps/" + map_name + "_centerline.csv", delimiter=',', skiprows=1)
+
+        self.el_lengths = np.linalg.norm(np.diff(self.track[:, :2], axis=0), axis=1)
+        self.s_track = np.insert(np.cumsum(self.el_lengths), 0, 0)
+        self.psi, self.kappa = tph.calc_head_curv_num.calc_head_curv_num(self.track, self.el_lengths, False)
+
+        self.nvecs = tph.calc_normal_vectors_ahead.calc_normal_vectors_ahead(self.psi)
+
+        self.left_path = self.track[:, :2] - self.nvecs * (self.track[:, 2][:, None])
+        self.right_path = self.track[:, :2] + self.nvecs * (self.track[:, 3][:, None])
+
+
 
 def register_schema(writer, schema_name, schema_path):
     with open(schema_path, "rb") as f:
@@ -87,6 +100,8 @@ def publish_message(writer, channel_id, msg, time):
         publish_time=time,
     )
 
+
+
 def load_agent_test_data(file_name):
     data = np.load(file_name)
 
@@ -94,6 +109,20 @@ def load_agent_test_data(file_name):
 
 states, actions = load_agent_test_data(f"Logs/{vehicle_name}/SimLog_{map_name}_0.npy")
 map_data = MapData(map_name)
+traj_data = Trajectory(map_name)
+track_data = TrackPath(map_name)
+
+def build_pose_list_msgs(data, start_time):
+    trajectory = {"frame_id": "map"}
+    trajectory["timestamp"] = {
+            "sec": int(start_time * 1e-9),
+            "nsec": int(start_time - int(start_time * 1e-9))}
+    trajectory["poses"] = []
+    for i in range(len(data)):
+        pose = {"position": {"x": data[i, 0], "y": data[i, 1], "z": 0},
+                "orientation": {"x": 0, "y": 0, "z": 0, "w": 0}}
+        trajectory["poses"].append(pose)
+    return trajectory
 
 with open(file_name, "wb") as stream:
     writer = Writer(stream)
@@ -112,6 +141,17 @@ with open(file_name, "wb") as stream:
     slip_angle_channel_id = register_channel(writer, "slip_angle", schema_id)
     lap_time_channel_id = register_channel(writer, "laptime", schema_id)
 
+    schema_id = register_schema(writer, "foxglove.PosesInFrame", f"{schema_path}PosesInFrame.json")
+    trajectory_channel_id = register_channel(writer, "trajectory", schema_id)
+    l_boudnary_channel_id = register_channel(writer, "l_boundaries", schema_id)
+    r_boudnary_channel_id = register_channel(writer, "r_boundaries", schema_id)
+    schema_id = register_schema(writer, "foxglove.FrameTransform", f"{schema_path}FrameTransform.json")
+    tf_channel_id = register_channel(writer, "tf", schema_id)
+
+
+    schema_id = register_schema(writer, "foxglove.LaserScan", f"{schema_path}LaserScan.json")
+    scan_channel_id = register_channel(writer, "scan", schema_id)
+
     start_time = time_ns()
 
     grid = {"frame_id": "map"}
@@ -121,7 +161,7 @@ with open(file_name, "wb") as stream:
     grid["pose"] = {
             "position": {"x": map_data.map_origin[0], "y": map_data.map_origin[1], "z": 0},
             "orientation": {"x": 0, "y": 0, "z": 0, "w": 0} }
-    grid["column_count"] = map_data.map_img.shape[0]
+    grid["column_count"] = map_data.map_img.shape[1]
     grid["cell_size"] = {"x": 0.05, "y": 0.05}
     grid["row_stride"] =  map_data.map_img.shape[1] * 4
     grid["cell_stride"] = 4
@@ -131,6 +171,16 @@ with open(file_name, "wb") as stream:
     img = map_data.map_img.astype(np.float32) * 255
     grid["data"] = base64.b64encode(img).decode("utf-8")
     publish_message(writer, grid_channel_id, grid, start_time)
+
+    trajectory = build_pose_list_msgs(traj_data.track[:, 1:3], start_time)
+    publish_message(writer, trajectory_channel_id, trajectory, start_time)
+
+    left_bound = build_pose_list_msgs(track_data.left_path, start_time)
+    publish_message(writer, l_boudnary_channel_id, left_bound, start_time)
+    right_bound = build_pose_list_msgs(track_data.right_path, start_time)
+    publish_message(writer, r_boudnary_channel_id, right_bound, start_time)
+
+
 
     timestep = 0.05
     for i in range(len(states)):
@@ -152,6 +202,14 @@ with open(file_name, "wb") as stream:
         publish_message(writer, yaw_rate_channel_id, {"data": states[i, 5]}, time)
         publish_message(writer, slip_angle_channel_id, {"data": states[i, 6]}, time)
         publish_message(writer, lap_time_channel_id, {"data": round(i*timestep+0.001, 3)}, time)
+
+        tf = {"parent_frame_id": "map"}
+        tf["child_frame_id"] = f"vehicle"
+        # tf["child_frame_id"] = f"vehicle_{i}"
+        tf["timestamp"] = {"sec": time_in_s, "nsec": time_in_ns}
+        tf["translation"] = {"x": states[i, 0], "y": states[i, 1], "z": 0}
+        tf["rotation"] = {"x": 0, "y": 0, "z": np.sin(states[i, 4]/2), "w": np.cos(states[i, 4]/2)}
+        publish_message(writer, tf_channel_id, tf, time)
 
     writer.finish()
 

@@ -22,15 +22,9 @@ class RaceTrack:
         self.load_racetrack(map_name)
 
     def load_racetrack(self, map_name):
-        track = []
         filename = os.path.realpath(os.path.dirname(__file__)) + "/" + map_name + "_raceline.csv"
-        with open(filename, 'r') as csvfile:
-            csvFile = csv.reader(csvfile, quoting=csv.QUOTE_NONNUMERIC)  
-        
-            for lines in csvFile:  
-                track.append(lines)
+        track = np.loadtxt(filename, delimiter=',', skiprows=1)
 
-        track = np.array(track)
         self.raceline = track[:, 1:3]
         self.speeds = track[:, 5] 
 

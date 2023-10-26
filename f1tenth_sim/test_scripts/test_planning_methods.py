@@ -5,7 +5,7 @@ import numpy as np
 
 def run_simulation_loop_laps(env, planner, n_laps):
     for lap in range(n_laps):
-        observation, done = env.reset(poses=np.array([0, 0, 0]))
+        observation, done = env.reset()
         while not done:
             action = planner.plan(observation)
             observation, done = env.step(action)

@@ -23,7 +23,8 @@ class PpTrajectoryFollower:
     def plan(self, obs):
         state = obs["vehicle_state"]
 
-        lookahead_distance = 0.5 + state[3] * 0.18
+        # lookahead_distance = 0.5 + state[3] * 0.18
+        lookahead_distance = 0.2 + state[3] * 0.14
         lookahead_point = self.racetrack.get_lookahead_point(state[:2], lookahead_distance)
 
         if state[3] < 1:
