@@ -58,6 +58,34 @@ class MapData:
         self.N = len(self.wpts)
         
 
+def register_schema(writer, schema_name, schema_path):
+    with open(schema_path, "rb") as f:
+        schema = f.read()
+
+    schema_id = writer.register_schema(
+        name=schema_name,
+        encoding=SchemaEncoding.JSONSchema,
+        data=schema,
+    )
+
+    return schema_id
+
+def register_channel(writer, channel_name, schema_id):
+    channel_id = writer.register_channel(
+        topic=channel_name,
+        message_encoding=MessageEncoding.JSON,
+        schema_id=schema_id,
+    )
+
+    return channel_id
+
+def publish_message(writer, channel_id, msg, time):
+    writer.add_message(
+        channel_id=channel_id,
+        log_time=time,
+        data=json.dumps(msg).encode("utf-8"),
+        publish_time=time,
+    )
 
 def load_agent_test_data(file_name):
     data = np.load(file_name)
@@ -69,95 +97,61 @@ map_data = MapData(map_name)
 
 with open(file_name, "wb") as stream:
     writer = Writer(stream)
-
     writer.start('x-jsonschema')
 
-    with open(f"{schema_path}PoseInFrame.json", "rb") as f:
-        schema = f.read()
+    schema_id = register_schema(writer, "foxglove.PoseInFrame", f"{schema_path}PoseInFrame.json")
+    pose_channel_id = register_channel(writer, "vehicle_pose", schema_id)
+    schema_id = register_schema(writer, "foxglove.Grid", f"{schema_path}Grid.json")
+    grid_channel_id = register_channel(writer, "grid", schema_id)
+    schema_id = register_schema(writer, "foxglove.Vector1", f"{schema_path}Vector1.json")
+    speed_channel_id = register_channel(writer, "speed_states", schema_id)
+    steering_channel_id = register_channel(writer, "steering_states", schema_id)
+    speed_actions_channel_id = register_channel(writer, "speed_actions", schema_id)
+    steering_actions_channel_id = register_channel(writer, "steering_actions", schema_id)
+    yaw_rate_channel_id = register_channel(writer, "yaw_rate", schema_id)
+    slip_angle_channel_id = register_channel(writer, "slip_angle", schema_id)
+    lap_time_channel_id = register_channel(writer, "laptime", schema_id)
 
-    schema_id = writer.register_schema(
-        name="foxglove.PoseInFrame",
-        encoding=SchemaEncoding.JSONSchema,
-        data=schema,
-    )
-
-    pose_channel_id = writer.register_channel(
-        topic="vehicle_pose",
-        message_encoding=MessageEncoding.JSON,
-        schema_id=schema_id,
-    )
-
-    with open(f"{schema_path}Grid.json", "rb") as f:
-        schema = f.read()
-
-    schema_id = writer.register_schema(
-        name="foxglove.Grid",
-        encoding=SchemaEncoding.JSONSchema,
-        data=schema,
-    )
-
-    grid_channel_id = writer.register_channel(
-        topic="grid",
-        message_encoding=MessageEncoding.JSON,
-        schema_id=schema_id,
-    )
     start_time = time_ns()
 
-    grid = {}
+    grid = {"frame_id": "map"}
     grid["timestamp"] = {
             "sec": int(start_time * 1e-9),
-            "nsec": int(start_time - int(start_time * 1e-9)),
-        }
+            "nsec": int(start_time - int(start_time * 1e-9))}
     grid["pose"] = {
             "position": {"x": map_data.map_origin[0], "y": map_data.map_origin[1], "z": 0},
-            "orientation": {"x": 0, "y": 0, "z": 0, "w": 0},
-        }
-    grid["frame_id"] = "map"
+            "orientation": {"x": 0, "y": 0, "z": 0, "w": 0} }
     grid["column_count"] = map_data.map_img.shape[0]
     grid["cell_size"] = {"x": 0.05, "y": 0.05}
     grid["row_stride"] =  map_data.map_img.shape[1] * 4
     grid["cell_stride"] = 4
     grid["fields"] = [
         {"name": "red", "offset": 0, "type": 7},
-        {"name": "blue", "offset": 0, "type": 7},
-        {"name": "green", "offset": 0, "type": 7}
     ]
     img = map_data.map_img.astype(np.float32) * 255
     grid["data"] = base64.b64encode(img).decode("utf-8")
-
-    writer.add_message(
-        channel_id=grid_channel_id,
-        log_time=int(start_time),
-        data=json.dumps(grid).encode("utf-8"),
-        publish_time=int(start_time),
-    )
+    publish_message(writer, grid_channel_id, grid, start_time)
 
     timestep = 0.05
     for i in range(len(states)):
-        time = start_time + i * 1e9 * timestep
+        time = int(start_time + i * 1e9 * timestep)
         time_in_s = int(time * 1e-9)
         time_in_ns = int(time - time_in_s)
 
-        pose = {}
-        qz = np.sin(states[i, 4]/2)
-        qw = np.cos(states[i, 4]/2)
- 
+        pose = {"frame_id": "map"}
         pose["pose"] = {
             "position": {"x": states[i, 0], "y": states[i, 1], "z": 0},
-            "orientation": {"x": 0, "y": 0, "z": qz, "w": qw},
-        }
-        pose["frame_id"] = "map"
-        start_time = time_ns()
-        pose["timestamp"] = {
-            "sec": time_in_s,
-            "nsec": time_in_ns,
-        }
-        writer.add_message(
-            channel_id=pose_channel_id,
-            log_time=int(time),
-            data=json.dumps(pose).encode("utf-8"),
-            publish_time=int(time),
-        )
+            "orientation": {"x": 0, "y": 0, "z": np.sin(states[i, 4]/2), "w": np.cos(states[i, 4]/2)}}
+        pose["timestamp"] = {"sec": time_in_s, "nsec": time_in_ns}
+
+        publish_message(writer, pose_channel_id, pose, time)
+        publish_message(writer, speed_channel_id, {"data": states[i, 3]}, time)
+        publish_message(writer, steering_channel_id, {"data": states[i, 2]}, time)
+        publish_message(writer, steering_actions_channel_id, {"data": actions[i, 0]}, time)
+        publish_message(writer, speed_actions_channel_id, {"data": actions[i, 1]}, time)
+        publish_message(writer, yaw_rate_channel_id, {"data": states[i, 5]}, time)
+        publish_message(writer, slip_angle_channel_id, {"data": states[i, 6]}, time)
+        publish_message(writer, lap_time_channel_id, {"data": round(i*timestep+0.001, 3)}, time)
 
     writer.finish()
 
