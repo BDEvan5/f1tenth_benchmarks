@@ -104,10 +104,10 @@ def publish_message(writer, channel_id, msg, time):
 
 def load_agent_test_data(file_name):
     data = np.load(file_name)
-
     return data[:, :7], data[:, 7:]
 
 states, actions = load_agent_test_data(f"Logs/{vehicle_name}/SimLog_{map_name}_0.npy")
+scans = np.load(f"Logs/{vehicle_name}/ScanLog_{map_name}_0.npy")
 map_data = MapData(map_name)
 traj_data = Trajectory(map_name)
 track_data = TrackPath(map_name)
@@ -148,7 +148,6 @@ with open(file_name, "wb") as stream:
     schema_id = register_schema(writer, "foxglove.FrameTransform", f"{schema_path}FrameTransform.json")
     tf_channel_id = register_channel(writer, "tf", schema_id)
 
-
     schema_id = register_schema(writer, "foxglove.LaserScan", f"{schema_path}LaserScan.json")
     scan_channel_id = register_channel(writer, "scan", schema_id)
 
@@ -180,8 +179,6 @@ with open(file_name, "wb") as stream:
     right_bound = build_pose_list_msgs(track_data.right_path, start_time)
     publish_message(writer, r_boudnary_channel_id, right_bound, start_time)
 
-
-
     timestep = 0.05
     for i in range(len(states)):
         time = int(start_time + i * 1e9 * timestep)
@@ -203,6 +200,7 @@ with open(file_name, "wb") as stream:
         publish_message(writer, slip_angle_channel_id, {"data": states[i, 6]}, time)
         publish_message(writer, lap_time_channel_id, {"data": round(i*timestep+0.001, 3)}, time)
 
+        # if i > 5:
         tf = {"parent_frame_id": "map"}
         tf["child_frame_id"] = f"vehicle"
         # tf["child_frame_id"] = f"vehicle_{i}"
@@ -210,6 +208,16 @@ with open(file_name, "wb") as stream:
         tf["translation"] = {"x": states[i, 0], "y": states[i, 1], "z": 0}
         tf["rotation"] = {"x": 0, "y": 0, "z": np.sin(states[i, 4]/2), "w": np.cos(states[i, 4]/2)}
         publish_message(writer, tf_channel_id, tf, time)
+
+        scan_msg = {"frame_id": "map"}
+        scan_msg["timestamp"] = {"sec": time_in_s, "nsec": time_in_ns}
+        scan_msg["start_angle"] = -2.35
+        scan_msg["end_angle"] = 2.35
+        # scan_msg["ranges"] = base64.b64encode(scans[i]).decode("utf-8")
+        scan_msg["ranges"] = scans[i].tolist()
+        scan_msg["pose"] = {"position": {"x": states[i, 0], "y": states[i, 1], "z": 0},
+            "orientation": {"x": 0, "y": 0, "z": np.sin(states[i, 4]/2), "w": np.cos(states[i, 4]/2)}}
+        publish_message(writer, scan_channel_id, scan_msg, time)
 
     writer.finish()
 

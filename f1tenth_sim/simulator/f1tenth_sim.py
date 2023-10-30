@@ -36,7 +36,7 @@ class F1TenthSim:
 
     def step(self, action):
         if self.history is not None:
-            self.history.add_memory_entry(self.current_state, action)
+            self.history.add_memory_entry(self.current_state, action, self.scan)
 
         mini_i = self.params.n_sim_steps
         while mini_i > 0:
@@ -116,10 +116,12 @@ class F1TenthSim:
 class StdF1TenthSim(F1TenthSim):
     def __init__(self, map_name, log_name=None):
         super().__init__(map_name, log_name)
-    
+        init_pose = np.append(self.current_state[0:2], self.current_state[4])
+        self.scan = self.scan_simulator.scan(init_pose)
+ 
     def build_observation(self, pose):
-        scan = self.scan_simulator.scan(pose)
-        observation = {"scan": scan,
+        self.scan = self.scan_simulator.scan(pose)
+        observation = {"scan": self.scan,
                 "vehicle_speed": self.dynamics_simulator.state[3],
                 "collision": self.collision,
                 "lap_complete": self.lap_complete,
@@ -129,10 +131,12 @@ class StdF1TenthSim(F1TenthSim):
 class PlanningF1TenthSim(F1TenthSim):
     def __init__(self, map_name, log_name=None):
         super().__init__(map_name, log_name)
+        init_pose = np.append(self.current_state[0:2], self.current_state[4])
+        self.scan = self.scan_simulator.scan(init_pose)
     
     def build_observation(self, pose):
-        scan = self.scan_simulator.scan(pose)
-        observation = {"scan": scan,
+        self.scan = self.scan_simulator.scan(pose)
+        observation = {"scan": self.scan,
                 "vehicle_state": self.dynamics_simulator.state,
                 "collision": self.collision,
                 "lap_complete": self.lap_complete,
