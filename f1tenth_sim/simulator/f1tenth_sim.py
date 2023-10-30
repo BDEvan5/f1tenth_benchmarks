@@ -97,6 +97,7 @@ class F1TenthSim:
         # print(f"Resetting to {self.starting_progress:.2f} progress with pose: {start_pose}")
         start_pose = np.zeros(3)
         self.dynamics_simulator.reset(start_pose)
+        self.current_state = np.zeros((7, ))
 
         self.current_time = 0.0
         action = np.zeros(2)

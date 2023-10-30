@@ -21,33 +21,13 @@ def run_planning_tests(planner):
         planner.set_map(map_name)
         run_simulation_loop_laps(simulator, planner, 1)
 
-def run_tuning_tests():
-    tuning_map = "esp"
-    values = np.linspace(0.4, 2, 17)
-
-    simulator = PlanningF1TenthSim(tuning_map, "PpTuning")
-    for v in values:
-        print(f"Testing with constant value {v}...")
-        planner = PpTrajectoryFollower()
-        planner.constant_lookahead = v
-        
-        planner.set_map(tuning_map)
-        run_simulation_loop_laps(simulator, planner, 1)
-
-    calculate_tracking_accuracy("PpTuning")
-
 
 def run_tuning_tests2():
     tuning_map = "aut"
-    tuning_map = "esp"
-    name = "PpTuning3"
+    name = "PerceptionTesting"
     simulator = PlanningF1TenthSim(tuning_map, name)
-    v1 = 0.5
-    v2 = 0.18
     print(f"Testing with constant value {v1} and variable {v2}...")
     planner = PpTrajectoryFollower()
-    planner.constant_lookahead = v1
-    planner.variable_lookahead = v2
     
     planner.set_map(tuning_map)
     run_simulation_loop_laps(simulator, planner, 1)

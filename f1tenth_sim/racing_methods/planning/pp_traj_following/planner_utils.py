@@ -35,8 +35,9 @@ class RaceTrack:
         nearest_point, nearest_dist, t, i = nearest_point_on_trajectory_py2(position, self.raceline, self.l2s, self.diffs)
 
         lookahead_point, i2, t2 = first_point_on_trajectory_intersecting_circle(position, lookahead_distance, self.raceline, i+t, wrap=True)
-        if i2 == None: 
-            return None
+        if i2 == None: # this happens when the circle does not intersect the trajectory.
+            i2 = i + int(lookahead_distance / np.sqrt(self.l2s[i]))
+            # return None
         lookahead_point = np.empty((3, ))
         lookahead_point[0:2] = self.raceline[i2, :]
         lookahead_point[2] = self.speeds[i]

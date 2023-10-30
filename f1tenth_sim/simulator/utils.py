@@ -28,8 +28,9 @@ class CenterLine:
 
 
 class SimulatorHistory:
-    def __init__(self, run_name):
+    def __init__(self, run_name, save_scan=False):
         self.path = f"Logs/{run_name}/"
+        self.save_scan = save_scan
         if os.path.exists(self.path) == False:
             os.mkdir(self.path)
 
@@ -55,8 +56,9 @@ class SimulatorHistory:
         
         np.save(self.path + f"SimLog_{self.map_name}_{self.lap_n}.npy", lap_history)
 
-        scans = np.array(self.scans)
-        np.save(self.path + f"ScanLog_{self.map_name}_{self.lap_n}.npy", scans)
+        if self.save_scan:
+            scans = np.array(self.scans)
+            np.save(self.path + f"ScanLog_{self.map_name}_{self.lap_n}.npy", scans)
 
         self.states = []
         self.actions = []
