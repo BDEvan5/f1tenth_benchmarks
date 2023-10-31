@@ -7,13 +7,18 @@ import yaml
 from argparse import Namespace
 import numpy as np
 import pandas as pd
-
+import os
 
 class F1TenthSim:
-    def __init__(self, map_name, log_name=None):
+    def __init__(self, map_name, log_name, save_detail_history=True):
         with open(f"f1tenth_sim/simulator/simulator_params.yaml", 'r') as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
         self.params = Namespace(**params)
+        self.log_name = log_name
+        self.map_name = map_name
+        self.path = f"Logs/{log_name}/"
+        if os.path.exists(self.path) == False:
+            os.mkdir(self.path)
 
         self.scan_simulator = ScanSimulator2D(self.params.num_beams, self.params.fov, map_name, self.params.random_seed)
         self.dynamics_simulator = DynamicsSimulator(self.params.random_seed, self.params.timestep)
@@ -27,12 +32,11 @@ class F1TenthSim:
         self.starting_progress = 0
 
         self.history = None
-        if log_name != None:
+        self.lap_history = []
+        if save_detail_history:
             self.history = SimulatorHistory(log_name)
             self.history.set_map_name(map_name)
-            self.lap_history = []
-
-        self.map_name = map_name
+            
 
     def step(self, action):
         if self.history is not None:
@@ -50,9 +54,10 @@ class F1TenthSim:
         observation = self.build_observation(pose)
         
         done = self.collision or self.lap_complete
-        if done and self.history is not None:
-            self.history.save_history()
-            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.history.run_name, "Progress": self.progress, "Time": self.current_time})
+        if done:
+            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.log_name, "Progress": self.progress, "Time": self.current_time})
+            self.save_data_frame()
+            if self.history is not None: self.history.save_history()
 
         if self.collision:
             print(f"{self.lap_number} COLLISION: Time: {self.current_time:.2f}, Progress: {100*self.progress:.1f}")
@@ -108,15 +113,14 @@ class F1TenthSim:
         return obs, done, start_pose
 
     def save_data_frame(self):
-        if self.history is not None:
-            agent_df = pd.DataFrame(self.lap_history)
-            agent_df = agent_df.sort_values(by=["Lap"])
-            agent_df.to_csv(self.history.path + f"Results_{self.map_name}.csv", index=False, float_format='%.4f')
+        agent_df = pd.DataFrame(self.lap_history)
+        agent_df = agent_df.sort_values(by=["Lap"])
+        agent_df.to_csv(self.path + f"Results_{self.map_name}.csv", index=False, float_format='%.4f')
 
 
 class StdF1TenthSim(F1TenthSim):
-    def __init__(self, map_name, log_name=None):
-        super().__init__(map_name, log_name)
+    def __init__(self, map_name, log_name, save_detail_history=True):
+        super().__init__(map_name, log_name, save_detail_history)
         init_pose = np.append(self.current_state[0:2], self.current_state[4])
         self.scan = self.scan_simulator.scan(init_pose)
  
@@ -130,8 +134,8 @@ class StdF1TenthSim(F1TenthSim):
         return observation
 
 class PlanningF1TenthSim(F1TenthSim):
-    def __init__(self, map_name, log_name=None):
-        super().__init__(map_name, log_name)
+    def __init__(self, map_name, log_name, save_detail_history=True):
+        super().__init__(map_name, log_name, save_detail_history)
         init_pose = np.append(self.current_state[0:2], self.current_state[4])
         self.scan = self.scan_simulator.scan(init_pose)
     
