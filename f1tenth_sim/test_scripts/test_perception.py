@@ -1,4 +1,4 @@
-from f1tenth_sim.simulator import PlanningF1TenthSim 
+from f1tenth_sim.simulator import F1TenthSim_TrueLocation 
 from f1tenth_sim.racing_methods.planning.pp_traj_following.PpTrajectoryFollower import PpTrajectoryFollower
 from f1tenth_sim.racing_methods.full_stack.particle_filter import ParticleFilter
 import numpy as np
@@ -22,7 +22,7 @@ def run_planning_tests(planner):
     map_list = ["aut", "esp", "gbr", "mco"]
     for map_name in map_list:
         print(f"Testing on {map_name}...")
-        simulator = PlanningF1TenthSim(map_name, planner.name)
+        simulator = F1TenthSim_TrueLocation(map_name, planner.name)
         planner.set_map(map_name)
         run_simulation_loop_laps(simulator, planner, 1)
 
@@ -30,7 +30,7 @@ def run_planning_tests(planner):
 def run_tuning_tests2():
     tuning_map = "aut"
     name = "PerceptionTesting"
-    simulator = PlanningF1TenthSim(tuning_map, name)
+    simulator = F1TenthSim_TrueLocation(tuning_map, name)
     planner = PpTrajectoryFollower()
     pf_localisation = ParticleFilter(name, 500)
     

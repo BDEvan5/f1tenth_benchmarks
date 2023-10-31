@@ -2,7 +2,7 @@ import numpy as np
 from f1tenth_sim.mapless_racing.sac import TrainSAC, TestSAC
 from f1tenth_sim.mapless_racing.td3 import TrainTD3, TestTD3
 from f1tenth_sim.mapless_racing.reward_functions import TrajectoryAidedLearningReward
-from f1tenth_sim.mapless_racing.EndToEndArchitecture import EndToEndArchitecture
+
 
 def create_train_agent(state_dim, algorithm):
     action_dim = 2

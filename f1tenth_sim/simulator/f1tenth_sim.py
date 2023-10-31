@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import os
 
-class F1TenthSim:
+class F1TenthSimBase:
     def __init__(self, map_name, log_name, save_detail_history=True):
         with open(f"f1tenth_sim/simulator/simulator_params.yaml", 'r') as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
@@ -30,6 +30,7 @@ class F1TenthSim:
         self.progress = 0 
         self.lap_number = -1 # so that it goes to 0 when reset
         self.starting_progress = 0
+        self.total_steps = 0
 
         self.history = None
         self.lap_history = []
@@ -52,17 +53,19 @@ class F1TenthSim:
         self.collision = self.check_vehicle_collision(pose)
         self.lap_complete = self.check_lap_complete(pose)
         observation = self.build_observation(pose)
+        self.total_steps += 1
         
         done = self.collision or self.lap_complete
         if done:
-            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.log_name, "Progress": self.progress, "Time": self.current_time})
+            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.log_name, "Progress": self.progress, "Time": self.current_time, "Steps": self.total_steps})
             self.save_data_frame()
             if self.history is not None: self.history.save_history()
 
         if self.collision:
-            print(f"{self.lap_number} COLLISION: Time: {self.current_time:.2f}, Progress: {100*self.progress:.1f}")
+            print(f"{self.lap_number} :: {self.total_steps} COLLISION: Time: {self.current_time:.2f}, Progress: {100*self.progress:.1f}")
         elif self.lap_complete:
-            print(f"{self.lap_number} LAP COMPLETE: Time: {self.current_time:.2f}, Progress: {(100*self.progress):.1f}")
+            print(f"{self.lap_number} :: {self.total_steps} LAP COMPLETE: Time: {self.current_time:.2f}, Progress: {(100*self.progress):.1f}")
+
 
         return observation, done
 
@@ -118,7 +121,7 @@ class F1TenthSim:
         agent_df.to_csv(self.path + f"Results_{self.map_name}.csv", index=False, float_format='%.4f')
 
 
-class StdF1TenthSim(F1TenthSim):
+class F1TenthSim(F1TenthSimBase):
     def __init__(self, map_name, log_name, save_detail_history=True):
         super().__init__(map_name, log_name, save_detail_history)
         init_pose = np.append(self.current_state[0:2], self.current_state[4])
@@ -133,7 +136,7 @@ class StdF1TenthSim(F1TenthSim):
                 "laptime": self.current_time}
         return observation
 
-class PlanningF1TenthSim(F1TenthSim):
+class F1TenthSim_TrueLocation(F1TenthSimBase):
     def __init__(self, map_name, log_name, save_detail_history=True):
         super().__init__(map_name, log_name, save_detail_history)
         init_pose = np.append(self.current_state[0:2], self.current_state[4])
