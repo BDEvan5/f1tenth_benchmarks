@@ -139,6 +139,7 @@ class PlanningF1TenthSim(F1TenthSim):
         self.scan = self.scan_simulator.scan(pose)
         observation = {"scan": self.scan,
                 "vehicle_state": self.dynamics_simulator.state,
+                "vehicle_speed": self.dynamics_simulator.state[3],
                 "collision": self.collision,
                 "lap_complete": self.lap_complete,
                 "laptime": self.current_time,

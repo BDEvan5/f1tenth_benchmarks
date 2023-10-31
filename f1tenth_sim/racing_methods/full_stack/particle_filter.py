@@ -1,5 +1,6 @@
 import numpy as np
 from f1tenth_sim.racing_methods.full_stack.ScanSimulator import ScanSimulator2D
+from matplotlib import pyplot as plt
 
 NUM_BEAMS = 45
 # NUM_BEAMS = 1080 #! TODO: change this to use resampling....
@@ -29,20 +30,35 @@ class ParticleFilter:
         self.scan_simulator = ScanSimulator2D(f"maps/{map_name}", NUM_BEAMS, 4.7*np.pi)
 
     def localise(self, action, observation):
-        self.particle_control_update(action)
+        vehicle_speed = observation["vehicle_speed"]
+        print(f"Vehicle speed: {vehicle_speed}")
+        self.particle_control_update(action, vehicle_speed)
         self.measurement_update(observation["scan"][::24])
 
         estimate = np.dot(self.particles.T, self.weights)
         self.estimates.append(estimate)
 
+        plt.figure(1)
+        plt.clf()
+        plt.plot(observation['vehicle_state'][0], observation['vehicle_state'][1], 'x', label="True")
+        plt.plot(self.particles[:,0], self.particles[:,1], 'o', label="Particles")
+        plt.plot(self.proposal_distribution[:,0], self.proposal_distribution[:,1], 'o', label="Particles")
+
+        plt.plot(estimate[0], estimate[1], '+', markersize=16, label="Estimate")
+
+        # plt.show()
+        plt.pause(0.00001)
+
+
+
         return estimate
 
-    def particle_control_update(self, control):
+    def particle_control_update(self, control, vehicle_speed):
         # update the proposal distribution through resampling.
         proposal_indices = np.random.choice(self.particle_indices, self.NP, p=self.weights)
         self.proposal_distribution = self.particles[proposal_indices,:]
 
-        next_states = particle_dynamics_update(self.proposal_distribution, control, self.dt)
+        next_states = particle_dynamics_update(self.proposal_distribution, control, vehicle_speed, self.dt)
         random_samples = np.random.multivariate_normal(np.zeros(3), self.Q, self.NP)
         self.particles = next_states + random_samples
 
@@ -55,8 +71,8 @@ class ParticleFilter:
         sigma = np.sqrt(np.average(z**2, axis=0))
         weights = 1.0 / np.sqrt(2.0 * np.pi * sigma ** 2) * np.exp(-z ** 2 / (2 * sigma ** 2))
         # print(f"Avg: {np.average(weights, axis=1)[:10]}")
-        self.weights = np.prod(weights, axis=1) 
-        self.weights = np.power(self.weights, 1/5.2)
+        self.weights = np.prod(weights, axis=1) * self.NP **2
+        # self.weights = np.power(self.weights, 1/2.2)
 
         weight_sum = np.sum(self.weights, axis=0)
         if (weight_sum == 0).any():
@@ -72,10 +88,10 @@ class ParticleFilter:
 
 
 
-def particle_dynamics_update(states, actions, dt):
-    states[:, 0] += actions[1] * np.cos(states[:, 2]) * dt
-    states[:, 1] += actions[1] * np.sin(states[:, 2]) * dt
-    states[:, 2] += actions[1] * np.tan(actions[0]) / L * dt
+def particle_dynamics_update(states, actions, speed, dt):
+    states[:, 0] += speed * np.cos(states[:, 2]) * dt
+    states[:, 1] += speed * np.sin(states[:, 2]) * dt
+    states[:, 2] += speed * np.tan(actions[0]) / L * dt
     return states
 
 
