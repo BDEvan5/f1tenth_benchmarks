@@ -105,7 +105,7 @@ class F1TenthSim:
 
         self.lap_number += 1
         
-        return obs, done
+        return obs, done, start_pose
 
     def save_data_frame(self):
         if self.history is not None:
