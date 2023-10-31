@@ -1,7 +1,8 @@
 
 import numpy as np
 import os
-from f1tenth_sim.racing_methods.planning.pp_traj_following.planner_utils import RaceTrack, get_actuation
+from numba import njit
+from f1tenth_sim.classic_racing.planner_utils import RaceTrack
 
 
 WHEELBASE = 0.33
@@ -12,7 +13,7 @@ GRAVITY = 9.81
 LOOKAHEAD_DISTANCE = 0.8
 
 
-class PpTrajectoryFollower:
+class PurePursuit:
     def __init__(self):
         self.name = "pp_traj_following"
         self.racetrack = None
@@ -45,4 +46,13 @@ class PpTrajectoryFollower:
 
 
 
+@njit(fastmath=False, cache=True)
+def get_actuation(pose_theta, lookahead_point, position, lookahead_distance, wheelbase):
+    waypoint_y = np.dot(np.array([np.sin(-pose_theta), np.cos(-pose_theta)]), lookahead_point[0:2]-position)
+    speed = lookahead_point[2]
+    if np.abs(waypoint_y) < 1e-6:
+        return speed, 0.
+    radius = 1/(2.0*waypoint_y/lookahead_distance**2)
+    steering_angle = np.arctan(wheelbase/radius)
+    return speed, steering_angle
 

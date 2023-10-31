@@ -1,15 +1,8 @@
 from f1tenth_sim.simulator import StdF1TenthSim 
-from f1tenth_sim.racing_methods.mapless.follow_the_gap.FollowTheGap import FollowTheGap
+from f1tenth_sim.mapless_racing.follow_the_gap.FollowTheGap import FollowTheGap
 import numpy as np
 
-
-def run_simulation_loop_laps(env, planner, n_laps):
-    for lap in range(n_laps):
-        observation, done = env.reset()
-        while not done:
-            action = planner.plan(observation)
-            observation, done = env.step(action)
-    env.save_data_frame()
+from testing_utils import *
 
 
 def run_mapless_tests(planner):

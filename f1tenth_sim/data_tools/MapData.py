@@ -7,7 +7,6 @@ from matplotlib.collections import LineCollection
 class MapData:
     def __init__(self, map_name):
         self.path = "maps/"
-        # self.path = "map_data/"
         self.map_name = map_name
 
         self.xs, self.ys = None, None
@@ -60,7 +59,7 @@ class MapData:
         self.N = len(xs)
 
     def load_raceline(self):
-        filename = f"f1tenth_sim/racing_methods/planning/pp_traj_following/" + self.map_name + "_raceline.csv"
+        filename = f"racelines/" + self.map_name + "_raceline.csv"
         racetrack = np.loadtxt(filename, delimiter=',', skiprows=1)
         self.t_xs = racetrack[:, 1]
         self.t_ys = racetrack[:, 2]
@@ -136,7 +135,6 @@ class MapData:
         plt.ylabel("Speed (m/s)")
         plt.grid()
         plt.tight_layout()
-        plt.savefig("map_data/" + self.map_name + "_speeds.svg")
 
     def plot_map_trajectory_data(self):
         plt.figure(figsize=(10, 5))
@@ -146,7 +144,6 @@ class MapData:
         plt.ylabel("Speed (m/s)")
         plt.grid()
         plt.tight_layout()
-        plt.savefig("map_data/" + self.map_name + "_curvatures.svg")
 
     def plot_map_data(self):
         self.plot_map_img()
@@ -154,9 +151,6 @@ class MapData:
         self.plot_centre_line()
         
         self.plot_raceline()
-
-        plt.savefig("map_data/" + self.map_name + "_map.svg")
-        # plt.show()
 
         self.plot_map_trajectory_data()
 

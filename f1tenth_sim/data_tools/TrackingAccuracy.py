@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 class TrackingAccuracy:
     def __init__(self, map_name) -> None:
         self.map_name = map_name
-        filename = f"f1tenth_sim/racing_methods/planning/pp_traj_following/" + map_name + "_raceline.csv"
+        filename = f"racelines/" + map_name + "_raceline.csv"
         racetrack = np.loadtxt(filename, delimiter=',', skiprows=1)
         self.wpts = racetrack[:, 1:3]
 
