@@ -74,12 +74,12 @@ def calculate_tracking_accuracy(vehicle_name):
     print(f"Vehicle name: {vehicle_name}")
     old_df = pd.read_csv(agent_path + f"Results_{vehicle_name}.csv")
 
-    testing_logs = glob.glob(f"{agent_path}Sim*.npy")
+    testing_logs = glob.glob(f"{agent_path}RawData/Sim*.npy")
     if len(testing_logs) == 0: raise ValueError("No logs found")
     for test_log in testing_logs:
         test_folder_name = test_log.split("/")[-1]
         test_log_key = "_".join(test_folder_name.split(".")[0].split("_")[1:])
-        file_name = f"{agent_path}TrackingAccuracy_{test_log_key}.npy"
+        file_name = f"{agent_path}RawData/TrackingAccuracy_{test_log_key}.npy"
         lap_num = int(test_folder_name.split("_")[-1].split(".")[0])
         # if os.path.exists(file_name): continue
 

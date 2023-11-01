@@ -29,7 +29,6 @@ MAX_TRACKING_ERROR = 40 #cm
 
 class TrajectoryPlotter:
     def __init__(self):
-        self.path = None
         self.vehicle_name = None
         self.map_name = None
         self.states = None
@@ -41,13 +40,16 @@ class TrajectoryPlotter:
         self.tracking_accuracy = None
 
     def process_folder(self, folder):
-        self.path = folder
-        self.test_folder = folder
+        self.load_folder = folder + "RawData/"
+        self.save_folder = folder + "Images/"
+        self.pdf_save_folder = folder + "Images_pdf/"
+        ensure_path_exists(self.save_folder)
+        ensure_path_exists(self.pdf_save_folder)
 
-        self.vehicle_name = self.path.split("/")[-2]
+        self.vehicle_name = folder.split("/")[-2]
         print(f"Vehicle name: {self.vehicle_name}")
         
-        testing_logs = glob.glob(f"{folder}*.npy")
+        testing_logs = glob.glob(f"{self.load_folder}*.npy")
         for test_log in testing_logs:
             test_folder_name = test_log.split("/")[-1]
             self.test_log_key = test_folder_name.split(".")[0].split("_")[1:]
@@ -63,12 +65,12 @@ class TrajectoryPlotter:
             self.plot_tracking_path()
 
     def load_lap_data(self):
-        data = np.load(f"{self.test_folder}SimLog_{self.test_log_key}.npy")
+        data = np.load(f"{self.load_folder}SimLog_{self.test_log_key}.npy")
         self.states = data[:, :7]
         self.actions = data[:, 7:9]
         # self.track_progresses = data[:, 9]
 
-        accuracy_data = np.load(f"{self.test_folder}TrackingAccuracy_{self.test_log_key}.npy")
+        accuracy_data = np.load(f"{self.load_folder}TrackingAccuracy_{self.test_log_key}.npy")
         self.track_progresses = accuracy_data[:, 0] * 100
         # rather use racing line progresses here
         self.tracking_accuracy = accuracy_data[:, 1] * 100
@@ -99,8 +101,9 @@ class TrajectoryPlotter:
         plt.tight_layout()
         plt.axis('off')
         
-        name = self.test_folder + f"RacelineTrackingHeatMap_{self.test_log_key}"
+        name = self.save_folder + f"RacelineTrackingHeatMap_{self.test_log_key}"
         plt.savefig(name + ".svg", bbox_inches='tight', pad_inches=0)
+        name = self.pdf_save_folder + f"RacelineTrackingHeatMap_{self.test_log_key}"
         plt.savefig(name + ".pdf", bbox_inches='tight', pad_inches=0)
     
     def plot_tracking_path(self): 
@@ -122,7 +125,7 @@ class TrajectoryPlotter:
         plt.tight_layout()
         plt.axis('off')
         
-        name = self.test_folder + f"TrackingAccuracy_{self.test_log_key}"
+        name = self.save_folder + f"TrackingAccuracy_{self.test_log_key}"
         plt.savefig(name + ".svg", bbox_inches='tight', pad_inches=0)
 
     def plot_tracking_accuracy(self):
@@ -135,7 +138,7 @@ class TrajectoryPlotter:
         plt.xlabel("Track Progress (%)")
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig(f"{self.test_folder}Tracking_{self.test_log_key}.svg", bbox_inches='tight', pad_inches=0)
+        plt.savefig(f"{self.save_folder}Tracking_{self.test_log_key}.svg", bbox_inches='tight', pad_inches=0)
 
     def plot_trackign_error_distribution(self):
         plt.figure(1, figsize=(5, 4))
@@ -151,7 +154,7 @@ class TrajectoryPlotter:
         plt.gca().xaxis.set_major_locator(plt.MaxNLocator())
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig(f"{self.test_folder}TrackingHist_{self.test_log_key}.svg", bbox_inches='tight', pad_inches=0)
+        plt.savefig(f"{self.save_folder}TrackingHist_{self.test_log_key}.svg", bbox_inches='tight', pad_inches=0)
 
         
 

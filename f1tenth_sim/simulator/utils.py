@@ -26,10 +26,14 @@ class CenterLine:
         pose = np.array([point[0], point[1], -theta])
         return pose
 
+def ensure_path_exists(folder):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
 
 class SimulatorHistory:
     def __init__(self, run_name, save_scan=False):
-        self.path = f"Logs/{run_name}/"
+        self.path = f"Logs/{run_name}/RawData/"
+        ensure_path_exists(self.path)
         self.save_scan = save_scan
         if os.path.exists(self.path) == False:
             os.mkdir(self.path)

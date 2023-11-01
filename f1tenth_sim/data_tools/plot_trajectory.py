@@ -26,26 +26,31 @@ def ensure_path_exists(folder):
 
 class TrajectoryPlotter:
     def __init__(self):
-        self.path = None
         self.vehicle_name = None
         self.map_name = None
         self.states = None
         self.actions = None
         self.map_data = None
-        self.summary_path = None
         self.lap_n = 0
         
         self.track_progresses = None
         self.tracking_accuracy = None
 
-    def process_folder(self, folder):
-        self.path = folder
-        self.test_folder = folder
+        self.load_folder = None
+        self.save_folder = None
+        self.pdf_save_folder = None
 
-        self.vehicle_name = self.path.split("/")[-2]
+    def process_folder(self, folder):
+        self.load_folder = folder + "RawData/"
+        self.save_folder = folder + "Images/"
+        self.pdf_save_folder = folder + "Images_pdf/"
+        ensure_path_exists(self.save_folder)
+        ensure_path_exists(self.pdf_save_folder)
+
+        self.vehicle_name = folder.split("/")[-2]
         print(f"Vehicle name: {self.vehicle_name}")
         
-        testing_logs = glob.glob(f"{folder}*.npy")
+        testing_logs = glob.glob(f"{self.load_folder}/*.npy")
         for test_log in testing_logs:
             test_folder_name = test_log.split("/")[-1]
             self.test_log_key = test_folder_name.split(".")[0].split("_")[1:]
@@ -60,7 +65,7 @@ class TrajectoryPlotter:
             self.plot_trajectory()
 
     def load_lap_data(self):
-        data = np.load(f"{self.test_folder}SimLog_{self.test_log_key}.npy")
+        data = np.load(f"{self.load_folder}SimLog_{self.test_log_key}.npy")
         self.states = data[:, :7]
         self.actions = data[:, 7:9]
         self.track_progresses = data[:, 9]
@@ -96,7 +101,7 @@ class TrajectoryPlotter:
         a3.set_xlabel("Track progress (m)")
 
         plt.tight_layout()
-        plt.savefig(f"{self.test_folder}Analysis_{self.test_log_key}.svg", bbox_inches='tight', pad_inches=0)  
+        plt.savefig(f"{self.save_folder}Analysis_{self.test_log_key}.svg", bbox_inches='tight', pad_inches=0)  
     
     def plot_trajectory(self): 
         plt.figure(1)
@@ -125,9 +130,10 @@ class TrajectoryPlotter:
         plt.tight_layout()
         plt.axis('off')
         
-        name = self.test_folder + f"Trajectory_{self.test_log_key}"
+        name = self.save_folder + f"Trajectory_{self.test_log_key}"
         # std_img_saving(name)
         plt.savefig(name + ".svg", bbox_inches='tight', pad_inches=0)
+        name = self.pdf_save_folder + f"Trajectory_{self.test_log_key}"
         plt.savefig(name + ".pdf", bbox_inches='tight', pad_inches=0)
 
 

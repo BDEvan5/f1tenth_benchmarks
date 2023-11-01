@@ -9,6 +9,11 @@ import numpy as np
 import pandas as pd
 import os, datetime
 
+
+def ensure_path_exists(folder):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
 class F1TenthSimBase:
     def __init__(self, map_name, log_name, save_detail_history=True):
         with open(f"f1tenth_sim/simulator/simulator_params.yaml", 'r') as file:
@@ -17,8 +22,7 @@ class F1TenthSimBase:
         self.log_name = log_name
         self.map_name = map_name
         self.path = f"Logs/{log_name}/"
-        if os.path.exists(self.path) == False:
-            os.mkdir(self.path)
+        ensure_path_exists(self.path)
 
         self.scan_simulator = ScanSimulator2D(self.params.num_beams, self.params.fov, map_name, self.params.random_seed)
         self.dynamics_simulator = DynamicsSimulator(self.params.random_seed, self.params.timestep)
