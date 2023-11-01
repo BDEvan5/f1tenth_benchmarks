@@ -15,7 +15,7 @@ def ensure_path_exists(folder):
         os.makedirs(folder)
 
 class F1TenthSimBase:
-    def __init__(self, map_name, log_name, save_detail_history=True):
+    def __init__(self, map_name, log_name, save_detail_history=True, training=False):
         with open(f"f1tenth_sim/simulator/simulator_params.yaml", 'r') as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
         self.params = Namespace(**params)
@@ -23,6 +23,7 @@ class F1TenthSimBase:
         self.map_name = map_name
         self.path = f"Logs/{log_name}/"
         ensure_path_exists(self.path)
+        self.training = training
 
         self.scan_simulator = ScanSimulator2D(self.params.num_beams, self.params.fov, map_name, self.params.random_seed)
         self.dynamics_simulator = DynamicsSimulator(self.params.random_seed, self.params.timestep)
@@ -64,8 +65,7 @@ class F1TenthSimBase:
         
         done = self.collision or self.lap_complete
         if done:
-            dt = datetime.datetime.now() 
-            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.log_name, "Progress": self.progress, "Time": self.current_time, "Steps": self.total_steps, "RecordTime": dt})
+            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.log_name, "Progress": self.progress, "Time": self.current_time, "Steps": self.total_steps, "RecordTime": datetime.datetime.now() })
             self.save_data_frame()
             if self.history is not None: self.history.save_history()
 
@@ -127,12 +127,17 @@ class F1TenthSimBase:
     def save_data_frame(self):
         agent_df = pd.DataFrame(self.lap_history)
         agent_df = agent_df.sort_values(by=["Lap"])
-        agent_df.to_csv(self.path + f"Results_{self.log_name}.csv", index=False, float_format='%.4f')
+        if self.training:
+            file_name = self.path + f"TrainingData_{self.log_name}.csv"
+        else:
+            file_name = self.path + f"Results_{self.log_name}.csv"
+
+        agent_df.to_csv(file_name, index=False, float_format='%.4f')
 
 
 class F1TenthSim(F1TenthSimBase):
-    def __init__(self, map_name, log_name, save_detail_history=True):
-        super().__init__(map_name, log_name, save_detail_history)
+    def __init__(self, map_name, log_name, save_detail_history=True, training=False):
+        super().__init__(map_name, log_name, save_detail_history, training)
         init_pose = np.append(self.current_state[0:2], self.current_state[4])
         self.scan = self.scan_simulator.scan(init_pose)
  
@@ -146,8 +151,8 @@ class F1TenthSim(F1TenthSimBase):
         return observation
 
 class F1TenthSim_TrueLocation(F1TenthSimBase):
-    def __init__(self, map_name, log_name, save_detail_history=True):
-        super().__init__(map_name, log_name, save_detail_history)
+    def __init__(self, map_name, log_name, save_detail_history=True, training=False):
+        super().__init__(map_name, log_name, save_detail_history, training)
         init_pose = np.append(self.current_state[0:2], self.current_state[4])
         self.scan = self.scan_simulator.scan(init_pose)
     

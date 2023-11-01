@@ -5,7 +5,6 @@ def run_simulation_loop_laps(env, planner, n_laps):
         while not done:
             action = planner.plan(observation)
             observation, done = env.step(action)
-    env.save_data_frame()
 
 
 def run_training_loop_steps(env, planner, steps):
