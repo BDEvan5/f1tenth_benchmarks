@@ -14,7 +14,6 @@ class RaceTrack:
 
     def load_racetrack(self, map_name):
         filename = "racelines/" + map_name + "_raceline.csv"
-        # filename = os.path.realpath(os.path.dirname(__file__)) + "/" + map_name + "_raceline.csv"
         track = np.loadtxt(filename, delimiter=',', skiprows=1)
 
         self.raceline = track[:, 1:3]

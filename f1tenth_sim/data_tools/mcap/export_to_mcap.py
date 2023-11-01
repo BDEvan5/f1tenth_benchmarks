@@ -10,7 +10,7 @@ from PIL import Image
 
 import base64
 
-vehicle_name = "pp_traj_following"
+vehicle_name = "MPCC"
 # map_name = "esp"
 map_name = "aut"
 file_name = f"Logs/{vehicle_name}/test_{map_name}.mcap"
@@ -53,7 +53,7 @@ import os
 import trajectory_planning_helpers as tph
 class Trajectory:
     def __init__(self, map_name) -> None:
-        filename = f"f1tenth_sim/racing_methods/planning/pp_traj_following/" + map_name + "_raceline.csv"
+        filename = f"racelines/" + map_name + "_raceline.csv"
         self.track = np.loadtxt(filename, delimiter=',', skiprows=1)
 
 class TrackPath:
@@ -106,8 +106,11 @@ def load_agent_test_data(file_name):
     data = np.load(file_name)
     return data[:, :7], data[:, 7:]
 
-states, actions = load_agent_test_data(f"Logs/{vehicle_name}/SimLog_{map_name}_0.npy")
-scans = np.load(f"Logs/{vehicle_name}/ScanLog_{map_name}_0.npy")
+states, actions = load_agent_test_data(f"Logs/{vehicle_name}/RawData/SimLog_{map_name}_0.npy")
+try:
+    scans = np.load(f"Logs/{vehicle_name}/ScanLog_{map_name}_0.npy")
+except:
+    scans = None
 map_data = MapData(map_name)
 traj_data = Trajectory(map_name)
 track_data = TrackPath(map_name)
@@ -209,15 +212,16 @@ with open(file_name, "wb") as stream:
         tf["rotation"] = {"x": 0, "y": 0, "z": np.sin(states[i, 4]/2), "w": np.cos(states[i, 4]/2)}
         publish_message(writer, tf_channel_id, tf, time)
 
-        scan_msg = {"frame_id": "map"}
-        scan_msg["timestamp"] = {"sec": time_in_s, "nsec": time_in_ns}
-        scan_msg["start_angle"] = -2.35
-        scan_msg["end_angle"] = 2.35
-        # scan_msg["ranges"] = base64.b64encode(scans[i]).decode("utf-8")
-        scan_msg["ranges"] = scans[i].tolist()
-        scan_msg["pose"] = {"position": {"x": states[i, 0], "y": states[i, 1], "z": 0},
-            "orientation": {"x": 0, "y": 0, "z": np.sin(states[i, 4]/2), "w": np.cos(states[i, 4]/2)}}
-        publish_message(writer, scan_channel_id, scan_msg, time)
+        if scans is not None:
+            scan_msg = {"frame_id": "map"}
+            scan_msg["timestamp"] = {"sec": time_in_s, "nsec": time_in_ns}
+            scan_msg["start_angle"] = -2.35
+            scan_msg["end_angle"] = 2.35
+            # scan_msg["ranges"] = base64.b64encode(scans[i]).decode("utf-8")
+            scan_msg["ranges"] = scans[i].tolist()
+            scan_msg["pose"] = {"position": {"x": states[i, 0], "y": states[i, 1], "z": 0},
+                "orientation": {"x": 0, "y": 0, "z": np.sin(states[i, 4]/2), "w": np.cos(states[i, 4]/2)}}
+            publish_message(writer, scan_channel_id, scan_msg, time)
 
     writer.finish()
 

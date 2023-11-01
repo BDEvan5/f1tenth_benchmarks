@@ -160,6 +160,7 @@ class F1TenthSim_TrueLocation(F1TenthSimBase):
         self.scan = self.scan_simulator.scan(pose)
         observation = {"scan": self.scan,
                 "vehicle_state": self.dynamics_simulator.state,
+                "pose": np.append(self.current_state[0:2], self.current_state[4]),
                 "vehicle_speed": self.dynamics_simulator.state[3],
                 "collision": self.collision,
                 "lap_complete": self.lap_complete,

@@ -1,5 +1,6 @@
 from f1tenth_sim.simulator import F1TenthSim_TrueLocation 
 from f1tenth_sim.classic_racing.PurePursuit import PurePursuit
+from f1tenth_sim.classic_racing.MPCC import MPCC
 import numpy as np
 from f1tenth_sim.data_tools.calculate_tracking_accuracy import calculate_tracking_accuracy
 from f1tenth_sim.data_tools.plot_raceline_tracking import plot_raceline_tracking
@@ -15,7 +16,8 @@ def run_simulation_loop_laps(env, planner, n_laps):
 
 
 def run_planning_tests(planner):
-    map_list = ["aut", "esp", "gbr", "mco"]
+    # map_list = ["aut", "esp", "gbr", "mco"]
+    map_list = ["aut"]
     for map_name in map_list:
         print(f"Testing on {map_name}...")
         simulator = F1TenthSim_TrueLocation(map_name, planner.name)
@@ -30,8 +32,11 @@ def run_planning_tests(planner):
 
 
 
+
+
 if __name__ == "__main__":
-    run_planning_tests(PurePursuit())
+    # run_planning_tests(PurePursuit())
+    run_planning_tests(MPCC())
 
     # run_tuning_tests()
     # run_tuning_tests2()
