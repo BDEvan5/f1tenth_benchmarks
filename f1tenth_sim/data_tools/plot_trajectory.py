@@ -4,7 +4,6 @@ plt.rcParams['pdf.use14corefonts'] = True
 import numpy as np
 import glob
 import os
-import math, cmath
 
 import glob
 from matplotlib.ticker import PercentFormatter
@@ -57,21 +56,15 @@ class TrajectoryPlotter:
 
             if not self.load_lap_data(): break # no more laps
             
-            # self.plot_analysis()
-            # self.plot_tracking_accuracy()
-            # self.plot_trajectory()
-            self.plot_tracking_path()
-            # self.plot_steering_profile()    
+            self.plot_analysis()
+            self.plot_trajectory()
 
     def load_lap_data(self):
         data = np.load(f"{self.test_folder}SimLog_{self.test_log_key}.npy")
         self.states = data[:, :7]
-        self.actions = data[:, 7:]
+        self.actions = data[:, 7:9]
+        self.track_progresses = data[:, 9]
 
-        accuracy_data = np.load(f"{self.test_folder}TrackingAccuracy_{self.test_log_key}.npy")
-        self.track_progresses = accuracy_data[:, 0] * 100
-        self.tracking_accuracy = accuracy_data[:, 1] * 100
-        
         return 1 # to say success
     
 
@@ -120,7 +113,7 @@ class TrajectoryPlotter:
 
         norm = plt.Normalize(0, 8)
         lc = LineCollection(segments, cmap='jet', norm=norm)
-        lc.set_array(self.tracking_accuracy)
+        lc.set_array(vs)
         lc.set_linewidth(5)
         line = plt.gca().add_collection(lc)
         cbar = plt.colorbar(line,fraction=0.046, pad=0.04, shrink=0.99)
@@ -136,73 +129,7 @@ class TrajectoryPlotter:
         # std_img_saving(name)
         plt.savefig(name + ".svg", bbox_inches='tight', pad_inches=0)
         plt.savefig(name + ".pdf", bbox_inches='tight', pad_inches=0)
-    
-    def plot_tracking_path(self): 
-        plt.figure(1)
-        plt.clf()
-        points = self.states[:, 0:2]
-        
-        self.map_data.plot_map_img()
 
-        xs, ys = self.map_data.pts2rc(points)
-        plt.plot(xs, ys, color=sunset_orange, alpha=0.6, linewidth=0.2)
-
-        xs, ys = self.map_data.xy2rc(self.map_data.xs, self.map_data.ys)
-        plt.plot(xs, ys, color=periwinkle, alpha=0.6, linewidth=0.2)
-
-        plt.gca().set_aspect('equal', adjustable='box')
-
-        plt.xticks([])
-        plt.yticks([])
-        plt.tight_layout()
-        plt.axis('off')
-        
-        name = self.test_folder + f"TrackingAccuracy_{self.test_log_key}"
-        # std_img_saving(name)
-        plt.savefig(name + ".svg", bbox_inches='tight', pad_inches=0)
-        # plt.savefig(name + ".pdf", bbox_inches='tight', pad_inches=0)
-
-    def plot_steering_profile(self):
-        plt.figure(figsize=(7, 2))
-        plt.clf()
-        plt.plot(self.track_progresses[:-1], self.states[:-1, 2], label="State", color=periwinkle)
-        plt.plot(self.track_progresses[:-1], self.actions[:-1, 0], label="Actions", color=sunset_orange)
-        max_value = np.max(np.abs(self.actions[:-1, 0])) * 1.1
-        plt.ylim(-max_value, max_value)
-        plt.grid(True)
-        plt.legend()
-        plt.ylabel("Steering (rad)")
-
-        plt.savefig(f"{self.test_folder}Steering_{self.test_log_key}.png", bbox_inches='tight', pad_inches=0)
-
-    def plot_tracking_accuracy(self):
-            
-        plt.figure(1, figsize=(10, 5))
-        plt.clf()
-        plt.plot(self.track_progresses, self.tracking_accuracy)
-        
-        plt.ylim(0, 15)
-        plt.title("Tracking Accuracy (cm)")
-        plt.xlabel("Track Progress (%)")
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig(f"{self.test_folder}Tracking_{self.test_log_key}.svg", bbox_inches='tight', pad_inches=0)
-
-            
-        plt.figure(1, figsize=(5, 4))
-        plt.clf()
-        bins = np.linspace(0, 10, 20)
-
-        plt.hist(self.tracking_accuracy, bins=bins)
-        plt.ylim(0, 4000)
-        
-        plt.xlabel("Tracking Accuracy (cm)")
-        plt.ylabel("Frequency")
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig(f"{self.test_folder}TrackingHist_{self.test_log_key}.svg", bbox_inches='tight', pad_inches=0)
-
-        
 
 def plot_analysis(vehicle_name):
     TestData = TrajectoryPlotter()
@@ -211,14 +138,6 @@ def plot_analysis(vehicle_name):
 
 
 
-def analyse_folder():
-    
-    TestData = TrajectoryPlotter()
-    # TestData.explore_folder("Data/")
-
-    # TestData.process_folder("Logs/TestMPCC/")
-    TestData.process_folder("Logs/TunePointsMPCC/")
-
-
 if __name__ == '__main__':
-    analyse_folder()
+    # analyse_folder()
+    plot_analysis("PurePursuit")

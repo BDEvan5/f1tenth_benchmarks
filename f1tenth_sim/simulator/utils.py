@@ -40,19 +40,22 @@ class SimulatorHistory:
         self.states = []
         self.actions = []
         self.scans = []
+        self.progresses = []
 
     def set_map_name(self, map_name):
         self.map_name = map_name
     
-    def add_memory_entry(self, state, action, scan):
+    def add_memory_entry(self, state, action, scan, progress):
         self.states.append(state)
         self.actions.append(action)
         self.scans.append(scan)
+        self.progresses.append(progress)
     
     def save_history(self):
         states = np.array(self.states)
         actions = np.array(self.actions)
-        lap_history = np.concatenate((states, actions), axis=1)
+        progresses = np.array(self.progresses)[:, None]
+        lap_history = np.concatenate((states, actions, progresses), axis=1)
         
         np.save(self.path + f"SimLog_{self.map_name}_{self.lap_n}.npy", lap_history)
 

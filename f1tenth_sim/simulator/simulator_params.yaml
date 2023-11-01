@@ -1,6 +1,6 @@
 random_seed: 12345 
 
-n_sim_steps: 5
+n_sim_steps: 4
 timestep: 0.01
 
 fov: 4.7

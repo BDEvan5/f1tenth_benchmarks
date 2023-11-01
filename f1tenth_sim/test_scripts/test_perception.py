@@ -2,7 +2,7 @@ from f1tenth_sim.simulator import F1TenthSim_TrueLocation
 from f1tenth_sim.racing_methods.planning.pp_traj_following.PpTrajectoryFollower import PpTrajectoryFollower
 from f1tenth_sim.racing_methods.full_stack.particle_filter import ParticleFilter
 import numpy as np
-from f1tenth_sim.data_tools.TrackingAccuracy import calculate_tracking_accuracy
+from f1tenth_sim.data_tools.calculate_tracking_accuracy import calculate_tracking_accuracy
 from f1tenth_sim.data_tools.plot_trajectory_analysis import plot_trajectory_analysis
 
 

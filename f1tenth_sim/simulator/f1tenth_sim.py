@@ -7,7 +7,7 @@ import yaml
 from argparse import Namespace
 import numpy as np
 import pandas as pd
-import os
+import os, datetime
 
 class F1TenthSimBase:
     def __init__(self, map_name, log_name, save_detail_history=True):
@@ -33,7 +33,10 @@ class F1TenthSimBase:
         self.total_steps = 0
 
         self.history = None
-        self.lap_history = []
+        if os.path.exists(self.path + f"Results_{self.log_name}.csv"):
+            self.lap_history = pd.read_csv(self.path + f"Results_{self.log_name}.csv").to_dict('records')
+        else:
+            self.lap_history = []
         if save_detail_history:
             self.history = SimulatorHistory(log_name)
             self.history.set_map_name(map_name)
@@ -41,7 +44,7 @@ class F1TenthSimBase:
 
     def step(self, action):
         if self.history is not None:
-            self.history.add_memory_entry(self.current_state, action, self.scan)
+            self.history.add_memory_entry(self.current_state, action, self.scan, self.progress)
 
         mini_i = self.params.n_sim_steps
         while mini_i > 0:
@@ -57,7 +60,8 @@ class F1TenthSimBase:
         
         done = self.collision or self.lap_complete
         if done:
-            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.log_name, "Progress": self.progress, "Time": self.current_time, "Steps": self.total_steps})
+            dt = datetime.datetime.now() 
+            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.log_name, "Progress": self.progress, "Time": self.current_time, "Steps": self.total_steps, "RecordTime": dt})
             self.save_data_frame()
             if self.history is not None: self.history.save_history()
 
@@ -110,6 +114,7 @@ class F1TenthSimBase:
         self.current_time = 0.0
         action = np.zeros(2)
         obs, done = self.step(action)
+        self.progress = 0
 
         self.lap_number += 1
         
@@ -118,7 +123,7 @@ class F1TenthSimBase:
     def save_data_frame(self):
         agent_df = pd.DataFrame(self.lap_history)
         agent_df = agent_df.sort_values(by=["Lap"])
-        agent_df.to_csv(self.path + f"Results_{self.map_name}.csv", index=False, float_format='%.4f')
+        agent_df.to_csv(self.path + f"Results_{self.log_name}.csv", index=False, float_format='%.4f')
 
 
 class F1TenthSim(F1TenthSimBase):

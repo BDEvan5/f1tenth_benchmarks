@@ -16,7 +16,6 @@ class TrackingAccuracy:
         racetrack = np.loadtxt(filename, delimiter=',', skiprows=1)
         self.wpts = racetrack[:, 1:3]
 
-
         self.el_lengths = np.linalg.norm(np.diff(self.wpts, axis=0), axis=1)
         self.s_track = np.insert(np.cumsum(self.el_lengths), 0, 0)
         self.total_s = self.s_track[-1]
@@ -64,7 +63,6 @@ def dist_to_p(t_glob: np.ndarray, path: list, p: np.ndarray):
     return distance.euclidean(p, s)
 
 
-
 def load_agent_test_data(file_name):
     data = np.load(file_name)
     
@@ -74,10 +72,8 @@ def load_agent_test_data(file_name):
 def calculate_tracking_accuracy(vehicle_name):
     agent_path = f"Logs/{vehicle_name}/"
     print(f"Vehicle name: {vehicle_name}")
+    old_df = pd.read_csv(agent_path + f"Results_{vehicle_name}.csv")
 
-    results = []
-    values = np.linspace(0.4, 2, 17)
-    
     testing_logs = glob.glob(f"{agent_path}Sim*.npy")
     if len(testing_logs) == 0: raise ValueError("No logs found")
     for test_log in testing_logs:
@@ -94,34 +90,17 @@ def calculate_tracking_accuracy(vehicle_name):
         states, actions = load_agent_test_data(test_log)
 
         progresses, cross_track = std_track.calculate_tracking_accuracy(states[:, 0:2]) 
-        df = {"Lap": lap_num, "LhD": values[lap_num], "MaxProgress": progresses[-1], "MeanCT": np.mean(cross_track), "MaxCT": np.max(cross_track)}
-        results.append(df)
+        df_idx = old_df.loc[(old_df["Lap"] == lap_num) & (old_df["TestMap"] == testing_map)].index[0]
+        old_df.at[df_idx, "MeanCT"] = np.mean(cross_track)
+        old_df.at[df_idx, "MaxCT"] = np.max(cross_track)
 
         save_data = np.column_stack((progresses, cross_track))
         np.save(file_name, save_data)
 
-
-        # discrete_data = np.digitize(cross_track, states[:, 3])
-
-        plt.figure()
-        # plt.hist()
-        plt.scatter(states[:, 3], cross_track)
-        plt.plot(states[:, 3], cross_track, alpha=0.5)
-
-        plt.xlabel("Speed (m/s)")
-        plt.ylim([0, 0.8])
-        plt.ylabel("Cross Track Error (m)")
-        plt.title(f"{test_folder_name} --> {values[lap_num]}")
-
-        plt.savefig(f"{agent_path}CTvsSpeed_{test_log_key}.svg")
-
-    results_df = pd.DataFrame(results)
-    results_df = results_df.sort_values(by=["Lap"])
-    results_df.to_csv(f"{agent_path}Results_{vehicle_name}.csv", index=False, float_format='%.4f')
+    old_df = old_df.sort_values(by=["TestMap", "Lap"])
+    old_df.to_csv(f"{agent_path}Results_{vehicle_name}.csv", index=False, float_format='%.4f')
 
 
 if __name__ == "__main__":
-    # calculate_tracking_accuracy("TunePointsMPCC2")
-    # calculate_tracking_accuracy("PpTuning")
-    calculate_tracking_accuracy("PpTuning2")
+    calculate_tracking_accuracy("PurePursuit")
 
