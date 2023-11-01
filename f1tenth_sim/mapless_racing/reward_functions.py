@@ -14,8 +14,8 @@ class PurePursuit:
     def __init__(self, map_name):
         self.racetrack = RaceTrack(map_name)
         self.counter = 0
-        self.constant_lookahead = 0.5
-        self.variable_lookahead = 0.18
+        self.constant_lookahead = 0.4
+        self.variable_lookahead = 0.1
 
     def plan(self, obs):
         state = obs["vehicle_state"]
@@ -29,7 +29,7 @@ class PurePursuit:
         speed_raceline, steering_angle = get_actuation(state[4], lookahead_point, state[:2], lookahead_distance, WHEELBASE)
         steering_angle = np.clip(steering_angle, -MAX_STEER, MAX_STEER)
             
-        speed = min(speed_raceline, MAX_SPEED) *0.75 # ! remove..... cap the speed
+        speed = min(speed_raceline, MAX_SPEED) 
         action = np.array([steering_angle, speed])
 
         return action

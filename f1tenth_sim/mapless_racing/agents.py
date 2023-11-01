@@ -14,7 +14,8 @@ def create_train_agent(state_dim, algorithm):
     
     return agent
     
-def create_test_agent(filename, directory, algorithm):
+def create_test_agent(filename, directory):
+    algorithm = filename.split("_")[0]
     if algorithm == "TD3":
         agent = TestTD3(filename, directory)
     elif algorithm == "SAC":

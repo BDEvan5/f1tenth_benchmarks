@@ -14,8 +14,8 @@ def seed_randomness(random_seed):
 def train_agents():
     seed_randomness(1)
     map_name = "mco"
-    algorithm = "TD3"
-    # algorithm = "SAC"
+    # algorithm = "TD3"
+    algorithm = "SAC"
     agent_name = f"{algorithm}_endToEnd_2"
     training_steps = 40000
 

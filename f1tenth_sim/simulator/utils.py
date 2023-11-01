@@ -67,6 +67,7 @@ class SimulatorHistory:
             scans = np.array(self.scans)
             np.save(self.path + f"ScanLog_{self.map_name}_{self.lap_n}.npy", scans)
 
+        self.progresses = []
         self.states = []
         self.actions = []
         self.lap_n += 1
