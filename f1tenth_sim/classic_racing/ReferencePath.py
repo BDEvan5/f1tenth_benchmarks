@@ -24,10 +24,12 @@ class ReferencePath:
         self.center_lut_x, self.center_lut_y = self.get_interpolated_path_casadi('lut_center_x', 'lut_center_y', self.path, self.s_track)
         self.angle_lut_t = self.get_interpolated_heading_casadi('lut_angle_t', self.psi, self.s_track)
 
-        left_path = self.path - self.nvecs * (self.track[:, 2][:, None]  - w)
-        right_path = self.path + self.nvecs * (self.track[:, 3][:, None] - w)
-        self.left_lut_x, self.left_lut_y = self.get_interpolated_path_casadi('lut_left_x', 'lut_left_y', left_path, self.s_track)
-        self.right_lut_x, self.right_lut_y = self.get_interpolated_path_casadi('lut_right_x', 'lut_right_y', right_path, self.s_track)
+        self.left_path = self.path - self.nvecs * np.clip((self.track[:, 2][:, None]  - w), 0, np.inf)
+        self.right_path = self.path + self.nvecs * np.clip((self.track[:, 3][:, None] - w), 0, np.inf)
+        self.left_lut_x, self.left_lut_y = self.get_interpolated_path_casadi('lut_left_x', 'lut_left_y', self.left_path, self.s_track)
+        self.right_lut_x, self.right_lut_y = self.get_interpolated_path_casadi('lut_right_x', 'lut_right_y', self.right_path, self.s_track)
+
+        # self.plot_path()
 
     def init_path(self):
         filename = 'maps/' + self.map_name + '_centerline.csv'
@@ -48,7 +50,7 @@ class ReferencePath:
             elif angle_diffs[i] < -np.pi:
                 self.psi[i+1:] += 2*np.pi
 
-        self.nvecs = tph.calc_normal_vectors_ahead.calc_normal_vectors_ahead(self.psi-np.pi/2)
+        self.nvecs = tph.calc_normal_vectors_ahead.calc_normal_vectors_ahead(self.psi)
 
         self.track_length = self.s_track[-1]
 
@@ -107,8 +109,10 @@ class ReferencePath:
         # plt.plot(self.right_lut_x(self.s_track), self.right_lut_y(self.s_track), label="right", color='green', alpha=0.7)
 
         plt.plot(self.path[:, 0], self.path[:, 1], label="center", color='blue', alpha=0.7)
+        plt.plot(self.left_path[:, 0], self.left_path[:, 1], label="center", color='blue', alpha=0.7)
+        plt.plot(self.right_path[:, 0], self.right_path[:, 1], label="center", color='blue', alpha=0.7)
 
-        # plt.show()
+        plt.show()
 
 
     def plot_angles(self):

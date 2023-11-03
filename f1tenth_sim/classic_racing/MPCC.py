@@ -14,23 +14,7 @@ VERBOSE = False
 WAIT_FOR_USER = False
 # WAIT_FOR_USER = True
 
-L = 0.33
-GRAVITY = 9.81 
-MASS = 3.71
-MU = 0.8
-F_MAX = 1 * GRAVITY * MASS * MU
-MAX_ACCELERATION = 8
-
-
-WEIGHT_PROGRESS = 0.01
-WEIGHT_LAG = 10
-WEIGHT_CONTOUR = 20
-WEIGHT_STEER = 50
-WEIGHT_STEER_CHANGE = 0
-WEIGHT_SPEED_CHANGE = 0
-
 np.printoptions(precision=2, suppress=True)
-
 
 def normalise_psi(psi):
     while psi > np.pi:
@@ -39,29 +23,41 @@ def normalise_psi(psi):
         psi += 2*np.pi
     return psi
 
+GRAVITY = 9.81 
+
+WEIGHT_PROGRESS = 0.001
+WEIGHT_LAG = 10
+WEIGHT_CONTOUR = 20
+WEIGHT_STEER = 100
 NX = 4
 NU = 3
 
 p = {
     "position_min": -100,
     "position_max": 100,
-    "heading_max": 10,
+    "heading_max": 20,
     "delta_max": 0.4,
-    "local_path_max_length": 200,
+    "local_path_max_length": 300,
     "max_speed": 8,
     "min_speed": 2,
     "local_path_speed_min": 2,
     "local_path_speed_max": 10,
-    "max_v_dot": 0.04*8
+    "max_v_dot": 0.04*6,
+    "wheelbase": 0.33,
+    "friction_mu": 0.7,
+    "vehicle_mass": 3.71,
 }
 p = Namespace(**p)
+
+F_MAX = GRAVITY * p.vehicle_mass * p.friction_mu
+
 
 class MPCC:
     def __init__(self):
         self.name = "MPCC"
         self.rp = None
         self.rt = None
-        self.dt = 0.05
+        self.dt = 0.04
         self.N = 20 # number of steps to predict
         self.p_initial = 5
         self.g, self.obj = None, None
@@ -74,7 +70,7 @@ class MPCC:
         self.init_constraints()
     
     def set_map(self, map_name):
-        self.rp = ReferencePath(map_name)
+        self.rp = ReferencePath(map_name, 0.4)
         self.rt = RaceTrack(map_name)
 
         self.init_objective()
@@ -87,7 +83,7 @@ class MPCC:
 
         rhs = ca.vertcat(controls[1] * ca.cos(states[2]), 
                          controls[1] * ca.sin(states[2]), 
-                         (controls[1] / L) * ca.tan(controls[0]), 
+                         (controls[1] / p.wheelbase) * ca.tan(controls[0]), 
                          controls[2])  # dynamic equations of the states
 
         self.f = ca.Function('f', [states, controls], [rhs])  # nonlinear mapping function f(x,u)
@@ -107,25 +103,18 @@ class MPCC:
 
         for k in range(self.N):
             st_next = self.X[:, k + 1]
-            con = self.U[:, k]
-            
             t_angle = self.rp.angle_lut_t(st_next[3])
-            ref_x, ref_y = self.rp.center_lut_x(st_next[3]), self.rp.center_lut_y(st_next[3])
-            #Contouring error
-            e_c = ca.sin(t_angle) * (st_next[0] - ref_x) - ca.cos(t_angle) * (st_next[1] - ref_y)
-            #Lag error
-            e_l = -ca.cos(t_angle) * (st_next[0] - ref_x) - ca.sin(t_angle) * (st_next[1] - ref_y)
-
-            self.obj = self.obj + e_c **2 * WEIGHT_CONTOUR  
-            self.obj = self.obj + e_l **2 * WEIGHT_LAG
-            self.obj = self.obj - con[2] * WEIGHT_PROGRESS 
-            self.obj = self.obj + (con[0]) ** 2 * WEIGHT_STEER  # minimize the use of steering input
-
-            if k != 0: 
-                self.obj = self.obj + (con[0] - self.U[0, k - 1]) ** 2 * WEIGHT_STEER_CHANGE  # minimize the change of steering input
-                self.obj = self.obj + (con[1] - self.U[1, k - 1]) ** 2 * WEIGHT_SPEED_CHANGE  # 
+            delta_x = st_next[0] - self.rp.center_lut_x(st_next[3])
+            delta_y = st_next[1] - self.rp.center_lut_y(st_next[3])
             
-        
+            contouring_error = ca.sin(t_angle) * delta_x - ca.cos(t_angle) * delta_y 
+            lag_error = -ca.cos(t_angle) * delta_x - ca.sin(t_angle) * delta_y 
+
+            self.obj = self.obj + contouring_error **2 * WEIGHT_CONTOUR  
+            self.obj = self.obj + lag_error **2 * WEIGHT_LAG
+            self.obj = self.obj - self.U[2, k] * WEIGHT_PROGRESS # maximise progress speed
+            self.obj = self.obj + (self.U[0, k]) ** 2 * WEIGHT_STEER  # minimize steering input
+
     def init_bounds(self):
         self.g = []  # constraints vector
         self.g = ca.vertcat(self.g, self.X[:, 0] - self.P[:NX])  # initial condition constraints
@@ -134,49 +123,33 @@ class MPCC:
             st_next = self.X[:, k + 1]
             con = self.U[:, k]
 
-            # Vehicle dynamics constraints
-            k1 = self.f(st, con)
-            st_next_euler = st + (self.dt * k1)
-            self.g = ca.vertcat(self.g, st_next - st_next_euler)  # compute constraints
+            st_next_euler = st + (self.dt * self.f(st, con)) # Vehicle dynamics constraints
+            self.g = ca.vertcat(self.g, st_next - st_next_euler)  
 
-            # path boundary constraints
-            self.g = ca.vertcat(self.g, self.P[NX + 2 * k] * st_next[0] - self.P[NX + 2 * k + 1] * st_next[1])  # LB<=ax-by<=UB  --represents half space planes
-
-            # frictional constraint
-            force_lateral = con[1] **2 / L * ca.tan(ca.fabs(con[0])) *  MASS
-            self.g = ca.vertcat(self.g, force_lateral)
+            self.g = ca.vertcat(self.g, self.P[NX + 2 * k] * st_next[0] - self.P[NX + 2 * k + 1] * st_next[1])  # path boundary constraints
+            
+            force_lateral = con[1] **2 / p.wheelbase * ca.tan(ca.fabs(con[0])) *  p.vehicle_mass
+            self.g = ca.vertcat(self.g, force_lateral) # frictional constraint
 
             if k == 0: 
-                self.g = ca.vertcat(self.g, ca.fabs(con[1] - self.P[-1]))
+                self.g = ca.vertcat(self.g, ca.fabs(con[1] - self.P[-1])) # ensure initial speed matches current speed
             else:
-                self.g = ca.vertcat(self.g, ca.fabs(con[1] - self.U[1, k - 1]))  # prevent velocity change from being too abrupt
-
+                self.g = ca.vertcat(self.g, ca.fabs(con[1] - self.U[1, k - 1]))  # limit decceleration
 
     def init_solver(self):
-        opts = {}
-        opts["ipopt"] = {}
-        opts["ipopt"]["max_iter"] = 1000
-        opts["ipopt"]["acceptable_tol"] = 1e-8
-        opts["ipopt"]["acceptable_obj_change_tol"] = 1e-6
-        opts["ipopt"]["fixed_variable_treatment"] = "make_parameter"
-        opts["ipopt"]["print_level"] = 0
-        opts["print_time"] = 0
-        
-        OPT_variables = ca.vertcat(ca.reshape(self.X, NX * (self.N + 1), 1),
+        variables = ca.vertcat(ca.reshape(self.X, NX * (self.N + 1), 1),
                                 ca.reshape(self.U, NU * self.N, 1))
-
-        nlp_prob = {'f': self.obj, 'x': OPT_variables, 'g': self.g, 'p': self.P}
+        nlp_prob = {'f': self.obj, 'x': variables, 'g': self.g, 'p': self.P}
+        opts = {"ipopt": {"max_iter": 1000, "print_level": 0}, "print_time": 0}
         self.solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts)
 
     def prepare_input(self, obs):
-        x0 = obs["pose"]
+        x0 = np.append(obs["pose"], self.rp.calculate_s(obs["pose"][0:2]))
         x0[2] = normalise_psi(x0[2]) 
 
-        x0 = np.append(x0, self.rp.calculate_s(x0[0:2]))
-        x0[3] = self.filter_estimate(x0[3])
-        vehicle_speed = obs["vehicle_speed"]
+        x0[3] = self.filter_estimate(x0[3]) # I think that I can remove this???
 
-        return x0, vehicle_speed
+        return x0, obs["vehicle_speed"]
 
     def plan(self, obs):
         x0, vehicle_speed = self.prepare_input(obs)
@@ -187,117 +160,24 @@ class MPCC:
             self.warm_start = True
             p = self.generate_constraints_and_parameters(x0, vehicle_speed)
             states, controls, solved_status = self.solve(p)
-            if VERBOSE:
+            if not solved_status:
                 print(f"Solve failed: ReWarm Start: New outcome: {solved_status}")
+                print(f"S:{x0[3]:2f} --> Action: {controls[0, 0:2]}")
+                return np.array([0, 1])
 
-        s = states[:, 3]
-        s = [s[k] if s[k] < self.rp.track_length else s[k] - self.rp.track_length for k in range(self.N+1)]
-        c_pts = [[self.rp.center_lut_x(states[k, 3]).full()[0, 0], self.rp.center_lut_y(states[k, 3]).full()[0, 0]] for k in range(self.N + 1)]
-
-        first_control = controls[0, :]
-        action = first_control[0:2]
+        action = controls[0, 0:2]
         if VERBOSE:
             print(f"S:{x0[3]:2f} --> Action: {action}")
-            if not solved_status:
-                plt.show()
+            self.plot_vehicle_position(x0, states, controls)
+            self.plot_vehicle_controls(p, controls)
+            if  WAIT_FOR_USER: plt.show()
 
-        if VERBOSE:
-            self.rp.plot_path()
-            plt.figure(2)
-            points = states[:, 0:2].reshape(-1, 1, 2)
-            segments = np.concatenate([points[:-1], points[1:]], axis=1)
-            norm = plt.Normalize(0, 8)
-            lc = LineCollection(segments, cmap='jet', norm=norm)
-            lc.set_array(controls[:, 1])
-            lc.set_linewidth(4)
-            line = plt.gca().add_collection(lc)
-            plt.colorbar(line, fraction=0.046, pad=0.04, shrink=0.99)
-
-            # plt.plot(states[:, 0], states[:, 1], '-o', color='red')
-            for i in range(self.N + 1):
-                xs = [states[i, 0], c_pts[i][0]]
-                ys = [states[i, 1], c_pts[i][1]]
-                plt.plot(xs, ys, '--', color='orange')
-
-            size = 12
-            plt.xlim([x0[0] - size, x0[0] + size])
-            plt.ylim([x0[1] - size, x0[1] + size])
-            plt.pause(0.001)
-
-            # if not solved_status:
-            #     plt.show()
-
-        if VERBOSE:
-            fig, axs = plt.subplots(5, 1, num=3, clear=True, figsize=(8, 15))
-            axs[0].plot(controls[:, 0], '-o', color='red')
-            axs[0].set_ylabel('Steering Angle')
-            axs[0].set_ylim([-0.5, 0.5])
-            axs[0].grid(True)
-            # axs[0].set_title(f"Speed: {fs[3]:2f}")
-
-            axs[1].plot(controls[:, 1], '-o', color='red')
-            # vs = self.rt.get_interpolated_vs(states[:, 3])
-            # axs[1].plot(vs, '-o', color='blue')
-            axs[1].set_ylabel('Speed')
-            axs[1].set_ylim([0, 9])
-            axs[1].grid(True)
-
-            forces = [controls[k, 1] **2 / L * ca.tan(ca.fabs(controls[k, 0])) *  MASS for k in range(self.N)]
-            axs[2].plot(forces, '-o', color='red')
-            axs[2].set_ylabel('Lateral Force')
-            axs[2].set_ylim([0, 40])
-            axs[2].grid(True)
-
-
-            axs[3].plot(controls[:, 2], '-o', color='red')
-            axs[3].set_ylabel('Centerline \nSpeed')
-            axs[3].set_ylim([0, 9])
-            axs[3].grid(True)
-
-            dv = np.diff(controls[:, 1])
-            # dv = np.insert(dv, 0, controls[0, 1]- fs[3])
-            # dv = np.insert(0, fs[3] - controls[0, 1])
-
-            axs[4].plot(dv, '-o', color='red')
-            axs[4].set_ylabel('Acceleration')
-            # axs[4].set_ylim([-2, 2])
-            axs[4].grid(True)
-
-            plt.pause(0.001)
-            # plt.pause(0.1)
-
-            # if action[1] < 4:
-            #     plt.show()
-
-        if VERBOSE and False:
-            plt.figure(4)
-            plt.clf()
-            plt.plot(self.rp.center_lut_x(self.rp.s_track), self.rp.center_lut_y(self.rp.s_track), label="center", color='green', alpha=0.7)
-            plt.plot(self.rp.left_lut_x(self.rp.s_track), self.rp.left_lut_y(self.rp.s_track), label="left", color='green', alpha=0.7)
-            plt.plot(self.rp.right_lut_x(self.rp.s_track), self.rp.right_lut_y(self.rp.s_track), label="right", color='green', alpha=0.7)
-
-            plt.plot(states[:, 0], states[:, 1], '-o', color='red')
-            # plt.plot(c_pts[:, 0], c_pts[:, 1], '-o', color='blue')
-            # plt.plot(x0[0], x0[1], 'x', color='green')
-            plt.plot(self.rt.wpts[:, 0], self.rt.wpts[:, 1], color='blue')
-
-            size = 12
-            plt.xlim([x0[0] - size, x0[0] + size])
-            plt.ylim([x0[1] - size, x0[1] + size])
-            plt.pause(0.001)
-
-
-        if VERBOSE and WAIT_FOR_USER:
-            plt.show()
-
-
-        return action # return the first control action
+        return action 
 
     def generate_constraints_and_parameters(self, x0_in, x0_speed):
         self.lbg, self.ubg = np.zeros((self.g.shape[0], 1)), np.zeros((self.g.shape[0], 1))
         if self.warm_start:
-            if VERBOSE:
-                print(f"Warm starting with condition: {x0_in}")
+            if VERBOSE: print(f"Warm starting with condition: {x0_in}")
             self.construct_warm_start_soln(x0_in) 
 
         pp = np.zeros(NX + 2 * self.N + 1)
@@ -314,12 +194,11 @@ class MPCC:
             delta_y_path = right_point[1] - left_point[1]
             pp[NX + 2 * k:NX + 2 * k + 2] = [-delta_x_path, delta_y_path]
 
-            up_bound = max(-delta_x_path * right_point[0] - delta_y_path * right_point[1],
-                           -delta_x_path * left_point[0] - delta_y_path * left_point[1])
-            low_bound = min(-delta_x_path * right_point[0] - delta_y_path * right_point[1],
-                            -delta_x_path * left_point[0] - delta_y_path * left_point[1])
-            self.lbg[NX - 3 + (NX + 3) * (k + 1), 0] = low_bound # check this, there could be an error
-            self.ubg[NX - 3 + (NX + 3) * (k + 1), 0] = up_bound
+            right_bound = -delta_x_path * right_point[0] - delta_y_path * right_point[1]
+            left_bound = -delta_x_path * left_point[0] - delta_y_path * left_point[1]
+
+            self.lbg[NX - 3 + (NX + 3) * (k + 1), 0] = min(left_bound, right_bound)
+            self.ubg[NX - 3 + (NX + 3) * (k + 1), 0] = max(left_bound, right_bound)
             self.lbg[NX - 2 + (NX + 3) * (k + 1), 0] = - F_MAX
             self.ubg[NX - 2 + (NX + 3) * (k + 1) , 0] = F_MAX
             #Adjust indicies.
@@ -327,10 +206,9 @@ class MPCC:
             self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = ca.inf # do not limit speeding up
             # self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = self.max_v_dot
 
-
         # the optimizer cannot control the init state.
-        self.lbg[NX *2, 0] = - ca.inf
-        self.ubg[NX *2, 0] = ca.inf
+        # self.lbg[NX *2, 0] = - ca.inf #! I think this is wrong....
+        # self.ubg[NX *2, 0] = ca.inf
 
         pp[-1] = max(x0_speed, 1) # prevent constraint violation
 
@@ -398,3 +276,56 @@ class MPCC:
 
         self.warm_start = False
 
+    def plot_vehicle_controls(self, p, controls):
+        fig, axs = plt.subplots(5, 1, num=3, clear=True, figsize=(8, 15))
+        axs[0].plot(controls[:, 0], '-o', color='red')
+        axs[0].set_ylabel('Steering Angle')
+        axs[0].set_ylim([-0.5, 0.5])
+        axs[0].grid(True)
+
+        axs[1].plot(controls[:, 1], '-o', color='red')
+        axs[1].set_ylabel('Speed')
+        axs[1].set_ylim([0, 9])
+        axs[1].grid(True)
+
+        forces = [controls[k, 1] **2 / p.wheelbase * ca.tan(ca.fabs(controls[k, 0])) *  p.vehicle_mass for k in range(self.N)]
+        axs[2].plot(forces, '-o', color='red')
+        axs[2].set_ylabel('Lateral Force')
+        axs[2].set_ylim([0, 40])
+        axs[2].grid(True)
+
+        axs[3].plot(controls[:, 2], '-o', color='red')
+        axs[3].set_ylabel('Centerline \nSpeed')
+        axs[3].set_ylim([0, 9])
+        axs[3].grid(True)
+
+        dv = np.diff(controls[:, 1])
+        axs[4].plot(dv, '-o', color='red')
+        axs[4].set_ylabel('Acceleration')
+        axs[4].grid(True)
+
+        plt.pause(0.001)
+
+    def plot_vehicle_position(self, x0, states, controls):
+        c_pts = [[self.rp.center_lut_x(states[k, 3]).full()[0, 0], self.rp.center_lut_y(states[k, 3]).full()[0, 0]] for k in range(self.N + 1)]
+
+        self.rp.plot_path()
+        plt.figure(2)
+        points = states[:, 0:2].reshape(-1, 1, 2)
+        segments = np.concatenate([points[:-1], points[1:]], axis=1)
+        norm = plt.Normalize(0, 8)
+        lc = LineCollection(segments, cmap='jet', norm=norm)
+        lc.set_array(controls[:, 1])
+        lc.set_linewidth(4)
+        line = plt.gca().add_collection(lc)
+        plt.colorbar(line, fraction=0.046, pad=0.04, shrink=0.99)
+
+        for i in range(self.N + 1):
+            xs = [states[i, 0], c_pts[i][0]]
+            ys = [states[i, 1], c_pts[i][1]]
+            plt.plot(xs, ys, '--', color='orange')
+
+        size = 12
+        plt.xlim([x0[0] - size, x0[0] + size])
+        plt.ylim([x0[1] - size, x0[1] + size])
+        plt.pause(0.001)# return the first control action

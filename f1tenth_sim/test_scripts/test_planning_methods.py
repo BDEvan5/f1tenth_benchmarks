@@ -19,8 +19,10 @@ def run_simulation_loop_laps(env, planner, n_laps):
 
 
 def run_planning_tests(planner):
-    # map_list = ["aut", "esp", "gbr", "mco"]
-    map_list = ["aut"]
+    map_list = ["aut", "esp", "gbr", "mco"]
+    # map_list = ["esp"]
+    # map_list = ["mco"]
+    # map_list = ["aut"]
     for map_name in map_list:
         print(f"Testing on {map_name}...")
         simulator = F1TenthSim_TrueLocation(map_name, planner.name)
