@@ -9,7 +9,7 @@ from f1tenth_sim.classic_racing.planner_utils import RaceTrack
 from f1tenth_sim.classic_racing.ReferencePath import ReferencePath
 
 VERBOSE = False
-VERBOSE = True
+# VERBOSE = True
 
 WAIT_FOR_USER = False
 # WAIT_FOR_USER = True
@@ -22,8 +22,8 @@ F_MAX = 1 * GRAVITY * MASS * MU
 MAX_ACCELERATION = 8
 
 
-WEIGHT_PROGRESS = 1
-WEIGHT_LAG = 20
+WEIGHT_PROGRESS = 0.01
+WEIGHT_LAG = 10
 WEIGHT_CONTOUR = 20
 WEIGHT_STEER = 50
 WEIGHT_STEER_CHANGE = 0
@@ -61,8 +61,8 @@ class MPCC:
         self.name = "MPCC"
         self.rp = None
         self.rt = None
-        self.dt = 0.1
-        self.N = 15 # number of steps to predict
+        self.dt = 0.05
+        self.N = 20 # number of steps to predict
         self.p_initial = 5
         self.g, self.obj = None, None
 

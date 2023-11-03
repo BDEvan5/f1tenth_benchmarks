@@ -10,11 +10,16 @@ from matplotlib import pyplot as plt
 
 
 class TrackingAccuracy:
-    def __init__(self, map_name) -> None:
+    def __init__(self, map_name, centerline) -> None:
         self.map_name = map_name
-        filename = f"racelines/" + map_name + "_raceline.csv"
-        racetrack = np.loadtxt(filename, delimiter=',', skiprows=1)
-        self.wpts = racetrack[:, 1:3]
+        if centerline:
+            filename = f"racelines/" + map_name + "_raceline.csv"
+            racetrack = np.loadtxt(filename, delimiter=',', skiprows=1)
+            self.wpts = racetrack[:, 1:3]
+        else:
+            filename = f"maps/" + map_name + "_centerline.csv"
+            racetrack = np.loadtxt(filename, delimiter=',')
+            self.wpts = racetrack[:, :2]
 
         self.el_lengths = np.linalg.norm(np.diff(self.wpts, axis=0), axis=1)
         self.s_track = np.insert(np.cumsum(self.el_lengths), 0, 0)
@@ -69,7 +74,7 @@ def load_agent_test_data(file_name):
     return data[:, :7], data[:, 7:]
 
 
-def calculate_tracking_accuracy(vehicle_name):
+def calculate_tracking_accuracy(vehicle_name, centerline=False):
     agent_path = f"Logs/{vehicle_name}/"
     print(f"Vehicle name: {vehicle_name}")
     old_df = pd.read_csv(agent_path + f"Results_{vehicle_name}.csv")
@@ -86,7 +91,7 @@ def calculate_tracking_accuracy(vehicle_name):
         print(f"Analysing log: {test_folder_name} ")
 
         testing_map = test_folder_name.split("_")[1]
-        std_track = TrackingAccuracy(testing_map)
+        std_track = TrackingAccuracy(testing_map, centerline)
         states, actions = load_agent_test_data(test_log)
 
         progresses, cross_track = std_track.calculate_tracking_accuracy(states[:, 0:2]) 
