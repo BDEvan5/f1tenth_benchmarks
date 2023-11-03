@@ -22,12 +22,12 @@ F_MAX = 1 * GRAVITY * MASS * MU
 MAX_ACCELERATION = 8
 
 
-WEIGHT_PROGRESS = 0
+WEIGHT_PROGRESS = 1
 WEIGHT_LAG = 20
 WEIGHT_CONTOUR = 20
-WEIGHT_STEER = 500
-WEIGHT_STEER_CHANGE = 1000
-WEIGHT_SPEED_CHANGE = 10
+WEIGHT_STEER = 50
+WEIGHT_STEER_CHANGE = 0
+WEIGHT_SPEED_CHANGE = 0
 
 np.printoptions(precision=2, suppress=True)
 
@@ -85,10 +85,10 @@ class MPCC:
         states = ca.MX.sym('states', NX) # [x, y, psi, s]
         controls = ca.MX.sym('controls', NU) # [delta, v, p]
 
-        rhs = ca.vertcat(states[3] * ca.cos(states[2]), 
-                         states[3] * ca.sin(states[2]), 
-                         (states[3] / L) * ca.tan(controls[0]), 
-                         controls[1])  # dynamic equations of the states
+        rhs = ca.vertcat(controls[1] * ca.cos(states[2]), 
+                         controls[1] * ca.sin(states[2]), 
+                         (controls[1] / L) * ca.tan(controls[0]), 
+                         controls[2])  # dynamic equations of the states
 
         self.f = ca.Function('f', [states, controls], [rhs])  # nonlinear mapping function f(x,u)
         self.U = ca.MX.sym('U', NU, self.N)

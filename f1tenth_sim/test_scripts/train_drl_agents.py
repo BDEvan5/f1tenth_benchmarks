@@ -16,8 +16,8 @@ def train_agents():
     map_name = "mco"
     # algorithm = "TD3"
     algorithm = "SAC"
-    agent_name = f"{algorithm}_endToEnd_2"
-    training_steps = 40000
+    agent_name = f"{algorithm}_endToEnd_4"
+    training_steps = 120000
 
     simulator = F1TenthSim_TrueLocation(map_name, agent_name, False, True)
     training_agent = TrainingAgent(map_name, agent_name, algorithm)

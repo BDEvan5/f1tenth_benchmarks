@@ -8,8 +8,6 @@ def true_moving_average(data, period):
     if len(data) < period:
         return np.zeros_like(data)
     ret = np.convolve(data, np.ones(period), 'same') / period
-    # t_end = np.convolve(data, np.ones(period), 'valid') / (period)
-    # t_end = t_end[-1] # last valid value
     for i in range(period): # start
         t = np.convolve(data, np.ones(i+2), 'valid') / (i+2)
         ret[i] = t[0]
@@ -32,7 +30,7 @@ def plot_drl_training(vehicle_name, map_name="aut"):
     a1.set_xlabel("Training Steps")
     a2.set_xlabel("Training Steps")
 
-    results = pd.read_csv(f"Logs/{vehicle_name}/Results_{map_name}.csv")
+    results = pd.read_csv(f"Logs/{vehicle_name}/TrainingData_{vehicle_name}.csv")
     steps = results["Steps"]
     progresses = results["Progress"]*100
     a2.plot(steps, progresses, color=periwinkle)
@@ -51,8 +49,8 @@ def plot_drl_training(vehicle_name, map_name="aut"):
 
 
 
-
-# plot_drl_training("TD3_endToEnd_1")
-plot_drl_training("SAC_endToEnd_1")
+n = 3
+# plot_drl_training(f"TD3_endToEnd_{n}")
+plot_drl_training(f"SAC_endToEnd_{n}")
 
 
