@@ -3,7 +3,8 @@ random_seed: 12345
 n_sim_steps: 4
 timestep: 0.01
 
-fov: 4.7
+# fov: 4.7
+fov: 3.14
 num_beams: 1080
 # num_beams: 20
 
