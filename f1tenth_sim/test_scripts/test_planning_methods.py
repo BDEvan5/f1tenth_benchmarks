@@ -38,8 +38,8 @@ def run_planning_tests(planner):
 
 
 if __name__ == "__main__":
-    run_planning_tests(PurePursuit())
-    # run_planning_tests(MPCC())
+    # run_planning_tests(PurePursuit())
+    run_planning_tests(MPCC())
     # run_planning_tests(ConstantMPCC2())
 
     # run_tuning_tests()

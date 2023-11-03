@@ -13,12 +13,12 @@ def seed_randomness(random_seed):
 
 def train_agents():
     seed_randomness(1)
-    # map_name = "mco"
-    map_name = "gbr"
-    # algorithm = "TD3"
-    algorithm = "SAC"
+    map_name = "mco"
+    # map_name = "gbr"
+    algorithm = "TD3"
+    # algorithm = "SAC"
     agent_name = f"{algorithm}_endToEnd_5"
-    training_steps = 120000
+    training_steps = 40000
 
     simulator = F1TenthSim_TrueLocation(map_name, agent_name, False, True)
     training_agent = TrainingAgent(map_name, agent_name, algorithm)

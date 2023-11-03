@@ -11,7 +11,7 @@ def run_mapless_tests(planner):
     for i in inds:
         print(f"Testing on {map_list[i]}...")
         simulator = F1TenthSim(map_list[i], planner.name)
-        run_simulation_loop_laps(simulator, planner, 5)
+        run_simulation_loop_laps(simulator, planner, 2)
 
 
 if __name__ == "__main__":

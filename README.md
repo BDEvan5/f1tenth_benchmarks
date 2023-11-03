@@ -19,7 +19,6 @@ The classic racing stack has several key parts:
 Three different methods for mapless racing are presented:
 1. **Follow the gap algorithm:** the follow the gap algorithm calculates the largest gap and then steers towards it.
 2. **End-to-end deep reinforcement learning:** the SAC and TD3 algorithms are used for end-to-end reinforcement learning which uses the last two LiDAR scans and vehicle speed as input to a neural network that directly outputs speed and steering angles. The agents are trained using the [trajectory aided learning](https://ieeexplore.ieee.org/document/10182327) reward signal for 60,000 steps.
-3. **Local map racing:** local map racing uses the LiDAR scan to reconstruct a map of the visible region of the track. An optimisation and control based strategy is then employed to control the vehicle.
 
 
 ### Simulator
@@ -28,8 +27,22 @@ Three different methods for mapless racing are presented:
 > The classical methods are tested with particle filter localisation and with the vehicle's true location. 
 > This is done by providing two simulator classes; `F1TenthSim`, which only has the LiDAR scan and `F1TenthSim_TrueLocation` which includes the entire vehicle state.
 
+## Usage
 
-## Getting Started
+**Test scripts:**
+There are several key scripts for running the tests:
+- `classical_racing/GenerateOptimalTrajectory.py`: will generate the racelines in the `raceliones/` directory
+- `test_planning_methods.py`: evaluate the pure pursuit and MPCC algorithms. These tests assume that the vehicle has perfect state estimation.
+- `train_drl_agents.py`: this script trains the SAC or TD3 agents on a specified map. Once training is complete, the agent will be tested on all four maps.
+
+**Analysis scripts:**
+- `build_results_df.py`: this script builds a data frame of the results from all the planners.
+- `plot_drl_training.py`: plots the reward and progress during training an agent.
+- `plot_trajectory.py`: plots images for the trajectory for each agent.
+
+
+
+## Getting Started with Docker
 
 To ensure repeatability and useability, a Dockerfile is provided that can be used to run the code.
 

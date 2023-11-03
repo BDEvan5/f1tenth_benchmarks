@@ -146,4 +146,8 @@ def plot_analysis(vehicle_name):
 
 if __name__ == '__main__':
     # analyse_folder()
-    plot_analysis("PurePursuit")
+    # plot_analysis("PurePursuit")
+    # plot_analysis("follow_the_gap")
+    # plot_analysis("TD3_endToEnd_2")
+    # plot_analysis("SAC_endToEnd_5")
+    plot_analysis("TD3_endToEnd_5")

@@ -54,8 +54,8 @@ class TrajectoryAidedLearningReward:
     def __init__(self, map_name):
         self.pp = PurePursuit(map_name) 
 
-        self.beta_c = 0.4
-        self.weights = 0.4 / np.array([0.8, 2])
+        self.beta_c = 0.2
+        self.weights = 0.2 / np.array([0.8, 2])
         
     def __call__(self, observation, prev_obs, action):
         if prev_obs is None: return 0
@@ -66,8 +66,9 @@ class TrajectoryAidedLearningReward:
             return -1 # crash
         
         pp_act = self.pp.plan(prev_obs)
+        pp_act[1] *= 0.7
         rewards = np.abs(pp_act - action) * self.weights 
-        reward = 0.5 * max(self.beta_c - np.sum(rewards), 0)
+        reward = max(self.beta_c - np.sum(rewards), 0)
 
         return reward
 
