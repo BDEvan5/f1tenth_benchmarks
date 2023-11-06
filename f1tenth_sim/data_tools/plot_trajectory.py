@@ -150,4 +150,4 @@ if __name__ == '__main__':
     # plot_analysis("follow_the_gap")
     # plot_analysis("TD3_endToEnd_2")
     # plot_analysis("SAC_endToEnd_5")
-    plot_analysis("TD3_endToEnd_5")
+    plot_analysis("TD3_endToEnd_1")

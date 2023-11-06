@@ -3,6 +3,7 @@ from f1tenth_sim.classic_racing.PurePursuit import PurePursuit
 from f1tenth_sim.classic_racing.particle_filter import ParticleFilter
 import numpy as np
 from f1tenth_sim.data_tools.plot_trajectory import plot_analysis
+from f1tenth_sim.data_tools.plot_pf_errors import plot_pf_errors
 
 def run_simulation_loop_laps(env, planner, pf, n_laps):
     for lap in range(n_laps):
@@ -12,7 +13,6 @@ def run_simulation_loop_laps(env, planner, pf, n_laps):
             action = planner.plan(observation)
             observation, done = env.step(action)
             observation['pose'] = pf.localise(action, observation)
-            print(f"True: {env.current_state[:2]} --> Estimated: {observation['pose'][:2]} --> distance: {np.linalg.norm(observation['pose'][:2] - env.current_state[:2])}")
         pf.lap_complete()
 
 
@@ -25,7 +25,7 @@ def run_planning_tests(planner):
         run_simulation_loop_laps(simulator, planner, 1)
 
 
-def run_tuning_tests2():
+def test_pf_perception():
     tuning_map = "aut"
     name = "PerceptionTesting"
     simulator = F1TenthSim_TrueLocation(tuning_map, name)
@@ -36,16 +36,13 @@ def run_tuning_tests2():
     pf_localisation.set_map(tuning_map)
     run_simulation_loop_laps(simulator, planner, pf_localisation, 1)
 
-    # plot_trajectory_analysis(name)
+    plot_pf_errors(name)
 
 
 
 
 if __name__ == "__main__":
-    # run_planning_tests(PpTrajectoryFollower())
-
-    # run_tuning_tests()
-    run_tuning_tests2()
+    test_pf_perception()
 
 
 

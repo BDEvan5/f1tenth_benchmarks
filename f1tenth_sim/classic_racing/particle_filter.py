@@ -12,8 +12,6 @@ class ParticleFilter:
         self.vehicle_name = vehicle_name
         self.estimates = None
         self.scan_simulator = None
-        # self.Q = np.diag([0.1**2, 0.1**2, 0.0])
-        # self.Q = np.diag([0.1**2, 0.1**2, 0.05**2])
         self.Q = np.diag([0.05**2, 0.05**2, 0.05**2])
         self.NP = NP
         self.dt = 0.04
@@ -30,35 +28,17 @@ class ParticleFilter:
         self.particles = self.proposal_distribution
 
     def set_map(self, map_name):
-        # self.scan_simulator = ScanSimulator2D(f"maps/{map_name}", NUM_BEAMS, 3.14)
         self.scan_simulator = ScanSimulator2D(f"maps/{map_name}", NUM_BEAMS, 4.7)
 
     def localise(self, action, observation):
-        o_ps = np.copy(self.particles)
         vehicle_speed = observation["vehicle_speed"] 
-        print(f"Vehicle speed: {vehicle_speed}")
         self.particle_control_update(action, vehicle_speed)
         plt.figure(1)
         plt.clf()
-        # plt.plot(self.particles[:,0], self.particles[:,1], 'o', label="PreMeasure", alpha=0.5)
         self.measurement_update(observation["scan"][::24])
 
         estimate = np.dot(self.particles.T, self.weights)
         self.estimates.append(estimate)
-
-        # plt.figure(1)
-        # plt.plot(o_ps[:,0], o_ps[:,1], 'o', label="Old Particles", alpha=0.5)
-        # plt.scatter(self.particles[:,0], self.particles[:,1], s=self.weights*1200, label="Particles", alpha=0.5, color='r')
-        # # plt.plot(self.particles[:,0], self.particles[:,1], 'o', label="Particles", alpha=0.5)
-        # # plt.plot(self.proposal_distribution[:,0], self.proposal_distribution[:,1], 'o', label="Resampled", alpha=0.5)
-
-        # plt.plot(estimate[0], estimate[1], '+', markersize=16, label="Estimate")
-        # plt.plot(self.last_true_location[0], self.last_true_location[1], 'rX', label="old T", markersize=16)
-        # plt.plot(observation['vehicle_state'][0], observation['vehicle_state'][1], 'bX', label="True", markersize=16)
-
-        # plt.legend()
-        # # plt.show()
-        # plt.pause(0.00001)
 
         self.last_true_location = observation['vehicle_state'][:2]
 
@@ -72,49 +52,19 @@ class ParticleFilter:
         self.particles = next_states + random_samples
 
     def measurement_update(self, measurement):
-
-        # measurement = np.clip(measurement, 0, 10)
-        # measurement = np.clip(measurement, 0, 10)
-        # angles = np.linspace(-3.14/2, 3.14/2, NUM_BEAMS)
         angles = np.linspace(-4.7/2, 4.7/2, NUM_BEAMS)
         sines = np.sin(angles) 
         cosines = np.cos(angles)
         particle_measurements = np.zeros((self.NP, NUM_BEAMS))
         for i, state in enumerate(self.particles): 
             particle_measurements[i] = self.scan_simulator.scan(state)
-            # particle_measurements[i] = np.clip(self.scan_simulator.scan(state), 0, 10)
 
         z = particle_measurements - measurement
-        # sigma = np.sqrt(np.average(z**2, axis=0))
         sigma = np.clip(np.sqrt(np.average(z**2, axis=0)), 0.01, 10)
-        # print(f"Sigma: {sigma[:10]}, Min {np.min(sigma)}, Max {np.max(sigma)}")
         weights = 1.0 / np.sqrt(2.0 * np.pi * sigma ** 2) * np.exp(-z ** 2 / (2 * sigma ** 2))
-        # print(f"Avg: {np.average(weights, axis=1)[:10]}")
         self.weights = np.prod(weights, axis=1)
-        # self.weights = np.power(self.weights, 1/2.2)
-
-        weight_sum = np.sum(self.weights, axis=0)
-        if (weight_sum == 0).any():
-            print(f"Problem with weights")
-            raise ValueError("Problem with weights")
 
         self.weights = self.weights / np.sum(self.weights)
-        # plt.figure(2)
-        # plt.clf()
-        # plt.plot(0, 0, 'bx')
-        # plt.plot(measurement * cosines, measurement * sines, 'x-', label="True", alpha=0.5)
-        # for i, state in enumerate(self.particles): 
-
-        #     if self.weights[i] > 0.01:
-        #         alp = np.clip(self.weights[i]*5, 0, 1)
-        #         # plt.plot(particle_measurements[i] * cosines, particle_measurements[i] * sines, '.', label=f"Particles {i}", alpha=0.5)
-        #         plt.plot(particle_measurements[i] * cosines, particle_measurements[i] * sines, '.', label=f"Particles {i}", alpha=alp, color='red')
-        #         # plt.scatter(self.particles[:,0], self.particles[:,1], s=self.weights*1000, label="Particles", alpha=0.5, color='b')
-
-        # # plt.legend()
-        # # plt.show()
-        # plt.gca().set_aspect('equal', adjustable='box')
-        # plt.pause(0.00001)
 
         proposal_indices = np.random.choice(self.particle_indices, self.NP, p=self.weights)
         self.proposal_distribution = self.particles[proposal_indices,:]

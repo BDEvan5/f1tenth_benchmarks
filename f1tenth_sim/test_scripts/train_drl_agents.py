@@ -15,10 +15,10 @@ def train_agents():
     seed_randomness(1)
     map_name = "mco"
     # map_name = "gbr"
-    algorithm = "TD3"
-    # algorithm = "SAC"
+    # algorithm = "TD3"
+    algorithm = "SAC"
     agent_name = f"{algorithm}_endToEnd_5"
-    training_steps = 40000
+    training_steps = 80000
 
     simulator = F1TenthSim_TrueLocation(map_name, agent_name, False, True)
     training_agent = TrainingAgent(map_name, agent_name, algorithm)
@@ -30,7 +30,7 @@ def train_agents():
     for map_name in map_list:
         print(f"Testing on {map_name}...")
         simulator = F1TenthSim(map_name, agent_name)
-        run_simulation_loop_laps(simulator, testing_agent, 2)
+        run_simulation_loop_laps(simulator, testing_agent, 5)
 
 train_agents()
 

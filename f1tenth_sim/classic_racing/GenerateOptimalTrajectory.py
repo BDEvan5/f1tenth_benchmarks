@@ -8,7 +8,8 @@ np.printoptions(precision=3, suppress=True)
 MAX_KAPPA = 0.99
 VEHICLE_WIDTH = 1.1
 RACELINE_STEP = 0.2
-MU = 0.75
+MU = 0.5
+# MU = 0.75
 V_MAX = 8
 VEHICLE_MASS = 3.4
 ax_max_machine = np.array([[0, 8.5],[8, 8.5]])
@@ -127,7 +128,8 @@ def profile_aut():
 
 
 if __name__ == "__main__":
-    map_list = ['aut', 'esp', 'gbr', 'mco']
+    # map_list = ['aut', 'esp', 'gbr', 'mco']
+    map_list = ['mco']
     for map_name in map_list: OptimiseMap(map_name)
 
     # run_profiling(profile_aut, 'GenerateAUT')
