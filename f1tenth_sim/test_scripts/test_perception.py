@@ -30,7 +30,7 @@ def run_tuning_tests2():
     name = "PerceptionTesting"
     simulator = F1TenthSim_TrueLocation(tuning_map, name)
     planner = PurePursuit()
-    pf_localisation = ParticleFilter(name, 50)
+    pf_localisation = ParticleFilter(name, 100)
     
     planner.set_map(tuning_map)
     pf_localisation.set_map(tuning_map)
