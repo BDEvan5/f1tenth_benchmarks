@@ -60,8 +60,11 @@ class ParticleFilter:
             particle_measurements[i] = self.scan_simulator.scan(state)
 
         z = particle_measurements - measurement
+        # ssd = np.sum(z**2, axis=1)
+        # self.weights = np.exp(-ssd / (2*0.5**2))
         sigma = np.clip(np.sqrt(np.average(z**2, axis=0)), 0.01, 10)
-        weights = 1.0 / np.sqrt(2.0 * np.pi * sigma ** 2) * np.exp(-z ** 2 / (2 * sigma ** 2))
+        # weights = 1.0 / np.sqrt(2.0 * np.pi * sigma ** 2) * np.exp(-z ** 2 / (2 * sigma ** 2))
+        weights =  np.exp(-z ** 2 / (2 * sigma ** 2))
         self.weights = np.prod(weights, axis=1)
 
         self.weights = self.weights / np.sum(self.weights)

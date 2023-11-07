@@ -1,6 +1,6 @@
 import numpy as np 
 import matplotlib.pyplot as plt
-import csv
+import os
 import trajectory_planning_helpers as tph
 from matplotlib.collections import LineCollection
 np.printoptions(precision=3, suppress=True)
@@ -8,18 +8,23 @@ np.printoptions(precision=3, suppress=True)
 MAX_KAPPA = 0.99
 VEHICLE_WIDTH = 1.1
 RACELINE_STEP = 0.2
-MU = 0.5
-# MU = 0.75
+# MU = 0.5
+MU = 0.75
 V_MAX = 8
 VEHICLE_MASS = 3.4
 ax_max_machine = np.array([[0, 8.5],[8, 8.5]])
 ggv = np.array([[0, 8.5, 8.5], [8, 8.5, 8.5]])
 
 
+def ensure_path_exists(folder):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
 class OptimiseMap:
-    def __init__(self, map_name) -> None:
+    def __init__(self, map_name, raceline_set) -> None:
         self.map_name = map_name
-        self.track = np.loadtxt('maps/' + self.map_name + "_centerline.csv", delimiter=',')
+        self.track = np.loadtxt(f'maps/' + self.map_name + "_centerline.csv", delimiter=',')
+        ensure_path_exists(f"racelines/{raceline_set}/")
 
         self.el_lengths = np.linalg.norm(np.diff(self.track[:, :2], axis=0), axis=1)
         self.psi, kappa = tph.calc_head_curv_num.calc_head_curv_num(self.track[:, :2], self.el_lengths, False)
@@ -37,7 +42,7 @@ class OptimiseMap:
         self.generate_minimum_curvature_path()
         self.plot_minimum_curvature_path()
 
-        self.generate_velocity_profile()
+        self.generate_velocity_profile(raceline_set)
         self.plot_raceline_trajectory()
 
 
@@ -49,7 +54,7 @@ class OptimiseMap:
         self.min_curve_path, A_raceline, coeffs_x_raceline, coeffs_y_raceline, spline_inds_raceline_interp, t_values_raceline_interp, self.s_raceline, spline_lengths_raceline, el_lengths_raceline_interp_cl = tph.create_raceline.create_raceline(self.track[:, 0:2], self.nvecs, alpha, RACELINE_STEP) 
         self.psi_r, self.kappa_r = tph.calc_head_curv_num.calc_head_curv_num(self.min_curve_path, el_lengths_raceline_interp_cl, True)
 
-    def generate_velocity_profile(self):
+    def generate_velocity_profile(self, raceline_set):
         mu = MU * np.ones(len(self.kappa_r))
         el_lengths = np.linalg.norm(np.diff(self.min_curve_path, axis=0), axis=1)
 
@@ -60,7 +65,7 @@ class OptimiseMap:
         acc = tph.calc_ax_profile.calc_ax_profile(self.vs, el_lengths, True)
 
         raceline = np.concatenate([self.s_raceline[:, None], self.min_curve_path, self.psi_r[:, None], self.kappa_r[:, None], self.vs[:, None], acc[:, None]], axis=1)
-        np.savetxt("racelines/"+ self.map_name+ '_raceline.csv', raceline, delimiter=',')
+        np.savetxt(f"racelines/{raceline_set}/"+ self.map_name+ '_raceline.csv', raceline, delimiter=',')
 
     def plot_minimum_curvature_path(self):
         plt.figure(3)
@@ -128,8 +133,9 @@ def profile_aut():
 
 
 if __name__ == "__main__":
-    # map_list = ['aut', 'esp', 'gbr', 'mco']
-    map_list = ['mco']
-    for map_name in map_list: OptimiseMap(map_name)
+    map_list = ['aut', 'esp', 'gbr', 'mco']
+    # map_list = ['mco']
+    # for map_name in map_list: OptimiseMap(map_name, "training")
+    for map_name in map_list: OptimiseMap(map_name, "mu_75")
 
     # run_profiling(profile_aut, 'GenerateAUT')

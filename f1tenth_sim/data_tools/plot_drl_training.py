@@ -49,7 +49,7 @@ def plot_drl_training(vehicle_name, map_name="aut"):
 
 
 
-n = 5
+n = 1
 plot_drl_training(f"TD3_endToEnd_{n}")
 # plot_drl_training(f"SAC_endToEnd_{n}")
 

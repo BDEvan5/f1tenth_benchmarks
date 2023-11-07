@@ -19,8 +19,8 @@ def run_simulation_loop_laps(env, planner, n_laps):
 
 
 def run_planning_tests(planner):
-    map_list = ["aut", "esp", "gbr", "mco"]
-    # map_list = ["aut"]
+    # map_list = ["aut", "esp", "gbr", "mco"]
+    map_list = ["mco"]
     for map_name in map_list:
         print(f"Testing on {map_name}...")
         simulator = F1TenthSim_TrueLocation(map_name, planner.name)
@@ -38,12 +38,9 @@ def run_planning_tests(planner):
 
 
 if __name__ == "__main__":
-    # run_planning_tests(PurePursuit())
-    run_planning_tests(MPCC())
-    # run_planning_tests(ConstantMPCC2())
+    run_planning_tests(PurePursuit("TestPP"))
+    # run_planning_tests(MPCC())
 
-    # run_tuning_tests()
-    # run_tuning_tests2()
 
 
 

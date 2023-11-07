@@ -6,14 +6,17 @@ import os
 
 
 class RaceTrack:
-    def __init__(self, map_name) -> None:
+    def __init__(self, map_name, raceline_set=None) -> None:
         self.raceline = None
         self.speeds = None 
 
-        self.load_racetrack(map_name)
+        self.load_racetrack(map_name, raceline_set)
 
-    def load_racetrack(self, map_name):
-        filename = "racelines/" + map_name + "_raceline.csv"
+    def load_racetrack(self, map_name, raceline_set):
+        if raceline_set is None:
+            filename = "racelines/" + map_name + "_raceline.csv"
+        else:
+            filename = f"racelines/{raceline_set}/" + map_name + "_raceline.csv"
         track = np.loadtxt(filename, delimiter=',', skiprows=1)
 
         self.raceline = track[:, 1:3]
