@@ -53,8 +53,9 @@ F_MAX = GRAVITY * p.vehicle_mass * p.friction_mu
 
 
 class MPCC:
-    def __init__(self):
+    def __init__(self, test_id):
         self.name = "MPCC"
+        self.test_id = test_id
         self.rp = None
         self.rt = None
         self.dt = 0.04

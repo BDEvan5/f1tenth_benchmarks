@@ -11,15 +11,16 @@ GRAVITY = 9.81
 
 
 class PurePursuit:
-    def __init__(self, name="PurePursuit"):
-        self.name = name
+    def __init__(self, test_id):
+        self.name = "PurePursuit"
+        self.test_id = test_id
         self.racetrack = None
         self.counter = 0
-        self.constant_lookahead = 0.8
+        self.constant_lookahead = 0.5
         self.variable_lookahead = 0.1
 
     def set_map(self, map_name):
-        self.racetrack = RaceTrack(map_name, "mu_75")
+        self.racetrack = RaceTrack(map_name, self.test_id)
 
     def plan(self, obs):
         state = obs["vehicle_state"]

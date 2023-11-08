@@ -8,8 +8,6 @@ np.printoptions(precision=3, suppress=True)
 MAX_KAPPA = 0.99
 VEHICLE_WIDTH = 1.1
 RACELINE_STEP = 0.2
-# MU = 0.5
-MU = 0.75
 V_MAX = 8
 VEHICLE_MASS = 3.4
 ax_max_machine = np.array([[0, 8.5],[8, 8.5]])
@@ -21,8 +19,9 @@ def ensure_path_exists(folder):
         os.makedirs(folder)
 
 class OptimiseMap:
-    def __init__(self, map_name, raceline_set) -> None:
+    def __init__(self, map_name, raceline_set, mu) -> None:
         self.map_name = map_name
+        self.mu = mu
         self.track = np.loadtxt(f'maps/' + self.map_name + "_centerline.csv", delimiter=',')
         ensure_path_exists(f"racelines/{raceline_set}/")
 
@@ -55,7 +54,7 @@ class OptimiseMap:
         self.psi_r, self.kappa_r = tph.calc_head_curv_num.calc_head_curv_num(self.min_curve_path, el_lengths_raceline_interp_cl, True)
 
     def generate_velocity_profile(self, raceline_set):
-        mu = MU * np.ones(len(self.kappa_r))
+        mu = self.mu * np.ones(len(self.kappa_r))
         el_lengths = np.linalg.norm(np.diff(self.min_curve_path, axis=0), axis=1)
 
         self.vs = tph.calc_vel_profile.calc_vel_profile(ax_max_machine, self.kappa_r, el_lengths, False, 0, VEHICLE_MASS, ggv=ggv, mu=mu, v_max=V_MAX, v_start=V_MAX)
@@ -136,6 +135,8 @@ if __name__ == "__main__":
     map_list = ['aut', 'esp', 'gbr', 'mco']
     # map_list = ['mco']
     # for map_name in map_list: OptimiseMap(map_name, "training")
-    for map_name in map_list: OptimiseMap(map_name, "mu_75")
+    # for map_name in map_list: OptimiseMap(map_name, "mu75", 0.75)
+    # for map_name in map_list: OptimiseMap(map_name, "mu50", 0.5)
+    for map_name in map_list: OptimiseMap(map_name, "mu70", 0.7)
 
     # run_profiling(profile_aut, 'GenerateAUT')

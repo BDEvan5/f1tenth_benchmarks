@@ -76,10 +76,10 @@ class EndToEndAgent:
 
 
 class TrainingAgent(EndToEndAgent): 
-    def __init__(self, map_name, agent_name, algorithm="TD3"):
+    def __init__(self, map_name, test_id, algorithm="TD3"):
         super().__init__()
-        self.name = agent_name
-        self.path = f"Logs/{agent_name}/"
+        self.name = f"{algorithm}_endToEnd"
+        self.path = f"Logs/{self.name}/RawData_{test_id}/"
 
         self.reward_generator = TrajectoryAidedLearningReward(map_name)
         self.state = None

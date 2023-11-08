@@ -40,10 +40,10 @@ class TrajectoryPlotter:
         self.save_folder = None
         self.pdf_save_folder = None
 
-    def process_folder(self, folder):
-        self.load_folder = folder + "RawData/"
-        self.save_folder = folder + "Images/"
-        self.pdf_save_folder = folder + "Images_pdf/"
+    def process_folder(self, folder, test_id):
+        self.load_folder = folder + f"RawData_{test_id}/"
+        self.save_folder = folder + f"Images_{test_id}/"
+        self.pdf_save_folder = folder + f"Images_pdf_{test_id}/"
         ensure_path_exists(self.save_folder)
         ensure_path_exists(self.pdf_save_folder)
 
@@ -137,17 +137,17 @@ class TrajectoryPlotter:
         plt.savefig(name + ".pdf", bbox_inches='tight', pad_inches=0)
 
 
-def plot_analysis(vehicle_name):
+def plot_analysis(vehicle_name, test_id):
     TestData = TrajectoryPlotter()
 
-    TestData.process_folder(f"Logs/{vehicle_name}/")
+    TestData.process_folder(f"Logs/{vehicle_name}/", test_id)
 
 
 
 if __name__ == '__main__':
     # analyse_folder()
-    # plot_analysis("PurePursuit")
+    plot_analysis("PurePursuit", "mu75")
     # plot_analysis("follow_the_gap")
-    plot_analysis("TD3_endToEnd_5")
+    # plot_analysis("TD3_endToEnd_5")
     # plot_analysis("SAC_endToEnd_5")
     # plot_analysis("TD3_endToEnd_1")

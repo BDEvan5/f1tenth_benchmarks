@@ -39,10 +39,10 @@ class TrajectoryPlotter:
         self.track_progresses = None
         self.tracking_accuracy = None
 
-    def process_folder(self, folder):
-        self.load_folder = folder + "RawData/"
-        self.save_folder = folder + "Images/"
-        self.pdf_save_folder = folder + "Images_pdf/"
+    def process_folder(self, folder, test_id):
+        self.load_folder = folder + f"RawData_{test_id}/"
+        self.save_folder = folder + f"Images_{test_id}/"
+        self.pdf_save_folder = folder + f"Images_pdf_{test_id}/"
         ensure_path_exists(self.save_folder)
         ensure_path_exists(self.pdf_save_folder)
 
@@ -88,7 +88,7 @@ class TrajectoryPlotter:
         segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
         norm = plt.Normalize(0, MAX_TRACKING_ERROR)
-        lc = LineCollection(segments, cmap='jet', norm=norm)
+        lc = LineCollection(segments, cmap='bwr', norm=norm)
         lc.set_array(self.tracking_accuracy)
         lc.set_linewidth(5)
         line = plt.gca().add_collection(lc)
@@ -158,12 +158,12 @@ class TrajectoryPlotter:
 
         
 
-def plot_raceline_tracking(vehicle_name):
+def plot_raceline_tracking(vehicle_name, test_id):
     TestData = TrajectoryPlotter()
 
-    TestData.process_folder(f"Logs/{vehicle_name}/")
+    TestData.process_folder(f"Logs/{vehicle_name}/", test_id)
 
 
 
 if __name__ == '__main__':
-    plot_raceline_tracking("PurePursuit")
+    plot_raceline_tracking("PurePursuit", "mu75")

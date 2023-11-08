@@ -15,14 +15,16 @@ def ensure_path_exists(folder):
         os.makedirs(folder)
 
 class F1TenthSimBase:
-    def __init__(self, map_name, log_name, save_detail_history=True, training=False):
+    def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False):
         with open(f"f1tenth_sim/simulator/simulator_params.yaml", 'r') as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
         self.params = Namespace(**params)
-        self.log_name = log_name
+        self.planner_name = planner_name
         self.map_name = map_name
-        self.path = f"Logs/{log_name}/"
+        self.path = f"Logs/{planner_name}/"
+        self.test_id = test_id
         ensure_path_exists(self.path)
+        ensure_path_exists(self.path + f"RawData_{test_id}/")
         self.training = training
 
         self.scan_simulator = ScanSimulator2D(self.params.num_beams, self.params.fov, map_name, self.params.random_seed)
@@ -38,12 +40,12 @@ class F1TenthSimBase:
         self.total_steps = 0
 
         self.history = None
-        if os.path.exists(self.path + f"Results_{self.log_name}.csv"):
-            self.lap_history = pd.read_csv(self.path + f"Results_{self.log_name}.csv").to_dict('records')
+        if os.path.exists(self.path + f"Results_{self.planner_name}.csv"):
+            self.lap_history = pd.read_csv(self.path + f"Results_{self.planner_name}.csv").to_dict('records')
         else:
             self.lap_history = []
         if save_detail_history:
-            self.history = SimulatorHistory(log_name)
+            self.history = SimulatorHistory(self.path, test_id)
             self.history.set_map_name(map_name)
             
 
@@ -65,7 +67,7 @@ class F1TenthSimBase:
         
         done = self.collision or self.lap_complete
         if done:
-            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.log_name, "Progress": self.progress, "Time": self.current_time, "Steps": self.total_steps, "RecordTime": datetime.datetime.now() })
+            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.test_id, "Progress": self.progress, "Time": self.current_time, "Steps": self.total_steps, "RecordTime": datetime.datetime.now(), "Planner": self.planner_name})
             self.save_data_frame()
             if self.history is not None: self.history.save_history()
 
@@ -128,16 +130,16 @@ class F1TenthSimBase:
         agent_df = pd.DataFrame(self.lap_history)
         agent_df = agent_df.sort_values(by=["Lap"])
         if self.training:
-            file_name = self.path + f"TrainingData_{self.log_name}.csv"
+            file_name = self.path + f"RawData_{self.test_id}/TrainingData_{self.test_id}.csv"
         else:
-            file_name = self.path + f"Results_{self.log_name}.csv"
+            file_name = self.path + f"Results_{self.planner_name}.csv"
 
         agent_df.to_csv(file_name, index=False, float_format='%.4f')
 
 
 class F1TenthSim(F1TenthSimBase):
-    def __init__(self, map_name, log_name, save_detail_history=True, training=False):
-        super().__init__(map_name, log_name, save_detail_history, training)
+    def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False):
+        super().__init__(map_name, planner_name, test_id, save_detail_history, training)
         init_pose = np.append(self.current_state[0:2], self.current_state[4])
         self.scan = self.scan_simulator.scan(init_pose)
  
@@ -151,8 +153,8 @@ class F1TenthSim(F1TenthSimBase):
         return observation
 
 class F1TenthSim_TrueLocation(F1TenthSimBase):
-    def __init__(self, map_name, log_name, save_detail_history=True, training=False):
-        super().__init__(map_name, log_name, save_detail_history, training)
+    def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False):
+        super().__init__(map_name, planner_name, test_id, save_detail_history, training)
         init_pose = np.append(self.current_state[0:2], self.current_state[4])
         self.scan = self.scan_simulator.scan(init_pose)
     

@@ -74,17 +74,19 @@ def load_agent_test_data(file_name):
     return data[:, :7], data[:, 7:]
 
 
-def calculate_tracking_accuracy(vehicle_name, centerline=False):
-    agent_path = f"Logs/{vehicle_name}/"
-    print(f"Vehicle name: {vehicle_name}")
-    old_df = pd.read_csv(agent_path + f"Results_{vehicle_name}.csv")
+def calculate_tracking_accuracy(planner_name, centerline=False):
+    agent_path = f"Logs/{planner_name}/"
+    print(f"Planner name: {planner_name}")
+    old_df = pd.read_csv(agent_path + f"Results_{planner_name}.csv")
 
-    testing_logs = glob.glob(f"{agent_path}RawData/Sim*.npy")
+    testing_logs = glob.glob(f"{agent_path}RawData_*/Sim*.npy")
     if len(testing_logs) == 0: raise ValueError("No logs found")
     for test_log in testing_logs:
+        test_id = test_log.split("/")[-2].split("_")[1]
+        print(f"test_id: {test_id}")
         test_folder_name = test_log.split("/")[-1]
         test_log_key = "_".join(test_folder_name.split(".")[0].split("_")[1:])
-        file_name = f"{agent_path}RawData/TrackingAccuracy_{test_log_key}.npy"
+        file_name = f"{agent_path}RawData_{test_id}/TrackingAccuracy_{test_log_key}.npy"
         lap_num = int(test_folder_name.split("_")[-1].split(".")[0])
         # if os.path.exists(file_name): continue
 
@@ -103,7 +105,7 @@ def calculate_tracking_accuracy(vehicle_name, centerline=False):
         np.save(file_name, save_data)
 
     old_df = old_df.sort_values(by=["TestMap", "Lap"])
-    old_df.to_csv(f"{agent_path}Results_{vehicle_name}.csv", index=False, float_format='%.4f')
+    old_df.to_csv(f"{agent_path}Results_{planner_name}.csv", index=False, float_format='%.4f')
 
 
 if __name__ == "__main__":

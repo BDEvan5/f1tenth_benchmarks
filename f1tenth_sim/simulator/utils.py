@@ -31,14 +31,11 @@ def ensure_path_exists(folder):
         os.makedirs(folder)
 
 class SimulatorHistory:
-    def __init__(self, run_name, save_scan=False):
-        self.path = f"Logs/{run_name}/RawData/"
+    def __init__(self, path, test_id, save_scan=False):
+        self.path = path + f"RawData_{test_id}/"
         ensure_path_exists(self.path)
         self.save_scan = save_scan
-        if os.path.exists(self.path) == False:
-            os.mkdir(self.path)
 
-        self.run_name = run_name
         self.map_name = ""
         self.lap_n = 0
         self.states = []
