@@ -2,8 +2,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from f1tenth_sim.mapless_racing.training_utils import DoublePolicyNet, DoubleQNet
-from f1tenth_sim.mapless_racing.training_utils import DoubleQNet, PolicyNetworkSAC, OffPolicyBuffer
+from f1tenth_sim.drl_racing.training_utils import DoublePolicyNet, DoubleQNet
+from f1tenth_sim.drl_racing.training_utils import DoubleQNet, PolicyNetworkSAC, OffPolicyBuffer
 
 
 # hyper parameters

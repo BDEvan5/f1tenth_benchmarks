@@ -14,7 +14,7 @@ class FollowTheGap:
     MAX_STEER = 0.4
 
     def __init__(self):
-        self.name = 'follow_the_gap'
+        self.name = 'FollowTheGap'
 
     def plan(self, obs):
         scan = obs['scan']

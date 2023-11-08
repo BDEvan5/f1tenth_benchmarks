@@ -12,7 +12,7 @@ BATCH_SIZE = 100
 LR = 1e-3
 
    
-from f1tenth_sim.mapless_racing.training_utils import DoubleQNet, PolicyNetworkSAC, OffPolicyBuffer
+from f1tenth_sim.drl_racing.training_utils import DoubleQNet, PolicyNetworkSAC, OffPolicyBuffer
 
 
 def soft_update(net, net_target, tau):

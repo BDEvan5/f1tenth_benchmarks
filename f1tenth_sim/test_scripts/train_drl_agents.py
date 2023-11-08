@@ -2,7 +2,7 @@ from testing_utils import *
 import numpy as np 
 import torch
 from f1tenth_sim.simulator import F1TenthSim_TrueLocation, F1TenthSim
-from f1tenth_sim.mapless_racing.agents import TrainingAgent, TestingAgent
+from f1tenth_sim.drl_racing.agents import TrainingAgent, TestingAgent
 from f1tenth_sim.data_tools.specific_plotting.plot_drl_training import plot_drl_training
 
 
@@ -15,11 +15,11 @@ def seed_randomness(random_seed):
 
 def train_and_test_agents():
     seed_randomness(10)
-    map_name = "mco"
-    # map_name = "gbr"
+    # map_name = "mco"
+    map_name = "gbr"
     algorithm = "TD3"
     # algorithm = "SAC"
-    test_id = "v1"
+    test_id = "v2"
     training_steps = 80000
 
     training_agent = TrainingAgent(map_name, test_id, algorithm)
