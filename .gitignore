@@ -1,6 +1,6 @@
 # Custom
- Logs/*
- !Logs/.gitkeep
+!Logs/.gitkeep
+Logs/
 
 
 
@@ -128,3 +128,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+racelines/

@@ -1,36 +1,24 @@
 import csv
 import numpy as np
 from numba import njit
+import os
 
-
-@njit(fastmath=False, cache=True)
-def get_actuation(pose_theta, lookahead_point, position, lookahead_distance, wheelbase):
-    waypoint_y = np.dot(np.array([np.sin(-pose_theta), np.cos(-pose_theta)]), lookahead_point[0:2]-position)
-    speed = lookahead_point[2]
-    if np.abs(waypoint_y) < 1e-6:
-        return speed, 0.
-    radius = 1/(2.0*waypoint_y/lookahead_distance**2)
-    steering_angle = np.arctan(wheelbase/radius)
-    return speed, steering_angle
 
 
 class RaceTrack:
-    def __init__(self, map_name) -> None:
+    def __init__(self, map_name, raceline_set=None) -> None:
         self.raceline = None
         self.speeds = None 
 
-        self.load_racetrack(map_name)
+        self.load_racetrack(map_name, raceline_set)
 
-    def load_racetrack(self, map_name):
-        track = []
-        filename = "test_planner/" + map_name + "_raceline.csv"
-        with open(filename, 'r') as csvfile:
-            csvFile = csv.reader(csvfile, quoting=csv.QUOTE_NONNUMERIC)  
-        
-            for lines in csvFile:  
-                track.append(lines)
+    def load_racetrack(self, map_name, raceline_set):
+        if raceline_set is None:
+            filename = "racelines/" + map_name + "_raceline.csv"
+        else:
+            filename = f"racelines/{raceline_set}/" + map_name + "_raceline.csv"
+        track = np.loadtxt(filename, delimiter=',', skiprows=1)
 
-        track = np.array(track)
         self.raceline = track[:, 1:3]
         self.speeds = track[:, 5] 
 
@@ -41,8 +29,9 @@ class RaceTrack:
         nearest_point, nearest_dist, t, i = nearest_point_on_trajectory_py2(position, self.raceline, self.l2s, self.diffs)
 
         lookahead_point, i2, t2 = first_point_on_trajectory_intersecting_circle(position, lookahead_distance, self.raceline, i+t, wrap=True)
-        if i2 == None: 
-            return None
+        if i2 == None: # this happens when the circle does not intersect the trajectory.
+            i2 = i + int(lookahead_distance / np.sqrt(self.l2s[i]))
+            # return None
         lookahead_point = np.empty((3, ))
         lookahead_point[0:2] = self.raceline[i2, :]
         lookahead_point[2] = self.speeds[i]
