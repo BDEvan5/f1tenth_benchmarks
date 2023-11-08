@@ -10,18 +10,18 @@ def build_main_df():
     full_df = []
     summary_df = []
     for folder in folders:
-        vehicle_name = folder.split("/")[-1]
-        if not os.path.exists(folder + f"/Results_{vehicle_name}.csv"): continue
-        df = pd.read_csv(folder + f"/Results_{vehicle_name}.csv")
-        df["Vehicle"] = vehicle_name
+        planner_name = folder.split("/")[-1]
+        if not os.path.exists(folder + f"/Results_{planner_name}.csv"): continue
+        df = pd.read_csv(folder + f"/Results_{planner_name}.csv")
+        df["Vehicle"] = planner_name
         full_df.append(df)
 
         for map_name in df.TestMap.unique():
             map_df = df.loc[df["TestMap"] == map_name]
-            completion_rate = np.count_nonzero(map_df.Progress > 0.99) / map_df.shape[0] 
-            summary_df.append({"Vehicle": vehicle_name, "MapName": map_name, "AvgProgress": map_df.Progress.mean(), "AvgTime": map_df.Time.mean(), "CompletionRate": completion_rate})
-
-
+            for test_id in map_df.TestID.unique():
+                test_id_df = map_df.loc[map_df.TestID == test_id]
+                completion_rate = np.count_nonzero(test_id_df.Progress > 0.99) / test_id_df.shape[0] 
+                summary_df.append({"Vehicle": planner_name, "TestID":test_id, "MapName": map_name, "AvgProgress": test_id_df.Progress.mean(), "AvgTime": test_id_df.Time.mean(), "CompletionRate": completion_rate})
 
     full_df = pd.concat(full_df)
     full_df = full_df.sort_values(by=["Vehicle", "TestMap"])

@@ -15,8 +15,8 @@ def seed_randomness(random_seed):
 
 def train_and_test_agents():
     seed_randomness(10)
-    # map_name = "mco"
-    map_name = "gbr"
+    map_name = "mco"
+    # map_name = "gbr"
     algorithm = "TD3"
     # algorithm = "SAC"
     test_id = "v1"

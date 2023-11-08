@@ -12,7 +12,7 @@ GRAVITY = 9.81
 
 class PurePursuit:
     def __init__(self, map_name):
-        self.racetrack = RaceTrack(map_name, "training")
+        self.racetrack = RaceTrack(map_name, "mu50")
         self.counter = 0
         self.constant_lookahead = 0.8
         self.variable_lookahead = 0.1
@@ -54,7 +54,7 @@ class TrajectoryAidedLearningReward:
     def __init__(self, map_name):
         self.pp = PurePursuit(map_name) 
 
-        self.beta_c = 0.1
+        self.beta_c = 0.2
         self.weights = np.array([0.8, 2])
         
     def __call__(self, observation, prev_obs, action):
