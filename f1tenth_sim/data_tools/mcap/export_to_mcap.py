@@ -14,7 +14,7 @@ vehicle_name = "MPCC"
 # map_name = "esp"
 map_name = "aut"
 file_name = f"Logs/{vehicle_name}/test_{map_name}.mcap"
-schema_path = "f1tenth_sim/data_tools/schemas/"
+schema_path = "f1tenth_sim/data_tools/mcap/schemas/"
 
 
 class MapData:

@@ -5,13 +5,13 @@ import numpy as np
 from f1tenth_sim.data_tools.plot_trajectory import plot_analysis
 from f1tenth_sim.data_tools.plot_pf_errors import plot_pf_errors
 
-def run_simulation_loop_laps(env, planner, pf, n_laps):
+def run_simulation_loop_laps(sim, planner, pf, n_laps):
     for lap in range(n_laps):
-        observation, done, init_pose = env.reset()
+        observation, done, init_pose = sim.reset()
         observation['pose'] = pf.init_pose(init_pose)
         while not done:
             action = planner.plan(observation)
-            observation, done = env.step(action)
+            observation, done = sim.step(action)
             observation['pose'] = pf.localise(action, observation)
         pf.lap_complete()
 

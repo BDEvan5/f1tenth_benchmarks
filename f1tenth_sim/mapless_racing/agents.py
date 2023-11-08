@@ -45,7 +45,7 @@ class EndToEndAgent:
         Transforms the observation received from the environment into a vector which can be used with a neural network.
     
         Args:
-            obs: observation from env
+            obs: observation from sim
 
         Returns:
             nn_obs: observation vector for neural network

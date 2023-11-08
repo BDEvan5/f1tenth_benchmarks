@@ -1,21 +1,13 @@
 from f1tenth_sim.simulator import F1TenthSim_TrueLocation 
 from f1tenth_sim.classic_racing.PurePursuit import PurePursuit
 from f1tenth_sim.classic_racing.MPCC import MPCC
-from f1tenth_sim.classic_racing.ConstantMPCC2 import ConstantMPCC2
-import numpy as np
+
 from f1tenth_sim.data_tools.calculate_tracking_accuracy import calculate_tracking_accuracy
 from f1tenth_sim.data_tools.plot_raceline_tracking import plot_raceline_tracking
 from f1tenth_sim.data_tools.plot_trajectory import plot_analysis
 
+from f1tenth_sim.test_scripts.testing_utils import *
 
-def run_simulation_loop_laps(env, planner, n_laps):
-    for lap in range(n_laps):
-        observation, done, init_pose = env.reset()
-        while not done:
-            action = planner.plan(observation)
-            observation, done = env.step(action)
-
-            # break
 
 
 def run_planning_tests(planner):
@@ -38,8 +30,8 @@ def run_planning_tests(planner):
 
 
 if __name__ == "__main__":
-    run_planning_tests(PurePursuit("TestPP"))
-    # run_planning_tests(MPCC())
+    # run_planning_tests(PurePursuit("TestPP"))
+    run_planning_tests(MPCC())
 
 
 
