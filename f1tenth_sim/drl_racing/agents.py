@@ -138,10 +138,10 @@ class TrainingAgent(EndToEndAgent):
 class TestingAgent(EndToEndAgent): 
     def __init__(self, test_id, algorithm):
         super().__init__()
-        agent_name = f"{algorithm}_endToEnd"
-        self.path = f"Logs/{agent_name}/RawData_{test_id}/"
+        self.name = f"{algorithm}_endToEnd"
+        self.path = f"Logs/{self.name}/RawData_{test_id}/"
         self.architecture = EndToEndAgent()
-        self.agent = create_test_agent(agent_name, self.path)
+        self.agent = create_test_agent(self.name, self.path)
         
     def plan(self, obs):
         nn_state = self.transform_obs(obs)
