@@ -43,7 +43,7 @@ class LocalMapPlanner:
     def plan(self, obs):
         if self.save_data:
             np.save(self.scan_data_path + f'Scan_{self.counter}.npy', obs['scan'])
-        self.local_map = self.local_map_generator.generate_line_local_map(np.copy(obs['scan']), save=True, counter=None)
+        self.local_map = self.local_map_generator.generate_line_local_map(np.copy(obs['scan']))
         if len(self.local_map.track) < 4:
             self.counter += 1
             return np.zeros(2)

@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import trajectory_planning_helpers as tph
-from matplotlib.collections import LineCollection
 np.set_printoptions(precision=4)
 from scipy import interpolate, optimize
 

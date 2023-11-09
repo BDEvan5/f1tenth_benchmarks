@@ -41,7 +41,7 @@ class LocalMapGenerator:
         self.search_pts_b = []
         self.true_search_pts = []
 
-    def generate_line_local_map(self, scan, save=True, counter=None):
+    def generate_line_local_map(self, scan):
         self.search_pts_a = []
         self.search_pts_b = []
 
@@ -56,14 +56,23 @@ class LocalMapGenerator:
         local_track = self.build_local_track()
         smooth_track = self.smooth_track_spline(local_track)
 
-        local_map = PlotLocalMap(smooth_track)
-        # lm = LocalMap(track)
+        # local_map = PlotLocalMap(smooth_track)
+        local_map = LocalMap(smooth_track)
 
         self.smooth_track = local_map
-        if counter != None:
-            self.plot_local_map_generation(counter)
+        if self.save_data:
+            # save local map, the points from line1 and line1, the calculated segement points and the projected centre points
+            np.save(self.local_map_data_path + f"local_map_{self.counter}", local_map.track)
+            np.save(self.local_map_data_path + f"line1_{self.counter}", self.line_1.points)
+            np.save(self.local_map_data_path + f"line2_{self.counter}", self.line_2.points)
+            boundaries = np.concatenate((self.boundary_1, self.boundary_2), axis=1)
+            np.save(self.local_map_data_path + f"boundaries_{self.counter}", boundaries)
+            if self.boundary_extension_1 is not None:
+                boundaries = np.concatenate((self.boundary_extension_1, self.boundary_extension_2), axis=1)
+                np.save(self.local_map_data_path + f"boundExtension_{self.counter}", boundaries)
+            else:
+                np.save(self.local_map_data_path + f"boundExtension_{self.counter}", np.array([]))
 
-        if save: np.save(self.local_map_data_path + f"local_map_{self.counter}", local_map.track)
         self.counter += 1
 
         return local_map
