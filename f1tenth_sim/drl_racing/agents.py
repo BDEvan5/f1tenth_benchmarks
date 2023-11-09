@@ -1,7 +1,7 @@
 import numpy as np
-from f1tenth_sim.mapless_racing.sac import TrainSAC, TestSAC
-from f1tenth_sim.mapless_racing.td3 import TrainTD3, TestTD3
-from f1tenth_sim.mapless_racing.reward_functions import TrajectoryAidedLearningReward
+from f1tenth_sim.drl_racing.sac import TrainSAC, TestSAC
+from f1tenth_sim.drl_racing.td3 import TrainTD3, TestTD3
+from f1tenth_sim.drl_racing.reward_functions import TrajectoryAidedLearningReward
 
 
 def create_train_agent(state_dim, algorithm):
@@ -15,7 +15,7 @@ def create_train_agent(state_dim, algorithm):
     return agent
     
 def create_test_agent(filename, directory):
-    algorithm = filename.split("_")[0]
+    algorithm = filename[0:3]
     if algorithm == "TD3":
         agent = TestTD3(filename, directory)
     elif algorithm == "SAC":
@@ -136,9 +136,10 @@ class TrainingAgent(EndToEndAgent):
 
 
 class TestingAgent(EndToEndAgent): 
-    def __init__(self, agent_name):
+    def __init__(self, test_id, algorithm):
         super().__init__()
-        self.path = f"Logs/{agent_name}/"
+        agent_name = f"{algorithm}_endToEnd"
+        self.path = f"Logs/{agent_name}/RawData_{test_id}/"
         self.architecture = EndToEndAgent()
         self.agent = create_test_agent(agent_name, self.path)
         
