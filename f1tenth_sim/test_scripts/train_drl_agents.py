@@ -15,11 +15,11 @@ def seed_randomness(random_seed):
 
 def train_and_test_agents():
     seed_randomness(10)
-    # map_name = "mco"
-    map_name = "gbr"
+    map_name = "mco"
+    # map_name = "gbr"
     algorithm = "TD3"
-    # algorithm = "SAC"
-    test_id = "v2"
+    algorithm = "SAC"
+    test_id = "v1"
     training_steps = 80000
 
     training_agent = TrainingAgent(map_name, test_id, algorithm)
