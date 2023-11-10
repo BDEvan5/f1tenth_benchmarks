@@ -66,7 +66,25 @@ class LocalRaceline:
         return raceline
 
     def generate_minimum_curvature_path(self):
-        coeffs_x, coeffs_y, M, normvec_normalized = tph.calc_splines.calc_splines(self.lm.track[:, :2], self.lm.el_lengths, self.lm.psi[0], self.lm.psi[-1])
+        # plt.figure()
+        # plt.plot(self.lm.track[:, 0], self.lm.track[:, 1], '--', linewidth=2, color='black')
+        # # calculate the sides using the nvecs
+        # l1 = self.lm.track[:, :2] + self.lm.nvecs * self.lm.track[:, 2][:, None]
+        # l2 = self.lm.track[:, :2] - self.lm.nvecs * self.lm.track[:, 3][:, None]
+        # plt.plot(l1[:, 0], l1[:, 1], color='green')
+        # plt.plot(l2[:, 0], l2[:, 1], color='green')
+        # for i in range(len(l1)):
+        #     xs = [l1[i, 0], l2[i, 0]]
+        #     ys = [l1[i, 1], l2[i, 1]]
+        #     plt.plot(xs, ys, color='green')
+        # plt.plot(0, 0, '*', markersize=10, color='red')
+        # plt.axis('equal')
+
+        # plt.show()
+
+
+        M = tph.calc_spline_M.calc_spline_M(self.lm.track[:, :2], self.lm.el_lengths, self.lm.psi[0] + np.pi/2, self.lm.psi[-1] + np.pi/2)
+        # coeffs_x, coeffs_y, M, normvec_normalized = tph.calc_splines.calc_splines(self.lm.track[:, :2], self.lm.el_lengths, self.lm.psi[0] + np.pi/2, self.lm.psi[-1] + np.pi/2)
         psi = self.lm.psi #- np.pi/2 # Why?????
 
         start_psi = psi[0]
