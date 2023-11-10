@@ -14,7 +14,7 @@ def ensure_path_exists(folder):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-class F1TenthSimBase:
+class F1TenthSimBase: # IMO this should be a gym.Env and we should follow that structure, especially for the wrapper so that people can use it with their own customized envs
     def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False):
         with open(f"f1tenth_sim/simulator/simulator_params.yaml", 'r') as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
@@ -47,6 +47,8 @@ class F1TenthSimBase:
         if save_detail_history:
             self.history = SimulatorHistory(self.path, test_id)
             self.history.set_map_name(map_name)
+
+        # define action and observation space, important for gym.Env
             
 
     def step(self, action):
@@ -77,7 +79,7 @@ class F1TenthSimBase:
             print(f"{self.lap_number} :: {self.total_steps} LAP COMPLETE: Time: {self.current_time:.2f}, Progress: {(100*self.progress):.1f}")
 
 
-        return observation, done
+        return observation, done # gym should return observation, reward, terminated, truncated, info
 
     def build_observation(self, pose):
         raise NotImplementedError("The build_observation method has not been implemented")
@@ -113,6 +115,7 @@ class F1TenthSimBase:
         # self.starting_progress = np.random.random()
         # start_pose = self.center_line.get_pose_from_progress(self.starting_progress)
         # print(f"Resetting to {self.starting_progress:.2f} progress with pose: {start_pose}")
+        # I can add the random start pose code, should be part of the Trackline class or so
         start_pose = np.zeros(3)
         self.dynamics_simulator.reset(start_pose)
         self.current_state = np.zeros((7, ))

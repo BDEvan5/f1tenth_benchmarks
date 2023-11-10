@@ -3,7 +3,8 @@ from f1tenth_sim.mapless_racing.follow_the_gap.FollowTheGap import FollowTheGap
 import numpy as np
 
 from testing_utils import *
-
+# isn't that rather a run script than a test script?
+# location makes it difficult to run if repo not installed as package
 
 def run_mapless_tests(planner):
     map_list = ["aut", "esp", "gbr", "mco"]

@@ -13,6 +13,7 @@ class TrackingAccuracy:
     def __init__(self, map_name, centerline) -> None:
         self.map_name = map_name
         if centerline:
+            # no loading here, should get a RaceTrack and then use the centerline
             filename = f"racelines/" + map_name + "_raceline.csv"
             racetrack = np.loadtxt(filename, delimiter=',', skiprows=1)
             self.wpts = racetrack[:, 1:3]

@@ -8,7 +8,7 @@ from f1tenth_sim.data_tools.general_plotting.plot_trajectory import plot_analysi
 
 from f1tenth_sim.test_scripts.testing_utils import *
 
-
+# run_classical_methods.py
 
 def run_planning_tests_all_maps(planner, test_id):
     map_list = ["aut", "esp", "gbr", "mco"]
@@ -41,6 +41,7 @@ def test_pure_pursuit():
     planner = PurePursuit(test_id)
     # run_planning_test_single(planner, map_name, test_id)
     run_planning_tests_all_maps(planner, test_id)
+    # runn all should be config
 
 
 def test_mpcc():
@@ -55,7 +56,7 @@ def test_mpcc():
 
 
 if __name__ == "__main__":
-
+    # config for setting the correct runs?
     test_pure_pursuit()
     # test_mpcc()
 

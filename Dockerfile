@@ -12,5 +12,5 @@ RUN pip install -e .
 
 RUN pip install -r requirements.txt
 
-
+# does that work bc the simulator is not installed?
 ENTRYPOINT ["/bin/bash"]

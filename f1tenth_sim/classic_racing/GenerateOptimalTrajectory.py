@@ -12,7 +12,7 @@ V_MAX = 8
 VEHICLE_MASS = 3.4
 ax_max_machine = np.array([[0, 8.5],[8, 8.5]])
 ggv = np.array([[0, 8.5, 8.5], [8, 8.5, 8.5]])
-
+# I feel like all the vehicle parameters should be in a single file somewhere
 
 def ensure_path_exists(folder):
     if not os.path.exists(folder):

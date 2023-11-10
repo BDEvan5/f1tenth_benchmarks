@@ -16,6 +16,7 @@ WAIT_FOR_USER = False
 
 np.printoptions(precision=2, suppress=True)
 
+# put in utils
 def normalise_psi(psi):
     while psi > np.pi:
         psi -= 2*np.pi
@@ -31,7 +32,7 @@ WEIGHT_CONTOUR = 20
 WEIGHT_STEER = 100
 NX = 4
 NU = 3
-
+# @dataclass or something?
 p = {
     "position_min": -100,
     "position_max": 100,
@@ -278,6 +279,7 @@ class MPCC:
         self.warm_start = False
 
     def plot_vehicle_controls(self, p, controls):
+        # plotting utils for others?
         fig, axs = plt.subplots(5, 1, num=3, clear=True, figsize=(8, 15))
         axs[0].plot(controls[:, 0], '-o', color='red')
         axs[0].set_ylabel('Steering Angle')

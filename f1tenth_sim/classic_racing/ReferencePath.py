@@ -6,7 +6,7 @@ import csv
 
 
 
-class ReferencePath:
+class ReferencePath:  # What's the difference to the RaceTrack? Should be kind of related
     def __init__(self, map_name, w=0.35):
         # self.width = width
         self.map_name = map_name

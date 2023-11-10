@@ -1,9 +1,9 @@
 numba==0.57.1
 numpy==1.22.0
 matplotlib==3.5.2
-scipy==1.11.1
+scipy==1.11.1 # can't find this version
 pyyaml==6.0.1
-
+# isn't there more needed, e.g., trajectory_planning_helpers for GenerateOpt...
 
 
 

@@ -5,7 +5,7 @@ from PIL import Image
 import os 
 from scipy.ndimage import distance_transform_edt as edt
 
-
+# redundant code from f1tenth_sim/simulator/laser_models.py (?)
 class ScanSimulator2D:
     def __init__(self, map_name, num_beams, fov, eps=0.001, theta_dis=2000, max_range=30.0):
         self.num_beams = num_beams
