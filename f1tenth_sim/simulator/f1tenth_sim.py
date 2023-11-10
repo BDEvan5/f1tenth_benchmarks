@@ -8,6 +8,7 @@ from argparse import Namespace
 import numpy as np
 import pandas as pd
 import os, datetime
+import cProfile, io, pstats
 
 
 def ensure_path_exists(folder):
@@ -48,6 +49,26 @@ class F1TenthSimBase:
             self.history = SimulatorHistory(self.path, test_id)
             self.history.set_map_name(map_name)
             
+        self.pr = cProfile.Profile()
+        self.pr.enable()
+
+    def __del__(self):
+        self.pr.disable()
+        stats = self.pr.getstats()
+        ps = pstats.Stats(self.pr).sort_stats('cumulative')
+        stats_profile_functions = ps.get_stats_profile().func_profiles
+        df_entries = []
+        for k in stats_profile_functions.keys():
+            v = stats_profile_functions[k]
+            entry = {"func": k, "ncalls": v.ncalls, "tottime": v.tottime, "percall_tottime": v.percall_tottime, "cumtime": v.cumtime, "percall_cumtime": v.percall_cumtime, "file_name": v.file_name, "line_number": v.line_number}
+            df_entries.append(entry)
+        df = pd.DataFrame(df_entries)
+        df = df[df.cumtime > 0]
+        df = df[df.file_name != "~"] # this removes internatl file calls.
+        df = df[~df['file_name'].str.startswith('<')]
+        df = df.sort_values(by=['cumtime'], ascending=False)
+        df.to_csv(f"Logs/{self.planner_name}/RawData_{self.test_id}/Profile_{self.map_name}.csv")
+
 
     def step(self, action):
         if self.history is not None:
