@@ -74,8 +74,8 @@ class ParticleFilter:
 
     def lap_complete(self):
         estimates = np.array(self.estimates)
-        np.save(f"Logs/{self.vehicle_name}/pf_estimates.npy", estimates)
-        print(f"Estimates saved in {self.vehicle_name}/pf_estimates.npy")
+        np.save(f"Logs/{self.vehicle_name}/RawData_{self.NP}/pf_estimates_{self.NP}.npy", estimates)
+        print(f"Estimates saved in {self.vehicle_name}/RawData_{self.NP}/pf_estimates_{self.NP}.npy")
 
 
 

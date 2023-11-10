@@ -1,7 +1,7 @@
 
 import numpy as np
 from numba import njit
-from f1tenth_sim.classic_racing.planner_utils import RaceTrack
+from f1tenth_sim.classic_racing.planner_utils import RaceTrack, CentreLineTrack
 
 
 WHEELBASE = 0.33
@@ -21,6 +21,9 @@ class PurePursuit:
 
     def set_map(self, map_name):
         self.racetrack = RaceTrack(map_name, self.test_id)
+
+    def set_map_centerline(self, map_name):
+        self.racetrack = CentreLineTrack(map_name, 3)
 
     def plan(self, obs):
         state = obs["vehicle_state"]

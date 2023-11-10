@@ -2,8 +2,8 @@ from f1tenth_sim.simulator import F1TenthSim_TrueLocation
 from f1tenth_sim.classic_racing.PurePursuit import PurePursuit
 from f1tenth_sim.classic_racing.particle_filter import ParticleFilter
 import numpy as np
-from f1tenth_sim.data_tools.plot_trajectory import plot_analysis
-from f1tenth_sim.data_tools.plot_pf_errors import plot_pf_errors
+from f1tenth_sim.data_tools.general_plotting.plot_trajectory import plot_analysis
+from f1tenth_sim.data_tools.specific_plotting.plot_pf_errors import plot_pf_errors
 
 def run_simulation_loop_laps(sim, planner, pf, n_laps):
     for lap in range(n_laps):
@@ -14,6 +14,7 @@ def run_simulation_loop_laps(sim, planner, pf, n_laps):
             observation, done = sim.step(action)
             observation['pose'] = pf.localise(action, observation)
         pf.lap_complete()
+    sim.__del__()
 
 
 def run_planning_tests(planner):
@@ -27,16 +28,44 @@ def run_planning_tests(planner):
 
 def test_pf_perception():
     tuning_map = "aut"
-    name = "PerceptionTesting"
-    simulator = F1TenthSim_TrueLocation(tuning_map, name)
-    planner = PurePursuit()
-    pf_localisation = ParticleFilter(name, 100)
+    perception_name = "PerceptionTesting"
+    n_particles = 100
+    test_id = f"{n_particles}"
+    simulator = F1TenthSim_TrueLocation(tuning_map, perception_name, test_id)
+    planner = PurePursuit(test_id)
+    pf_localisation = ParticleFilter(perception_name, n_particles)
     
-    planner.set_map(tuning_map)
+    planner.set_map_centerline(tuning_map)
     pf_localisation.set_map(tuning_map)
     run_simulation_loop_laps(simulator, planner, pf_localisation, 1)
 
-    plot_pf_errors(name)
+    plot_pf_errors(perception_name, test_id)
+
+    
+def test_single_perception_config(tuning_map, perception_name, n_particles, test_id):
+    simulator = F1TenthSim_TrueLocation(tuning_map, perception_name, test_id)
+    planner = PurePursuit(test_id)
+    pf_localisation = ParticleFilter(perception_name, n_particles)
+        
+    planner.set_map_centerline(tuning_map)
+    pf_localisation.set_map(tuning_map)
+    run_simulation_loop_laps(simulator, planner, pf_localisation, 1)
+
+    plot_pf_errors(perception_name, test_id)
+
+
+def test_pf_perception():
+    tuning_map = "aut"
+    perception_name = "PerceptionTesting"
+    # for n_particles in [25, 50, 75, 100, 150, 250, 350, 500]:
+    for n_particles in [75, 100, 150]:
+    # for n_particles in [50]:
+    # for n_particles in [250]:
+        test_id = f"{n_particles}"
+        test_single_perception_config(tuning_map, perception_name, n_particles, test_id)
+
+
+
 
 
 
