@@ -1,15 +1,17 @@
 import numpy as np
 
 from f1tenth_sim.localmap_racing.local_map_utils import *
-from f1tenth_sim.localmap_racing.generator_utils import *
 from f1tenth_sim.localmap_racing.LocalMap import LocalMap
 
 np.set_printoptions(precision=4)
 
 DISTNACE_THRESHOLD = 1.4 # distance in m for an exception
 TRACK_WIDTH = 1.8 # use fixed width
-POINT_SEP_DISTANCE = 0.8
 FOV = 4.7
+BOUNDARY_SMOOTHING = 0.2
+MAX_TRACK_WIDTH = 2.5
+TRACK_SEPEARTION_DISTANCE = 0.4
+BOUNDARY_STEP_SIZE = 0.6
 
 
 class LocalMapGenerator:
@@ -47,7 +49,7 @@ class LocalMapGenerator:
                 np.save(self.local_map_data_path + f"boundExtension_{self.counter}", np.array([]))
 
         self.counter += 1
-        print(f"Counter: {self.counter} Track length: {local_track.shape[0]}")
+        # print(f"Counter: {self.counter} Track length: {local_track.shape[0]}")
 
         return local_map
 
@@ -58,18 +60,18 @@ class LocalMapGenerator:
         inds = np.array(np.where(pt_distances > DISTNACE_THRESHOLD))
 
         arr_inds = np.arange(len(pt_distances))[inds]
+        if np.min(arr_inds) > 2:
+            arr_inds = np.insert(arr_inds, 0, -2)
+        if np.max(arr_inds) < len(z)-3:
+            arr_inds = np.append(arr_inds, len(z)-1)
 
-        candidate_lines = []
-        arr_inds = np.insert(arr_inds, 0, -2)
-        arr_inds = np.append(arr_inds, len(z)-1)
         # build a list of all the possible boundaries to use. 
         candidate_lines = [z[arr_inds[i]+2:arr_inds[i+1]+1] for i in range(len(arr_inds)-1)]
         # Remove any boundaries that are not realistic
         candidate_lines = [line for line in candidate_lines if not np.all(line[:, 0] < -0.8) or np.all(np.abs(line[:, 1]) > 2.5)]
 
-        step_size = 0.6
-        left_line = resample_track_points(candidate_lines[0], step_size, 0.2)
-        right_line = resample_track_points(candidate_lines[-1], step_size, 0.2)
+        left_line = resample_track_points(candidate_lines[0], BOUNDARY_STEP_SIZE, BOUNDARY_SMOOTHING)
+        right_line = resample_track_points(candidate_lines[-1], BOUNDARY_STEP_SIZE, BOUNDARY_SMOOTHING)
         if left_line.shape[0] > right_line.shape[0]:
             self.left_longer = True
         else:
@@ -78,65 +80,22 @@ class LocalMapGenerator:
         return left_line, right_line # in time, remove the self.
 
     def calculate_visible_segments(self, left_line, right_line):
-        max_pts = max(left_line.shape[0], right_line.shape[0])
-        # consdier refactoring this to a function that can be called with reverse order
-        left_boundary = np.zeros((max_pts, 2))
-        right_boundary = np.zeros((max_pts, 2))
-        for i in range(max_pts):
-            if self.left_longer:
-                distances = np.linalg.norm(right_line - left_line[i], axis=1)
-            else:
-                distances = np.linalg.norm(left_line - right_line[i], axis=1)
-            idx = np.argmin(distances)
-            if distances[idx] > 2.5: #!Magic number
-                break # no more points are visible
-            
-            if self.left_longer:
-                left_boundary[i] = left_line[i]
-                right_boundary[i] = right_line[idx]
-            else:
-                left_boundary[i] = left_line[idx]
-                right_boundary[i] = right_line[i]
-
-        left_boundary = left_boundary[:i]
-        right_boundary = right_boundary[:i]
+        if self.left_longer:
+            left_boundary, right_boundary = calculate_boundary_segments(left_line, right_line)
+        else:
+            right_boundary, left_boundary = calculate_boundary_segments(right_line, left_line)
 
         return left_boundary, right_boundary
 
     def estimate_semi_visible_segments(self, left_line, right_line, left_boundary, right_boundary):
         if self.left_longer:
-            unmatched_points = len(left_line) - len(left_boundary)
+            if len(left_line) - len(left_boundary) < 3:
+                return None, None
+            right_extension, left_extension = extend_boundary_lines(left_line, left_boundary, right_boundary, -1)
         else:
-            unmatched_points = len(right_line) - len(right_boundary)
-
-        if unmatched_points < 3: 
-            return None, None
-
-        if self.left_longer:
-            left_extension = left_line[len(left_boundary):]
-            side_lm = LocalMap(left_extension)
-            right_extension = left_extension + side_lm.nvecs * TRACK_WIDTH 
-        else:
-            right_extension = right_line[len(right_boundary):]
-            side_lm = LocalMap(right_extension)
-            left_extension = right_extension - side_lm.nvecs * TRACK_WIDTH
-
-        # remove corner points closer to the centre line than the last true point
-        if len(left_boundary) > 0 and len(right_boundary) > 0:
-            centre_line = (left_boundary + right_boundary) / 2
-            if self.left_longer:
-                threshold = np.linalg.norm(right_boundary[-1] - centre_line[-1])
-            else:
-                threshold = np.linalg.norm(left_boundary[-1] - centre_line[-1])
-
-            if self.left_longer:
-                for z in range(len(right_extension)):
-                    if np.linalg.norm(right_extension[z] - centre_line[-1]) < threshold:
-                        right_extension[z] = right_boundary[-1]
-            else:
-                for z in range(len(left_extension)):
-                    if np.linalg.norm(left_extension[z] - centre_line[-1]) < threshold:
-                        left_extension[z] = left_boundary[-1]
+            if len(right_line) - len(right_boundary) < 3:
+                return None, None
+            left_extension, right_extension = extend_boundary_lines(right_line, right_boundary, left_boundary, 1)
 
         return left_extension, right_extension
         
@@ -144,13 +103,12 @@ class LocalMapGenerator:
         if left_extension is not None:
             left_boundary = np.append(left_boundary, left_extension, axis=0)
             right_boundary = np.append(right_boundary, right_extension, axis=0)
-        new_track = (left_boundary + right_boundary) / 2
-        w1 = np.linalg.norm(left_boundary - new_track, axis=1)[:, None]
-        w2 = np.linalg.norm(right_boundary - new_track, axis=1)[:, None]
-        local_track = np.concatenate((new_track, w1, w2), axis=1)
+        track_centre_line = (left_boundary + right_boundary) / 2
+        width_left = np.linalg.norm(left_boundary - track_centre_line, axis=1)[:, None]
+        width_right = np.linalg.norm(right_boundary - track_centre_line, axis=1)[:, None]
+        local_track = np.concatenate((track_centre_line, width_left, width_right), axis=1)
 
-        track_regularisation = 0.4
-        local_track = interpolate_4d_track(local_track, track_regularisation)
+        local_track = interpolate_4d_track(local_track, TRACK_SEPEARTION_DISTANCE)
 
         return local_track
 
@@ -175,6 +133,42 @@ def resample_track_points(points, seperation_distance=0.2, smoothing=0.2):
     resampled_points = interpolate_track_new(smooth_line, n_pts, 0)
 
     return resampled_points
+
+def calculate_boundary_segments(long_line, short_line):
+    long_boundary, short_boundary = np.zeros_like(long_line), np.zeros_like(long_line)
+    for i in range(long_line.shape[0]):
+        distances = np.linalg.norm(short_line - long_line[i], axis=1)
+
+        idx = np.argmin(distances)
+        if distances[idx] > MAX_TRACK_WIDTH: break 
+        
+        long_boundary[i] = long_line[i]
+        short_boundary[i] = short_line[idx]
+
+    return long_boundary[:i], short_boundary[:i]
+
+def extend_boundary_lines(long_line, long_boundary, short_boundary, direction=1):
+    long_extension = long_line[len(long_boundary):]
+    nvecs = calculate_nvecs(long_extension)
+    short_extension = long_extension - nvecs * TRACK_WIDTH * direction
+
+    if len(short_boundary) > 0 and len(long_boundary) > 0:
+        centre_line = (long_boundary + short_boundary) / 2
+        threshold = np.linalg.norm(short_boundary[-1] - centre_line[-1])
+        for z in range(len(short_extension)):
+            if np.linalg.norm(short_extension[z] - centre_line[-1]) < threshold:
+                short_extension[z] = short_boundary[-1]
+
+    return short_extension, long_extension
+
+
+
+def calculate_nvecs(line):
+    el_lengths = np.linalg.norm(np.diff(line, axis=0), axis=1)
+    psi, kappa = tph.calc_head_curv_num.calc_head_curv_num(line, el_lengths, False)
+    nvecs = tph.calc_normal_vectors_ahead.calc_normal_vectors_ahead(psi)
+
+    return nvecs
 
 
 
