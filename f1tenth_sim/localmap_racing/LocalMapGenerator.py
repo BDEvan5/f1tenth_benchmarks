@@ -93,78 +93,23 @@ class LocalMapGenerator:
 
     def extract_track_boundaries(self, z):
         z = z[z[:, 0] > -2] # remove points behind the car 
-        #!This might be a problem.... Check this
         z = z[np.logical_or(z[:, 0] > 0, np.abs(z[:, 1]) < 2)] # remove points behind the car or too far away
         pt_distances = np.linalg.norm(z[1:] - z[:-1], axis=1)
         inds = np.array(np.where(pt_distances > DISTNACE_THRESHOLD))
-        exclusion_zone = 2
-        inds = np.delete(inds, np.where(inds <= exclusion_zone)) 
-        inds = np.delete(inds, np.where(inds >= len(z)-exclusion_zone)) 
 
         arr_inds = np.arange(len(pt_distances))[inds]
-        min_ind = np.min(arr_inds) +1
-        max_ind = np.max(arr_inds) + 1
 
-        line_1_pts = z[:min_ind]
-        line_2_pts = z[max_ind:]
-        i = 1
-        while (np.all(line_1_pts[:, 0] < -0.8) or np.all(np.abs(line_1_pts[:, 1]) > 2.5)) and i < len(inds):
-            min_ind2 = np.min(arr_inds[i:]) 
-            line_1_pts = z[min_ind+2:min_ind2]
-            min_ind = min_ind2
-            i += 1
+        candidate_lines = []
+        arr_inds = np.insert(arr_inds, 0, -2)
+        arr_inds = np.append(arr_inds, len(z)-1)
+        # build a list of all the possible boundaries to use. 
+        candidate_lines = [z[arr_inds[i]+2:arr_inds[i+1]+1] for i in range(len(arr_inds)-1)]
+        # Remove any boundaries that are not realistic
+        candidate_lines = [line for line in candidate_lines if not np.all(line[:, 0] < -0.8) or np.all(np.abs(line[:, 1]) > 2.5)]
 
-        line_2_pts = z[max_ind:]
-        i = 1
-        while (np.all(line_1_pts[:, 0] < -0.8) or np.all(np.abs(line_1_pts[:, 1]) > 2.5)) and i < len(inds):
-            max_ind2 = np.max(arr_inds[:-i])
-            line_1_pts = z[max_ind2+2:max_ind]
-            max_ind = max_ind2
-            i += 1
-
-        self.line_1 = TrackBoundary(line_1_pts, True)
-        self.line_2 = TrackBoundary(line_2_pts, True)
-
-    # def extract_track_lines(self):
-    #     pts = np.hstack((self.scan_xs[:, None], self.scan_ys[:, None]))
-    #     pts = pts[pts[:, 0] > -2] # remove points behind the car
-    #     pts = pts[np.logical_or(pts[:, 0] > 0, np.abs(pts[:, 1]) < 2)] # remove points behind the car or too far away
-    #     pt_distances = np.linalg.norm(pts[1:] - pts[:-1], axis=1)
-    #     inds = np.array(np.where(pt_distances > DISTNACE_THRESHOLD))
-    #     exclusion_zone = 2
-    #     length = len(pts)
-    #     inds = np.delete(inds, np.where(inds <= exclusion_zone)) 
-    #     inds = np.delete(inds, np.where(inds >= length-exclusion_zone)) 
-
-    #     if len(inds) == 0:
-    #         raise IOError("Problem with full scan, no gaps found")
-
-    #     return pts, pt_distances, inds
-
-    # def extract_boundaries(self, pts, pt_distances, inds):
-    #     arr_inds = np.arange(len(pt_distances))[inds]
-    #     min_ind = np.min(arr_inds) +1
-    #     max_ind = np.max(arr_inds) + 1
-
-    #     line_1_pts = pts[:min_ind]
-    #     line_2_pts = pts[max_ind:]
-    #     i = 1
-    #     while (np.all(line_1_pts[:, 0] < -0.8) or np.all(np.abs(line_1_pts[:, 1]) > 2.5)) and i < len(inds):
-    #         min_ind2 = np.min(arr_inds[i:]) 
-    #         line_1_pts = pts[min_ind+2:min_ind2]
-    #         min_ind = min_ind2
-    #         i += 1
-
-    #     line_2_pts = pts[max_ind:]
-    #     i = 1
-    #     while (np.all(line_1_pts[:, 0] < -0.8) or np.all(np.abs(line_1_pts[:, 1]) > 2.5)) and i < len(inds):
-    #         max_ind2 = np.max(arr_inds[:-i])
-    #         line_1_pts = pts[max_ind2+2:max_ind]
-    #         max_ind = max_ind2
-    #         i += 1
-
-    #     self.line_1 = TrackBoundary(line_1_pts, True)
-    #     self.line_2 = TrackBoundary(line_2_pts, True)
+        # select the first and last boundaries 
+        self.line_1 = TrackBoundary(candidate_lines[0], True)
+        self.line_2 = TrackBoundary(candidate_lines[-1], True)
 
     def project_side_to_track(self, side):
         side_lm = LocalMap(side)
