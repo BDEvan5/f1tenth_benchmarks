@@ -44,7 +44,7 @@ def plot_drl_training(planner_name, test_id):
     a2.grid(True)
 
     plt.tight_layout()
-    plt.savefig(f"Logs/{planner_name}/TrainingProgress.svg")
+    plt.savefig(f"Logs/{planner_name}/TrainingProgress_{test_id}.svg")
 
 
 

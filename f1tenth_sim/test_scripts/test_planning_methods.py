@@ -28,9 +28,9 @@ def run_planning_test_single(planner, map_name, test_id):
     planner.set_map(map_name)
     run_simulation_loop_laps(simulator, planner, 1)
 
-    calculate_tracking_accuracy(planner.name)
-    plot_analysis(planner.name, test_id)
-    plot_raceline_tracking(planner.name, test_id)
+    # calculate_tracking_accuracy(planner.name)
+    # plot_analysis(planner.name, test_id)
+    # plot_raceline_tracking(planner.name, test_id)
 
 
 def test_pure_pursuit():
@@ -39,8 +39,8 @@ def test_pure_pursuit():
     # test_id = "mu70"
     map_name = "aut"
     planner = PurePursuit(test_id)
-    # run_planning_test_single(planner, map_name, test_id)
-    run_planning_tests_all_maps(planner, test_id)
+    run_planning_test_single(planner, map_name, test_id)
+    # run_planning_tests_all_maps(planner, test_id)
 
 
 def test_mpcc():

@@ -8,6 +8,7 @@ from argparse import Namespace
 import numpy as np
 import pandas as pd
 import os, datetime
+import cProfile, io, pstats
 
 
 def ensure_path_exists(folder):
@@ -40,14 +41,31 @@ class F1TenthSimBase:
         self.total_steps = 0
 
         self.history = None
-        if os.path.exists(self.path + f"Results_{self.planner_name}.csv"):
-            self.lap_history = pd.read_csv(self.path + f"Results_{self.planner_name}.csv").to_dict('records')
-        else:
-            self.lap_history = []
+
+        self.lap_history = []
         if save_detail_history:
             self.history = SimulatorHistory(self.path, test_id)
             self.history.set_map_name(map_name)
             
+        self.pr = cProfile.Profile()
+        self.pr.enable()
+
+    def __del__(self):
+        self.pr.disable()
+        ps = pstats.Stats(self.pr).sort_stats('cumulative')
+        stats_profile_functions = ps.get_stats_profile().func_profiles
+        df_entries = []
+        for k in stats_profile_functions.keys():
+            v = stats_profile_functions[k]
+            entry = {"func": k, "ncalls": v.ncalls, "tottime": v.tottime, "percall_tottime": v.percall_tottime, "cumtime": v.cumtime, "percall_cumtime": v.percall_cumtime, "file_name": v.file_name, "line_number": v.line_number}
+            df_entries.append(entry)
+        df = pd.DataFrame(df_entries)
+        df = df[df.cumtime > 0]
+        df = df[df.file_name != "~"] # this removes internatl file calls.
+        df = df[~df['file_name'].str.startswith('<')]
+        df = df.sort_values(by=['cumtime'], ascending=False)
+        df.to_csv(f"Logs/{self.planner_name}/RawData_{self.test_id}/Profile_{self.map_name}_{self.test_id}.csv")
+
 
     def step(self, action):
         if self.history is not None:
@@ -67,7 +85,7 @@ class F1TenthSimBase:
         
         done = self.collision or self.lap_complete
         if done:
-            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.test_id, "Progress": self.progress, "Time": self.current_time, "Steps": self.total_steps, "RecordTime": datetime.datetime.now(), "Planner": self.planner_name})
+            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.test_id, "Progress": self.progress, "Time": self.current_time, "Steps": self.total_steps, "RecordTime": datetime.datetime.now(), "Planner": self.planner_name, "EntryID": f"{self.map_name}_{self.test_id}_{self.lap_number}"})
             self.save_data_frame()
             if self.history is not None: self.history.save_history()
 
@@ -127,14 +145,27 @@ class F1TenthSimBase:
         return obs, done, start_pose
 
     def save_data_frame(self):
-        agent_df = pd.DataFrame(self.lap_history)
-        agent_df = agent_df.sort_values(by=["Lap"])
+        if os.path.exists(self.path + f"Results_{self.planner_name}.csv"):
+            history_df = pd.read_csv(self.path + f"Results_{self.planner_name}.csv")
+            history_dict = history_df.to_dict('records')
+            for lap_df in self.lap_history:
+                idx = history_df.loc[history_df["EntryID"] == lap_df["EntryID"]].index
+                if len(idx) == 0:
+                    history_dict.append(lap_df)
+                else: # replace
+                    idx = idx[0]
+                    history_dict[idx] = lap_df
+            save_df = pd.DataFrame(history_dict)
+        else:
+            save_df = pd.DataFrame(self.lap_history)
+        
+        save_df = save_df.sort_values(by=["EntryID"])
         if self.training:
             file_name = self.path + f"RawData_{self.test_id}/TrainingData_{self.test_id}.csv"
         else:
             file_name = self.path + f"Results_{self.planner_name}.csv"
 
-        agent_df.to_csv(file_name, index=False, float_format='%.4f')
+        save_df.to_csv(file_name, index=False, float_format='%.4f')
 
 
 class F1TenthSim(F1TenthSimBase):
