@@ -22,10 +22,6 @@ class LocalMapPlanner:
         self.path = f"Logs/{self.name}/"
         ensure_path_exists(self.path)
         self.use_raceline = raceline
-        self.save_data = save_data
-        if self.save_data:
-            self.scan_data_path = self.path + f"ScanData_{test_id}/"
-            ensure_path_exists(self.scan_data_path)
 
         self.counter = 0
                 
@@ -41,8 +37,6 @@ class LocalMapPlanner:
         #     self.local_raceline.set_map(map_name)
 
     def plan(self, obs):
-        if self.save_data:
-            np.save(self.scan_data_path + f'Scan_{self.counter}.npy', obs['scan'])
         self.local_map = self.local_map_generator.generate_line_local_map(np.copy(obs['scan']))
         if len(self.local_map.track) < 4:
             self.counter += 1
