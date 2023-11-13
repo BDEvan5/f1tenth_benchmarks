@@ -10,6 +10,18 @@ from LocalMapRacing.DataTools.plotting_utils import *
 POINT_SEP_DISTANCE = 0.8
 
 
+def resample_track_points(points, seperation_distance=0.2, smoothing=0.2):
+    if points[0, 0] > points[-1, 0]:
+        points = np.flip(points, axis=0)
+
+    line_length = np.sum(np.linalg.norm(np.diff(points, axis=0), axis=1))
+    n_pts = max(int(line_length / seperation_distance), 2)
+    smooth_line = interpolate_track_new(points, None, smoothing)
+    resampled_points = interpolate_track_new(smooth_line, n_pts, 0)
+
+    return resampled_points
+
+
 class TrackBoundary:
     def __init__(self, points, smoothing=False) -> None:        
         self.smoothing_s = 0.2

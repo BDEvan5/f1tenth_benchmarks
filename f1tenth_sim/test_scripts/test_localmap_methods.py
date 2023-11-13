@@ -27,9 +27,9 @@ def run_planning_test_single(planner, map_name, test_id):
     planner.set_map(map_name)
     run_simulation_loop_laps(simulator, planner, 1)
 
-    calculate_tracking_accuracy(planner.name)
+    # calculate_tracking_accuracy(planner.name)
     plot_analysis(planner.name, test_id)
-    plot_raceline_tracking(planner.name, test_id)
+    # plot_raceline_tracking(planner.name, test_id)
 
 
 def test__localmap_planner():

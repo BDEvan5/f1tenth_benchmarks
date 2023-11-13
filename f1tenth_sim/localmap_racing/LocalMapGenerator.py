@@ -40,26 +40,52 @@ class LocalMapGenerator:
     def generate_line_local_map(self, scan):
         z = scan[:, None] * self.z_transform
         self.extract_track_boundaries(z)
-        # line_left, line_right = self.extract_track_boundaries(z)
-        # self.calculate_visible_segments(line_left, line_right)
-        # self.estimate_semi_visible_segments(line_left, line_right)
+        line_1, line_2 = self.extract_track_boundaries(z)
+        long_line, short_line = self.calculate_visible_segments(line_1, line_2)
+        self.estimate_semi_visible_segments(long_line, short_line)
         # self.regularise_track()
 
-        self.search_pts_a = []
-        self.search_pts_b = []
+        # self.search_pts_a = []
+        # self.search_pts_b = []
 
         # self.scan_xs = self.coses * scan
         # self.scan_ys = self.sines * scan
 
         # pts, pt_distances, inds = self.extract_track_lines()
         # self.extract_boundaries(pts, pt_distances, inds)
-        self.estimate_center_line_dual_boundary()
-        self.extend_center_line_projection()
+        # self.estimate_center_line_dual_boundary()
+        # self.extend_center_line_projection()
 
-        local_track = self.build_local_track()
-        smooth_track = self.smooth_track_spline(local_track)
+        # local_track = self.build_local_track()
+        # smooth_track = self.smooth_track_spline(local_track)
+        b1 = self.boundary_1
+        b2 = self.boundary_2
+        if self.boundary_extension_1 is not None:
+            b1 = np.append(self.boundary_1, self.boundary_extension_1, axis=0)
+            b2 = np.append(self.boundary_2, self.boundary_extension_2, axis=0)
+        new_track = (b1 + b2) / 2
+        w1 = np.linalg.norm(b1 - new_track, axis=1)[:, None]
+        w2 = np.linalg.norm(b2 - new_track, axis=1)[:, None]
+        local_track = np.concatenate((new_track, w1, w2), axis=1)
+        # if self.counter > 250:
+        #     print(f"B1: {self.boundary_1}")
+        #     print(f"B2: {self.boundary_2}")
+        #     print(f"BE1: {self.boundary_extension_1}")
+        #     print(f"BE2: {self.boundary_extension_2}")
+        #     print(f"LT: {local_track}")
+        #     plt.figure(1)
+        #     plt.clf()
+        #     plt.plot(self.boundary_1[:, 0], self.boundary_1[:, 1], '-o', color='black', markersize=8)
+        #     plt.plot(self.boundary_2[:, 0], self.boundary_2[:, 1], '-o', color='black', markersize=8)
+        #     if self.boundary_extension_1 is not None:
+        #         plt.plot(self.boundary_extension_1[:, 0], self.boundary_extension_1[:, 1], '-o', color='pink', markersize=8)
+        #         plt.plot(self.boundary_extension_2[:, 0], self.boundary_extension_2[:, 1], '-o', color='pink', markersize=8)
+        #     plt.plot(local_track[:, 0], local_track[:, 1], '-X', color='orange', markersize=10)
+        #     plt.axis('equal')
+        #     plt.show()
 
-        local_map = LocalMap(smooth_track)
+        print(f"LocalTrack: {local_track.shape[0]}")
+        local_map = LocalMap(local_track)
 
         self.smooth_track = local_map
         if self.save_data:
@@ -75,6 +101,7 @@ class LocalMapGenerator:
                 np.save(self.local_map_data_path + f"boundExtension_{self.counter}", np.array([]))
 
         self.counter += 1
+        print(f"Counter: {self.counter} Track length: {local_track.shape[0]}")
 
         return local_map
 
@@ -110,6 +137,86 @@ class LocalMapGenerator:
         # select the first and last boundaries 
         self.line_1 = TrackBoundary(candidate_lines[0], True)
         self.line_2 = TrackBoundary(candidate_lines[-1], True)
+
+        return candidate_lines[0], candidate_lines[-1] # in time, remove the self.
+
+    def calculate_visible_segments(self, line_1, line_2):
+        step_size = 0.6
+        line_1 = resample_track_points(line_1, step_size, 0.2)
+        line_2 = resample_track_points(line_2, step_size, 0.2)
+        if line_1.shape[0] > line_2.shape[0]:
+            long_side, short_side = line_1, line_2
+        else:
+            long_side, short_side = line_2, line_1
+
+
+        max_pts = long_side.shape[0]
+        self.boundary_1 = np.zeros((max_pts, 2))
+        self.boundary_2 = np.zeros((max_pts, 2))
+        for i in range(long_side.shape[0]):
+            distances = np.linalg.norm(short_side - long_side[i], axis=1)
+            idx = np.argmin(distances)
+            if distances[idx] > 2.5: #!Magic number
+                print(f"Break on {i}")
+                break # no more points are visible
+            corresponding_point = short_side[np.argmin(distances)]
+            self.boundary_1[i] = long_side[i]
+            self.boundary_2[i] = corresponding_point
+
+        self.boundary_1 = self.boundary_1[:i]
+        self.boundary_2 = self.boundary_2[:i]
+
+        return long_side, short_side # These should correspond to long and short sides.
+
+    def estimate_semi_visible_segments(self, line_1, line_2):
+        if line_1.shape[0] > line_2.shape[0]:
+            long_side, short_side = line_1, line_2
+        else:
+            long_side, short_side = line_2, line_1
+        
+        remaining_i = len(long_side) - len(self.boundary_1)
+        if remaining_i < 3: 
+            print(f"Long line: {long_side.shape[0]} boundary: {self.boundary_1.shape[0]} ")
+            self.boundary_extension_1 = None
+            self.boundary_extension_2 = None
+            return 
+
+        extension = long_side[len(self.boundary_1):]
+        side_lm = LocalMap(extension)
+        if line_1.shape[0] > line_2.shape[0]:
+            short_boundary = extension - side_lm.nvecs * TRACK_WIDTH 
+        else:
+            short_boundary = extension + side_lm.nvecs * TRACK_WIDTH 
+
+        # remove corner points closer to the centre line than the last true point
+        if len(self.boundary_1) > 0:
+            centre_line = (self.boundary_1 + self.boundary_2) / 2
+            threshold = np.linalg.norm(short_side[-1] - centre_line[-1])
+            # threshold = np.linalg.norm(short_boundary[-1] - centre_line[-1])
+            for z in range(len(short_boundary)):
+                # if np.linalg.norm(short_boundary[z] - centre_line[-1]) < TRACK_WIDTH/2:
+                if np.linalg.norm(short_boundary[z] - centre_line[-1]) < threshold:
+                    short_boundary[z] = short_side[-1]
+
+        if line_1.shape[0] > line_2.shape[0]:
+            self.boundary_extension_1 = extension
+            self.boundary_extension_2 = short_boundary
+        else:
+            self.boundary_extension_1 = short_boundary
+            self.boundary_extension_2 = extension
+        
+
+    def trim_points(self):
+        true_center_line = (self.boundary_1 + self.boundary_2) / 2
+        dists = np.linalg.norm(np.diff(true_center_line, axis=0), axis=1)
+        center_point_threshold = 0.15
+        removal_n = np.sum(dists < center_point_threshold)
+        # print(f"last 5 dists: {dists[-5:]}")
+        if removal_n > 0:
+            # print(f"Removing: {removal_n} points")
+            self.boundary_1 = self.boundary_1[:-removal_n]
+            self.boundary_2 = self.boundary_2[:-removal_n]
+        
 
     def project_side_to_track(self, side):
         side_lm = LocalMap(side)
@@ -168,7 +275,7 @@ class LocalMapGenerator:
     def extend_center_line_projection(self):
         true_center_line = (self.boundary_1 + self.boundary_2) / 2
         dists = np.linalg.norm(np.diff(true_center_line, axis=0), axis=1)
-        center_point_threshold = 0.25
+        center_point_threshold = 0.15
         removal_n = np.sum(dists < center_point_threshold)
         # print(f"last 5 dists: {dists[-5:]}")
         if removal_n > 0:

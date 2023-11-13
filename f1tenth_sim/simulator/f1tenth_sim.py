@@ -106,7 +106,7 @@ class F1TenthSimBase:
         done = False
         if self.progress > 0.99 and self.current_time > 5: done = True
         if self.current_time > 250: 
-            print("Time limit reached")
+            print("Time limit reached --> Lap not complete but no collision")
             done = True
 
         return done

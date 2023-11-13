@@ -21,6 +21,7 @@ class LocalMapPlanner:
         self.name = "LocalMapPlanner"
         self.path = f"Logs/{self.name}/"
         ensure_path_exists(self.path)
+        ensure_path_exists(self.path + f"RawData_{test_id}/")
         self.use_raceline = raceline
 
         self.counter = 0
