@@ -20,9 +20,10 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     coses = np.cos(angles)
     sines = np.sin(angles)
 
-    for i in range(250, 350):
+    for i in range(250,  350):
+    # for i in range(0, 100):
     # for i in range(len(logs)):
-        scan_xs, scan_ys = scans[i] * np.array([coses, sines])
+        scan_xs, scan_ys = scans[i+1] * np.array([coses, sines])
 
         local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
         line_1 = np.load(localmap_data_path + f"line1_{i}.npy")
@@ -40,18 +41,19 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         plt.plot(line_1[:, 0], line_1[:, 1], '-', color=minty_green, linewidth=3)
         plt.plot(line_2[:, 0], line_2[:, 1], '-', color=minty_green, linewidth=3)
 
-        plt.plot(local_track[:, 0], local_track[:, 1], '-X', color='orange', markersize=10)
+        # plt.plot(local_track[:, 0], local_track[:, 1], '-X', color='orange', markersize=10)
 
         for z in range(len(boundaries)):
             xs = [boundaries[z, 0], boundaries[z, 2]]
             ys = [boundaries[z, 1], boundaries[z, 3]]
-            plt.plot(xs, ys, '-o', color='black', markersize=8)
+            plt.plot(xs, ys, '-o', color='black', markersize=5)
         
         if len(boundary_extension) > 0:
             for z in range(boundary_extension.shape[0]):
                 xs = [boundary_extension[z, 0], boundary_extension[z, 2]]
                 ys = [boundary_extension[z, 1], boundary_extension[z, 3]]
-                plt.plot(xs, ys, '-o', color='pink', markersize=8)
+                plt.plot(xs, ys, '-o', color='pink', markersize=5)
+        plt.plot(local_track[:, 0], local_track[:, 1], '-', color='orange', linewidth=3)
 
         plt.axis('equal')
         plt.tight_layout()
