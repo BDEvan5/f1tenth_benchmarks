@@ -20,7 +20,8 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     coses = np.cos(angles)
     sines = np.sin(angles)
 
-    for i in range(250,  350):
+    for i in range(490, 510):
+    # for i in range(250,  350):
     # for i in range(0, 100):
     # for i in range(len(logs)):
         scan_xs, scan_ys = scans[i+1] * np.array([coses, sines])

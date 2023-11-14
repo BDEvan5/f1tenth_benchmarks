@@ -21,7 +21,7 @@ sizzling_red = "#f53b57"
 megaman = "#4bcffa"
 yerieal_yellow = "#ffdd59"
 fresh_turquoise = "#34e7e4"
-
+lighter_purple = "#a55eea"
 
 def std_img_saving(name):
 

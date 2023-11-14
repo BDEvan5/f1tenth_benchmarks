@@ -28,16 +28,16 @@ def run_planning_test_single(planner, map_name, test_id):
     run_simulation_loop_laps(simulator, planner, 1)
 
     # calculate_tracking_accuracy(planner.name)
-    plot_analysis(planner.name, test_id)
+    # plot_analysis(planner.name, test_id)
     # plot_raceline_tracking(planner.name, test_id)
 
 
 def test__localmap_planner():
     test_id = "c1"
-    map_name = "esp"
-    # map_name = "aut"
-    # planner = LocalMapPlanner(test_id, save_data=True, raceline=False)
-    planner = LocalMapPlanner(test_id, save_data=False, raceline=False)
+    # map_name = "esp"
+    map_name = "aut"
+    planner = LocalMapPlanner(test_id, save_data=True, raceline=False)
+    # planner = LocalMapPlanner(test_id, save_data=False, raceline=False)
     # planner = LocalMapPlanner(test_id, save_data=True, raceline=True)
     run_planning_test_single(planner, map_name, test_id)
     # run_planning_tests_all_maps(planner, test_id)

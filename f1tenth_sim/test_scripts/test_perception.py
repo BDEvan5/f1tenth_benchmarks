@@ -58,9 +58,9 @@ def test_pf_perception():
     tuning_map = "aut"
     perception_name = "PerceptionTesting"
     # for n_particles in [25, 50, 75, 100, 150, 250, 350, 500]:
-    for n_particles in [75, 100, 150]:
+    # for n_particles in [75, 100, 150]:
     # for n_particles in [50]:
-    # for n_particles in [250]:
+    for n_particles in [250]:
         test_id = f"{n_particles}"
         test_single_perception_config(tuning_map, perception_name, n_particles, test_id)
 

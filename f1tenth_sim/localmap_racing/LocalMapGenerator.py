@@ -103,12 +103,16 @@ class LocalMapGenerator:
         if left_extension is not None:
             left_boundary = np.append(left_boundary, left_extension, axis=0)
             right_boundary = np.append(right_boundary, right_extension, axis=0)
+        # left_boundary = resample_track_points(left_boundary, BOUNDARY_STEP_SIZE, 0)
+        # right_boundary = resample_track_points(right_boundary, BOUNDARY_STEP_SIZE, 0)
         track_centre_line = (left_boundary + right_boundary) / 2
-        width_left = np.linalg.norm(left_boundary - track_centre_line, axis=1)[:, None]
-        width_right = np.linalg.norm(right_boundary - track_centre_line, axis=1)[:, None]
-        local_track = np.concatenate((track_centre_line, width_left, width_right), axis=1)
+        widths = np.ones_like(track_centre_line) * TRACK_WIDTH / 2
+        # width_left = np.linalg.norm(left_boundary - track_centre_line, axis=1)[:, None]
+        # width_right = np.linalg.norm(right_boundary - track_centre_line, axis=1)[:, None]
+        local_track = np.concatenate((track_centre_line, widths), axis=1)
+        # local_track = np.concatenate((track_centre_line, width_left, width_right), axis=1)
 
-        local_track = interpolate_4d_track(local_track, TRACK_SEPEARTION_DISTANCE)
+        local_track = interpolate_4d_track(local_track, TRACK_SEPEARTION_DISTANCE, 0.01)
 
         return local_track
 
