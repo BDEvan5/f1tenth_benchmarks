@@ -132,6 +132,7 @@ class F1TenthSimBase:
         # start_pose = self.center_line.get_pose_from_progress(self.starting_progress)
         # print(f"Resetting to {self.starting_progress:.2f} progress with pose: {start_pose}")
         start_pose = np.zeros(3)
+        # start_pose = np.array([-7.3206, -3.1456,  1.6272])
         self.dynamics_simulator.reset(start_pose)
         self.current_state = np.zeros((7, ))
 

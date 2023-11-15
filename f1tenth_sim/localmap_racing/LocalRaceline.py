@@ -5,12 +5,13 @@ np.set_printoptions(precision=4)
 from scipy import interpolate, optimize
 
 from f1tenth_sim.localmap_racing.local_map_utils import *
+from f1tenth_sim.localmap_racing.local_opt_min_curv import local_opt_min_curv
 
 KAPPA_BOUND = 0.8
 VEHICLE_WIDTH = 1
 ax_max_machine = np.array([[0, 8.5],[8, 8.5]])
 ggv = np.array([[0, 8.5, 8.5], [8, 8.5, 8.5]])
-MU = 0.7
+MU = 0.6
 V_MAX = 8
 VEHICLE_MASS = 3.4
 
@@ -21,6 +22,18 @@ VEHICLE_MASS = 3.4
 # ax_max_machine = np.array([[0, a_max],[8, a_max]])
 # ggv = np.array([[0, a_max, a_max], [8, a_max, a_max]])
 # MU = 0.4
+
+#!TODO: this must be moved to a helper file that sets all these things up.
+#It must auto setup if a new device is used
+class MatrixAs:
+    def __init__(self):
+        self.matrxs = []
+        for i in range(10, 53):
+            A = np.load(f"Logs/Data_A/A_{i}.npy")
+            self.matrxs.append(A)
+
+    def get_A(self, i):
+        return self.matrxs[i - 10]
 
 class LocalRaceline:
     def __init__(self, path, test_id):
@@ -36,6 +49,7 @@ class LocalRaceline:
         self.counter = 0
         self.raceline_data_path = path + f"RacingLineData_{test_id}/"
         ensure_path_exists(self.raceline_data_path)
+        self.mtrxs = MatrixAs()
 
     def generate_raceline(self, local_map):
         # track = local_map.track
@@ -82,8 +96,14 @@ class LocalRaceline:
 
         # plt.show()
 
+        adjusted_track = self.lm.track
+        adjusted_track[:, 2] -= 0.5
+        adjusted_track[:, 3] -= 0.5
 
-        M = tph.calc_spline_M.calc_spline_M(self.lm.track[:, :2], self.lm.el_lengths, self.lm.psi[0] + np.pi/2, self.lm.psi[-1] + np.pi/2)
+        M = self.mtrxs.get_A(len(self.lm.track))
+        # M = tph.calc_spline_M.calc_spline_M(self.lm.track[:, :2], self.lm.el_lengths, self.lm.psi[0] + np.pi/2, self.lm.psi[-1] + np.pi/2, use_dist_scaling=True)
+
+        # M = tph.calc_spline_M.calc_spline_M(self.lm.track[:, :2], self.lm.el_lengths, self.lm.psi[0] + np.pi/2, self.lm.psi[-1] + np.pi/2, use_dist_scaling=False)
         # coeffs_x, coeffs_y, M, normvec_normalized = tph.calc_splines.calc_splines(self.lm.track[:, :2], self.lm.el_lengths, self.lm.psi[0] + np.pi/2, self.lm.psi[-1] + np.pi/2)
         psi = self.lm.psi #- np.pi/2 # Why?????
 
@@ -93,7 +113,8 @@ class LocalRaceline:
         # start_psi = (psi[0] - np.pi/2)/2 # average current heading and vehicle direction
         try:
             # alpha, error = tph.opt_min_curv.opt_min_curv(self.lm.track, self.lm.nvecs, M, KAPPA_BOUND, VEHICLE_WIDTH, print_debug=False, closed=False, psi_s=psi[0], psi_e=psi[-1], fix_s=True, fix_e=True)
-            alpha, error = tph.opt_min_curv.opt_min_curv(self.lm.track, self.lm.nvecs, M, KAPPA_BOUND, VEHICLE_WIDTH, print_debug=False, closed=False, psi_s=start_psi, psi_e=psi[-1], fix_s=True, fix_e=False)
+            alpha, error = local_opt_min_curv(adjusted_track, self.lm.nvecs, M, KAPPA_BOUND, 0, print_debug=False, psi_s=start_psi, psi_e=psi[-1], fix_s=True, fix_e=False)
+            # alpha, error = tph.opt_min_curv.opt_min_curv(self.lm.track, self.lm.nvecs, M, KAPPA_BOUND, VEHICLE_WIDTH, print_debug=False, closed=False, psi_s=start_psi, psi_e=psi[-1], fix_s=True, fix_e=False)
 
             raceline = self.lm.track[:, :2] + np.expand_dims(alpha, 1) * self.lm.nvecs
         except Exception as e:
@@ -147,9 +168,9 @@ def normalise_raceline(raceline, step_size, start_psi, end_psi):
     
     coeffs_x, coeffs_y, M, normvec_normalized = tph.calc_splines.calc_splines(raceline, r_el_lengths, start_psi, end_psi)
     
-    spline_lengths_raceline = tph.calc_spline_lengths.            calc_spline_lengths(coeffs_x=coeffs_x, coeffs_y=coeffs_y)
+    spline_lengths_raceline = tph.calc_spline_lengths.calc_spline_lengths(coeffs_x=coeffs_x, coeffs_y=coeffs_y)
     
-    raceline_interp, spline_inds_raceline_interp, t_values_raceline_interp, s_raceline_interp = tph.            interp_splines.interp_splines(spline_lengths=spline_lengths_raceline,
+    raceline_interp, spline_inds_raceline_interp, t_values_raceline_interp, s_raceline_interp = tph.interp_splines.interp_splines(spline_lengths=spline_lengths_raceline,
                                     coeffs_x=coeffs_x,
                                     coeffs_y=coeffs_y,
                                     incl_last_point=False,

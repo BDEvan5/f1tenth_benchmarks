@@ -12,13 +12,14 @@ def ensure_path_exists(path):
 def render_local_maps(planner_name, test_id, map_name="aut"):
     root = f"Logs/{planner_name}/"
     raceline_data_path = root + f"RacingLineData_{test_id}/"
-    localmap_data_path = root + f"LocalMapData_{test_id}/"
+    localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
     logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
     raceline_img_path = root + f"LocalRaceline_{test_id}/"
     ensure_path_exists(raceline_img_path)
     # in the future, I could load the scans from here and not hae to save them seperately....
 
-    for i in range(len(logs)):
+    for i in range(0, 100):
+    # for i in range(len(logs)):
         local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
         raceline = np.load(raceline_data_path + f"LocalRaceline_{i}.npy")
 

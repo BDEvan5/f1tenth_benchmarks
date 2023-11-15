@@ -60,15 +60,19 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     # for i in range(490, 510):
     # for i in range(250,  350):
     # for i in range(0, 50):
+    lengths = []
     for i in range(len(logs)):
         local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
 
-        local_track[:, 2] -= 0.5
-        local_track[:, 3] -= 0.5
+        lengths.append(len(local_track))
 
-        crossing = check_normals_crossing_complete(local_track)
-        if crossing:
-            print(f"Crossing: {i}")
+
+        # local_track[:, 2] -= 0.3
+        # local_track[:, 3] -= 0.3
+
+        # crossing = check_normals_crossing_complete(local_track)
+        # if crossing:
+        #     print(f"Crossing: {i}")
             # continue
 
         # boundaries = np.load(localmap_data_path + f"boundaries_{i}.npy")
@@ -120,6 +124,12 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         # plt.savefig(name + ".svg", bbox_inches="tight")
         # plt.show()
         # break
+
+    print(np.mean(lengths))
+    print(np.std(lengths))
+    print(np.min(lengths))
+    print(np.max(lengths))
+    print(np.unique(lengths, return_counts=True))
 
 
 def check_normals_crossing_complete(track):

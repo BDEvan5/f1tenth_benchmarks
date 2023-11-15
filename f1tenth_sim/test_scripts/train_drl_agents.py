@@ -17,8 +17,8 @@ def train_and_test_agents():
     seed_randomness(10)
     train_map = "mco"
     # train_map = "gbr" # test_id is the training map.
-    algorithm = "TD3"
-    # algorithm = "SAC"
+    # algorithm = "TD3"
+    algorithm = "SAC"
     training_steps = 80000
 
     training_agent = TrainingAgent(train_map, train_map, algorithm)

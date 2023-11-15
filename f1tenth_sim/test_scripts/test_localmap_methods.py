@@ -26,6 +26,7 @@ def run_planning_test_single(planner, map_name, test_id):
     simulator = F1TenthSim_TrueLocation(map_name, planner.name, test_id)
     planner.set_map(map_name)
     run_simulation_loop_laps(simulator, planner, 1)
+    # run_simulation_loop_laps_100(simulator, planner, 100)
 
     # calculate_tracking_accuracy(planner.name)
     # plot_analysis(planner.name, test_id)
@@ -33,12 +34,13 @@ def run_planning_test_single(planner, map_name, test_id):
 
 
 def test__localmap_planner():
-    test_id = "c1"
+    # test_id = "c1"
+    test_id = "r1"
     # map_name = "esp"
     map_name = "aut"
-    planner = LocalMapPlanner(test_id, save_data=True, raceline=False)
+    # planner = LocalMapPlanner(test_id, save_data=True, raceline=False)
     # planner = LocalMapPlanner(test_id, save_data=False, raceline=False)
-    # planner = LocalMapPlanner(test_id, save_data=True, raceline=True)
+    planner = LocalMapPlanner(test_id, save_data=True, raceline=True)
     run_planning_test_single(planner, map_name, test_id)
     # run_planning_tests_all_maps(planner, test_id)
 
