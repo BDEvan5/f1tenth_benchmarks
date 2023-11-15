@@ -66,6 +66,8 @@ class F1TenthSimBase:
         df = df.sort_values(by=['cumtime'], ascending=False)
         df.to_csv(f"Logs/{self.planner_name}/RawData_{self.test_id}/Profile_{self.map_name}_{self.test_id}.csv")
 
+        if self.history and len(self.history.states) > 1:
+            self.history.save_history()
 
     def step(self, action):
         if self.history is not None:

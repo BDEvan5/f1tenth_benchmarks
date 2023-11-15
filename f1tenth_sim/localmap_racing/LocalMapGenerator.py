@@ -161,6 +161,8 @@ def extend_boundary_lines(long_line, long_boundary, short_boundary, direction=1)
 
 
 def interpolate_track_new(points, n_points=None, s=0):
+    if len(points) <= 1:
+        return points
     order_k = min(3, len(points) - 1)
     tck = interpolate.splprep([points[:, 0], points[:, 1]], k=order_k, s=s)[0]
     if n_points is None: n_points = len(points)
