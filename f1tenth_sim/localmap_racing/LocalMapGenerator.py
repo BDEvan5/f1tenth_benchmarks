@@ -1,7 +1,6 @@
 import numpy as np
-
-from f1tenth_sim.localmap_racing.local_map_utils import *
-from f1tenth_sim.localmap_racing.LocalMap import LocalMap
+import os
+from f1tenth_sim.localmap_racing.LocalMap import *
 
 np.set_printoptions(precision=4)
 
@@ -161,6 +160,13 @@ def extend_boundary_lines(long_line, long_boundary, short_boundary, direction=1)
     return short_extension, long_extension
 
 
+def interpolate_track_new(points, n_points=None, s=0):
+    order_k = min(3, len(points) - 1)
+    tck = interpolate.splprep([points[:, 0], points[:, 1]], k=order_k, s=s)[0]
+    if n_points is None: n_points = len(points)
+    track = np.array(interpolate.splev(np.linspace(0, 1, n_points), tck)).T
+
+    return track
 
 def calculate_nvecs(line):
     el_lengths = np.linalg.norm(np.diff(line, axis=0), axis=1)
@@ -169,6 +175,10 @@ def calculate_nvecs(line):
 
     return nvecs
 
+def ensure_path_exists(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    
 
 
 if __name__ == "__main__":

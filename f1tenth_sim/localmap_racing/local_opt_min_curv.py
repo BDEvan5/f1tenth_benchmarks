@@ -3,16 +3,14 @@ import math
 import quadprog
 # import cvxopt
 import time
+import os
 from numba import njit
 
 def local_opt_min_curv(reftrack: np.ndarray,
                  normvectors: np.ndarray,
-                 A_inv: np.ndarray,
-                #  A: np.ndarray,
                  kappa_bound: float,
                  w_veh: float,
                  print_debug: bool = False,
-                 plot_debug: bool = False,
                  psi_s: float = None,
                  psi_e: float = None,
                  fix_s: bool = False,
@@ -23,6 +21,7 @@ def local_opt_min_curv(reftrack: np.ndarray,
     Tim Stahl
     Alexander Wischnewski
     Levent Ögretmen
+    Edits: Benjamin Evans
 
     .. description::
     This function uses a QP solver to minimize the summed curvature of a path by moving the path points along their
@@ -82,10 +81,9 @@ def local_opt_min_curv(reftrack: np.ndarray,
     # ------------------------------------------------------------------------------------------------------------------
 
     no_points = reftrack.shape[0]
-
-    no_splines = no_points
-    no_splines -= 1
-
+    no_splines = no_points -1
+    A_inv = load_A_inv(no_points)
+    
     # check inputs
     if no_points != normvectors.shape[0]:
         raise RuntimeError("Array size of reftrack should be the same as normvectors!")
@@ -94,7 +92,7 @@ def local_opt_min_curv(reftrack: np.ndarray,
     # if no_splines * 4 != A.shape[0] or A.shape[0] != A.shape[1]:
         print(f"No splines: {no_splines}")
         print(f"A_inv shape: {A_inv.shape}")
-        
+
         raise RuntimeError("Spline equation system matrix A has wrong dimensions!")
 
     # create extraction matrix -> only b_i coefficients of the solved linear equation system are needed for gradient
@@ -247,39 +245,9 @@ def local_opt_min_curv(reftrack: np.ndarray,
     if print_debug:
         print("Solver runtime opt_min_curv: " + "{:.3f}".format(time.perf_counter() - t_start) + "s")
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # CALCULATE CURVATURE ERROR ----------------------------------------------------------------------------------------
-    # ------------------------------------------------------------------------------------------------------------------
 
-    # calculate curvature once based on original linearization and once based on a new linearization around the solution
-    q_x_tmp = q_x + np.matmul(M_x, np.expand_dims(alpha_mincurv, 1))
-    q_y_tmp = q_y + np.matmul(M_y, np.expand_dims(alpha_mincurv, 1))
 
-    x_prime_tmp = np.eye(no_points, no_points) * np.matmul(np.matmul(A_ex_b, A_inv), q_x_tmp)
-    y_prime_tmp = np.eye(no_points, no_points) * np.matmul(np.matmul(A_ex_b, A_inv), q_y_tmp)
-
-    x_prime_prime = np.squeeze(np.matmul(T_c, q_x) + np.matmul(T_nx, np.expand_dims(alpha_mincurv, 1)))
-    y_prime_prime = np.squeeze(np.matmul(T_c, q_y) + np.matmul(T_ny, np.expand_dims(alpha_mincurv, 1)))
-
-    curv_orig_lin = np.zeros(no_points)
-    curv_sol_lin = np.zeros(no_points)
-
-    for i in range(no_points):
-        curv_orig_lin[i] = (x_prime[i, i] * y_prime_prime[i] - y_prime[i, i] * x_prime_prime[i]) \
-                          / math.pow(math.pow(x_prime[i, i], 2) + math.pow(y_prime[i, i], 2), 1.5)
-        curv_sol_lin[i] = (x_prime_tmp[i, i] * y_prime_prime[i] - y_prime_tmp[i, i] * x_prime_prime[i]) \
-                           / math.pow(math.pow(x_prime_tmp[i, i], 2) + math.pow(y_prime_tmp[i, i], 2), 1.5)
-
-    if plot_debug:
-        plt.plot(curv_orig_lin)
-        plt.plot(curv_sol_lin)
-        plt.legend(("original linearization", "solution based linearization"))
-        plt.show()
-
-    # calculate maximum curvature error
-    curv_error_max = np.amax(np.abs(curv_sol_lin - curv_orig_lin))
-
-    return alpha_mincurv, curv_error_max
+    return alpha_mincurv
 
 @njit(cache=True)
 def set_up_mtrxs(A_inv, no_points, no_splines):
@@ -365,6 +333,74 @@ def set_up_qs(no_splines, no_points, reftrack, psi_s, psi_e):
     return q_x, q_y
 
 # testing --------------------------------------------------------------------------------------------------------------
+
+
+def build_A(path_length):
+    no_splines = path_length - 1
+
+    M = np.zeros((no_splines * 4, no_splines * 4))
+        # calculate scaling factors between every pair of splines
+
+    scaling = np.ones(no_splines - 1)
+    template_M = np.array(                          # current point               | next point              | bounds
+                [[1,  0,  0,  0,  0,  0,  0,  0],   # a_0i                                                  = {x,y}_i
+                 [1,  1,  1,  1,  0,  0,  0,  0],   # a_0i + a_1i +  a_2i +  a_3i                           = {x,y}_i+1
+                 [0,  1,  2,  3,  0, -1,  0,  0],   # _      a_1i + 2a_2i + 3a_3i      - a_1i+1             = 0
+                 [0,  0,  2,  6,  0,  0, -2,  0]])  # _             2a_2i + 6a_3i               - 2a_2i+1   = 0
+
+    for i in range(no_splines):
+        j = i * 4
+
+        if i < no_splines - 1:
+            M[j: j + 4, j: j + 8] = template_M
+
+            M[j + 2, j + 5] *= scaling[i]
+            M[j + 3, j + 6] *= math.pow(scaling[i], 2)
+
+        else:
+            # no curvature and heading bounds on last element (handled afterwards)
+            M[j: j + 2, j: j + 4] = [[1,  0,  0,  0],
+                                     [1,  1,  1,  1]]
+
+    # if the path is unclosed we want to fix heading at the start and end point of the path (curvature cannot be
+    # determined in this case) -> set heading boundary conditions
+
+    # heading start point
+    M[-2, 1] = 1  # heading start point (evaluated at t = 0)
+
+    # heading end point
+    M[-1, -4:] = [0, 1, 2, 3]  # heading end point (evaluated at t = 1)
+
+    return M
+
+
+def build_A_matrixes():
+    start = 5
+    end = 80
+    print(f"A inverse mtxs not found. Building from {start} to {end}...")
+
+    path = f"Logs/Data_A_inv/"
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    for i in range(start, end+1):
+        # print(f"{i} is being built")
+        A = build_A(i)
+
+        inv = np.linalg.inv(A)
+        np.save(path + f"A_inv_{i}.npy", inv)
+
+    print(f"A inverse mtxs built from {start} to {end}")
+
+
+def load_A_inv(i):
+    path = f"Logs/Data_A_inv/A_inv_{i}.npy"
+    if not os.path.exists(path):
+        build_A_matrixes()
+    return np.load(path)
+
+
+
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     pass

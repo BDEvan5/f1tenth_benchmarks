@@ -33,13 +33,13 @@ def run_planning_test_single(planner, map_name, test_id):
 def test__localmap_planner():
     # test_id = "c1"
     test_id = "r1"
-    map_name = "mco"
-    # map_name = "aut"
+    # map_name = "mco"
+    map_name = "aut"
     # planner = LocalMapPlanner(test_id, save_data=True, raceline=False)
     # planner = LocalMapPlanner(test_id, save_data=False, raceline=False)
     planner = LocalMapPlanner(test_id, save_data=True, raceline=True)
-    run_planning_test_single(planner, map_name, test_id)
-    # run_planning_tests_all_maps(planner, test_id)
+    # run_planning_test_single(planner, map_name, test_id)
+    run_planning_tests_all_maps(planner, test_id)
 
 
 
