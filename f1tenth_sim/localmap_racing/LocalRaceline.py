@@ -27,13 +27,14 @@ VEHICLE_MASS = 3.4
 #It must auto setup if a new device is used
 class MatrixAs:
     def __init__(self):
+        self.start = 5
         self.matrxs = []
-        for i in range(10, 53):
+        for i in range(self.start, 80):
             A = np.load(f"Logs/Data_A/A_{i}.npy")
             self.matrxs.append(A)
 
     def get_A(self, i):
-        return self.matrxs[i - 10]
+        return self.matrxs[i - self.start]
 
 class LocalRaceline:
     def __init__(self, path, test_id):
@@ -141,18 +142,32 @@ class LocalRaceline:
 
 
     def calculate_s(self, point):
-        dists = np.linalg.norm(point - self.raceline[:, :2], axis=1)
-        t_guess = self.s_track[np.argmin(dists)] / self.s_track[-1]
+        new_points = np.linspace(0, self.s_track[-1], int(self.s_track[-1]*100)) #cm accuracy
+        xs, ys = interp_2d_points(new_points, self.s_track, self.raceline)
+        raceline = np.concatenate([xs[:, None], ys[:, None]], axis=-1)
+        dists = np.linalg.norm(point - raceline, axis=1)
+        t_new = (new_points[np.argmin(dists)] / self.s_track[-1])
 
-        t_point = optimize.fmin(dist_to_p, x0=t_guess, args=(self.tck, point), disp=False)
-        interp_return = interpolate.splev(t_point, self.tck, ext=3)
+        interp_return = interpolate.splev(t_new, self.tck, ext=3)
         closest_pt = np.array(interp_return).T
         if len(closest_pt.shape) > 1: closest_pt = closest_pt[0]
 
-        return closest_pt, t_point
+        return closest_pt, [t_new]
+
+    def calculate_zero_point_progress(self):
+        n_pts = np.count_nonzero(self.s_track < 5) # search first 4 m
+        s_track = self.s_track[:n_pts]
+        raceline = self.raceline[:n_pts]
+        new_points = np.linspace(0, s_track[-1], int(s_track[-1]*100)) #cm accuracy
+        xs, ys = interp_2d_points(new_points, s_track, raceline)
+        raceline = np.concatenate([xs[:, None], ys[:, None]], axis=-1)
+        dists = np.linalg.norm(raceline, axis=1)
+        t_new = (new_points[np.argmin(dists)] / self.s_track[-1])
+
+        return [t_new]
 
     def calculate_lookahead_point(self, lookahead_distance):
-        track_pt, current_s = self.calculate_s([0, 0])
+        current_s = self.calculate_zero_point_progress()
         lookahead_s = current_s + lookahead_distance / self.s_track[-1]
 
         lookahead_pt = np.array(interpolate.splev(lookahead_s, self.tck, ext=3)).T

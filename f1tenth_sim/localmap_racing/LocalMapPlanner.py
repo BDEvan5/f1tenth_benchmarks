@@ -46,7 +46,7 @@ class LocalMapPlanner:
         if self.use_raceline:
             self.local_raceline.generate_raceline(self.local_map)
             action, lhd_pt = self.pure_pursuit_racing_line(obs)
-            print(f"{self.counter} --> State: {obs['pose']} -- Action: {action} -- Progress: {100*obs['progress']:.3f}")
+            # print(f"{self.counter} --> State: {obs['pose']} -- Action: {action} -- Progress: {100*obs['progress']:.3f}")
         else:
             action, lhd_pt = self.pure_pursuit_center_line()
 

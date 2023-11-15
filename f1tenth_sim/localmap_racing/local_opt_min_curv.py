@@ -92,6 +92,9 @@ def local_opt_min_curv(reftrack: np.ndarray,
 
     if no_splines * 4 != A_inv.shape[0] or A_inv.shape[0] != A_inv.shape[1]:
     # if no_splines * 4 != A.shape[0] or A.shape[0] != A.shape[1]:
+        print(f"No splines: {no_splines}")
+        print(f"A_inv shape: {A_inv.shape}")
+        
         raise RuntimeError("Spline equation system matrix A has wrong dimensions!")
 
     # create extraction matrix -> only b_i coefficients of the solved linear equation system are needed for gradient

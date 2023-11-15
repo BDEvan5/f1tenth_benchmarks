@@ -18,7 +18,8 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     ensure_path_exists(raceline_img_path)
     # in the future, I could load the scans from here and not hae to save them seperately....
 
-    for i in range(0, 100):
+    # for i in range(0, 100):
+    for i in range(len(logs)-50, len(logs)):
     # for i in range(len(logs)):
         local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
         raceline = np.load(raceline_data_path + f"LocalRaceline_{i}.npy")
@@ -60,7 +61,8 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
 
 
 if __name__ == '__main__':
-    render_local_maps("LocalMapPlanner", "r1")
+    # render_local_maps("LocalMapPlanner", "r1")
+    render_local_maps("LocalMapPlanner", "r1", "mco")
 
 
 

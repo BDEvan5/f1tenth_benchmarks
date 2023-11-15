@@ -42,8 +42,8 @@ def build_A(path_length):
 
 import os
 def build_A_matrixes():
-    start = 10
-    end = 52
+    start = 53
+    end = 80
 
     path = f"Logs/Data_A/"
     if not os.path.exists(path):

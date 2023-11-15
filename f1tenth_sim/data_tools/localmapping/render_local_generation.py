@@ -20,7 +20,8 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     coses = np.cos(angles)
     sines = np.sin(angles)
 
-    for i in range(490, 510):
+    for i in range(len(logs)-50, len(logs)):
+    # for i in range(490, 510):
     # for i in range(250,  350):
     # for i in range(0, 100):
     # for i in range(len(logs)):
@@ -65,7 +66,8 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         # break
 
 if __name__ == '__main__':
-    render_local_maps("LocalMapPlanner", "c1")
+    # render_local_maps("LocalMapPlanner", "c1")
+    render_local_maps("LocalMapPlanner", "r1", "mco")
 
 
 
