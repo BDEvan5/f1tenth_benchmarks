@@ -2,22 +2,15 @@
 import numpy as np
 from numba import njit
 from f1tenth_sim.classic_racing.planner_utils import RaceTrack, CentreLineTrack
+from f1tenth_sim.general_utils import BasePlanner
 
 
-WHEELBASE = 0.33
-MAX_STEER = 0.4
-MAX_SPEED = 8
-GRAVITY = 9.81
-
-
-class PurePursuit:
+class PurePursuit(BasePlanner):
     def __init__(self, test_id):
-        self.name = "PurePursuit"
-        self.test_id = test_id
+        super().__init__("GlobalPurePursuit", test_id)
         self.racetrack = None
-        self.counter = 0
-        self.constant_lookahead = 0.5
-        self.variable_lookahead = 0.1
+        self.constant_lookahead = self.planner_params.constant_lookahead
+        self.variable_lookahead = self.planner_params.variable_lookahead
 
     def set_map(self, map_name):
         self.racetrack = RaceTrack(map_name, self.test_id)
@@ -26,18 +19,19 @@ class PurePursuit:
         self.racetrack = CentreLineTrack(map_name, 3)
 
     def plan(self, obs):
-        state = obs["vehicle_state"]
+        pose = obs["pose"]
+        vehicle_speed = obs["vehicle_speed"]
 
-        lookahead_distance = self.constant_lookahead + state[3] * self.variable_lookahead
-        lookahead_point = self.racetrack.get_lookahead_point(state[:2], lookahead_distance)
+        lookahead_distance = self.constant_lookahead + vehicle_speed * self.variable_lookahead
+        lookahead_point = self.racetrack.get_lookahead_point(pose[:2], lookahead_distance)
 
-        if state[3] < 1:
+        if vehicle_speed < 1:
             return np.array([0.0, 4])
 
-        speed_raceline, steering_angle = get_actuation(state[4], lookahead_point, state[:2], lookahead_distance, WHEELBASE)
-        steering_angle = np.clip(steering_angle, -MAX_STEER, MAX_STEER)
+        speed_raceline, steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], lookahead_distance, self.vehicle_params.wheelbase)
+        steering_angle = np.clip(steering_angle, -self.vehicle_params.max_steer, self.vehicle_params.max_steer)
             
-        speed = min(speed_raceline, MAX_SPEED)
+        speed = min(speed_raceline, self.vehicle_params.max_speed)
         action = np.array([steering_angle, speed])
 
         return action

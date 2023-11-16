@@ -1,5 +1,5 @@
 from f1tenth_sim.simulator import F1TenthSim 
-from f1tenth_sim.mapless_racing.follow_the_gap.FollowTheGap import FollowTheGap
+from f1tenth_sim.mapless_racing.FollowTheGap import FollowTheGap
 import numpy as np
 
 from testing_utils import *
@@ -17,7 +17,7 @@ def run_mapless_tests(planner):
         run_planning_test_single(planner, map_list[i], test_id="v1")
 
 if __name__ == "__main__":
-    run_mapless_tests(FollowTheGap())
+    run_mapless_tests(FollowTheGap("Std"))
 
 
 

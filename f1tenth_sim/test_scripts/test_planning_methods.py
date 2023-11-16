@@ -1,6 +1,6 @@
 from f1tenth_sim.simulator import F1TenthSim_TrueLocation 
 from f1tenth_sim.classic_racing.PurePursuit import PurePursuit
-from f1tenth_sim.classic_racing.MPCC import MPCC
+from f1tenth_sim.classic_racing.MPCC import GlobalMPCC
 
 from f1tenth_sim.data_tools.calculations.calculate_tracking_accuracy import calculate_tracking_accuracy
 from f1tenth_sim.data_tools.general_plotting.plot_raceline_tracking import plot_raceline_tracking
@@ -46,9 +46,9 @@ def test_pure_pursuit():
 def test_mpcc():
     test_id = "mu70"
     map_name = "aut"
-    planner = MPCC(test_id)
-    # run_planning_test_single(planner, map_name, test_id)
-    run_planning_tests_all_maps(planner, test_id)
+    planner = GlobalMPCC(test_id, True)
+    run_planning_test_single(planner, map_name, test_id)
+    # run_planning_tests_all_maps(planner, test_id)
 
 
 
@@ -56,8 +56,8 @@ def test_mpcc():
 
 if __name__ == "__main__":
 
-    test_pure_pursuit()
-    # test_mpcc()
+    # test_pure_pursuit()
+    test_mpcc()
 
 
 

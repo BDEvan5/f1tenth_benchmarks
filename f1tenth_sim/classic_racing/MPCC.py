@@ -1,67 +1,28 @@
 import numpy as np 
-import matplotlib.pyplot as plt
 import casadi as ca
-import os
-from argparse import Namespace
-from matplotlib.collections import LineCollection
 
 from f1tenth_sim.classic_racing.planner_utils import RaceTrack
 from f1tenth_sim.classic_racing.ReferencePath import ReferencePath
+from f1tenth_sim.general_utils import BasePlanner
 
-VERBOSE = False
-# VERBOSE = True
 
-WAIT_FOR_USER = False
-# WAIT_FOR_USER = True
-
-np.printoptions(precision=2, suppress=True)
-
-def normalise_psi(psi):
-    while psi > np.pi:
-        psi -= 2*np.pi
-    while psi < -np.pi:
-        psi += 2*np.pi
-    return psi
-
-GRAVITY = 9.81 
-
-WEIGHT_PROGRESS = 0.001
-WEIGHT_LAG = 10
-WEIGHT_CONTOUR = 20
-WEIGHT_STEER = 100
 NX = 4
 NU = 3
 
-p = {
-    "position_min": -100,
-    "position_max": 100,
-    "heading_max": 20,
-    "delta_max": 0.4,
-    "local_path_max_length": 300,
-    "max_speed": 8,
-    "min_speed": 2,
-    "local_path_speed_min": 2,
-    "local_path_speed_max": 10,
-    "max_v_dot": 0.04*6,
-    "wheelbase": 0.33,
-    "friction_mu": 0.7,
-    "vehicle_mass": 3.71,
-}
-p = Namespace(**p)
 
-F_MAX = GRAVITY * p.vehicle_mass * p.friction_mu
-
-
-class MPCC:
-    def __init__(self, test_id):
-        self.name = "MPCC"
-        self.test_id = test_id
+class GlobalMPCC(BasePlanner):
+    def __init__(self, test_id, save_data=False):
+        super().__init__("GlobalMPCC", test_id)
+        self.save_data = save_data
+        if self.save_data: 
+            self.mpcc_data_path = self.data_root_path + "mpcc_data/"
+            self.create_clean_path(self.mpcc_data_path)
         self.rp = None
         self.rt = None
-        self.dt = 0.04
-        self.N = 20 # number of steps to predict
-        self.p_initial = 5
         self.g, self.obj = None, None
+        self.dt = self.planner_params.dt
+        self.N = self.planner_params.N
+        self.f_max = self.planner_params.friction_mu * self.vehicle_params.vehicle_mass * self.vehicle_params.gravity
 
         self.u0 = np.zeros((self.N, NU))
         self.X0 = np.zeros((self.N + 1, NX))
@@ -84,7 +45,7 @@ class MPCC:
 
         rhs = ca.vertcat(controls[1] * ca.cos(states[2]), 
                          controls[1] * ca.sin(states[2]), 
-                         (controls[1] / p.wheelbase) * ca.tan(controls[0]), 
+                         (controls[1] / self.vehicle_params.wheelbase) * ca.tan(controls[0]), 
                          controls[2])  # dynamic equations of the states
 
         self.f = ca.Function('f', [states, controls], [rhs])  # nonlinear mapping function f(x,u)
@@ -94,9 +55,10 @@ class MPCC:
 
     def init_constraints(self):
         '''Initialize upper and lower bounds for state and control variables'''
-        lbx = [[p.position_min], [p.position_min], [-p.heading_max], [0]] * (self.N + 1) + [[-p.delta_max], [p.min_speed], [p.local_path_speed_min]] * self.N
+        p = self.planner_params
+        lbx = [[p.position_min], [p.position_min], [-p.heading_max], [0]] * (self.N + 1) + [[-p.max_steer], [p.min_speed], [p.local_path_speed_min]] * self.N
         self.lbx = np.array(lbx)
-        ubx = [[p.position_max], [p.position_max], [p.heading_max], [p.local_path_max_length]] * (self.N + 1) + [[p.delta_max], [p.max_speed], [p.local_path_speed_max]] * self.N
+        ubx = [[p.position_max], [p.position_max], [p.heading_max], [p.local_path_max_length]] * (self.N + 1) + [[p.max_steer], [p.max_speed], [p.local_path_speed_max]] * self.N
         self.ubx = np.array(ubx)
 
     def init_objective(self):
@@ -111,10 +73,10 @@ class MPCC:
             contouring_error = ca.sin(t_angle) * delta_x - ca.cos(t_angle) * delta_y 
             lag_error = -ca.cos(t_angle) * delta_x - ca.sin(t_angle) * delta_y 
 
-            self.obj = self.obj + contouring_error **2 * WEIGHT_CONTOUR  
-            self.obj = self.obj + lag_error **2 * WEIGHT_LAG
-            self.obj = self.obj - self.U[2, k] * WEIGHT_PROGRESS # maximise progress speed
-            self.obj = self.obj + (self.U[0, k]) ** 2 * WEIGHT_STEER  # minimize steering input
+            self.obj = self.obj + contouring_error **2 * self.planner_params.weight_contour  
+            self.obj = self.obj + lag_error **2 * self.planner_params.weight_lag
+            self.obj = self.obj - self.U[2, k] * self.planner_params.weight_progress
+            self.obj = self.obj + (self.U[0, k]) ** 2 * self.planner_params.weight_steer
 
     def init_bounds(self):
         self.g = []  # constraints vector
@@ -129,7 +91,7 @@ class MPCC:
 
             self.g = ca.vertcat(self.g, self.P[NX + 2 * k] * st_next[0] - self.P[NX + 2 * k + 1] * st_next[1])  # path boundary constraints
             
-            force_lateral = con[1] **2 / p.wheelbase * ca.tan(ca.fabs(con[0])) *  p.vehicle_mass
+            force_lateral = con[1] **2 / self.vehicle_params.wheelbase * ca.tan(ca.fabs(con[0])) *  self.vehicle_params.vehicle_mass
             self.g = ca.vertcat(self.g, force_lateral) # frictional constraint
 
             if k == 0: 
@@ -153,6 +115,7 @@ class MPCC:
         return x0, obs["vehicle_speed"]
 
     def plan(self, obs):
+        self.step_counter += 1
         x0, vehicle_speed = self.prepare_input(obs)
 
         p = self.generate_constraints_and_parameters(x0, vehicle_speed)
@@ -166,19 +129,17 @@ class MPCC:
                 print(f"S:{x0[3]:2f} --> Action: {controls[0, 0:2]}")
                 return np.array([0, 1])
 
+        if self.save_data:
+            np.save(self.mpcc_data_path + f"States_{self.step_counter}.npy", states)
+            np.save(self.mpcc_data_path + f"Controls_{self.step_counter}.npy", controls)
+
         action = controls[0, 0:2]
-        if VERBOSE:
-            print(f"S:{x0[3]:2f} --> Action: {action}")
-            self.plot_vehicle_position(x0, states, controls)
-            self.plot_vehicle_controls(p, controls)
-            if  WAIT_FOR_USER: plt.show()
 
         return action 
 
     def generate_constraints_and_parameters(self, x0_in, x0_speed):
         self.lbg, self.ubg = np.zeros((self.g.shape[0], 1)), np.zeros((self.g.shape[0], 1))
         if self.warm_start:
-            if VERBOSE: print(f"Warm starting with condition: {x0_in}")
             self.construct_warm_start_soln(x0_in) 
 
         pp = np.zeros(NX + 2 * self.N + 1)
@@ -200,10 +161,10 @@ class MPCC:
 
             self.lbg[NX - 3 + (NX + 3) * (k + 1), 0] = min(left_bound, right_bound)
             self.ubg[NX - 3 + (NX + 3) * (k + 1), 0] = max(left_bound, right_bound)
-            self.lbg[NX - 2 + (NX + 3) * (k + 1), 0] = - F_MAX
-            self.ubg[NX - 2 + (NX + 3) * (k + 1) , 0] = F_MAX
+            self.lbg[NX - 2 + (NX + 3) * (k + 1), 0] = - self.f_max
+            self.ubg[NX - 2 + (NX + 3) * (k + 1) , 0] = self.f_max
             #Adjust indicies.
-            self.lbg[NX -1 + (NX + 3) * (k + 1), 0] = - p.max_v_dot
+            self.lbg[NX -1 + (NX + 3) * (k + 1), 0] = - self.planner_params.max_decceleration * self.dt
             self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = ca.inf # do not limit speeding up
             # self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = self.max_v_dot
 
@@ -230,9 +191,6 @@ class MPCC:
         stats = self.solver.stats()
         solved_status = True
         if stats['return_status'] == 'Infeasible_Problem_Detected':
-        # if stats['return_status'] != 'Solve_Succeeded':
-            if VERBOSE:
-                print(stats['return_status'])
             solved_status = False
 
         # Shift trajectory and control solution to initialize the next step
@@ -253,7 +211,7 @@ class MPCC:
         self.X0 = np.zeros((self.N + 1, NX))
         self.X0[0, :] = initial_state
         for k in range(1, self.N + 1):
-            s_next = self.X0[k - 1, 3] + self.p_initial * self.dt
+            s_next = self.X0[k - 1, 3] + self.planner_params.p_initial * self.dt
             if s_next > self.rp.track_length:
                 s_next = s_next - self.rp.track_length
 
@@ -272,61 +230,15 @@ class MPCC:
             self.X0[k, :] = np.array([x_next.full()[0, 0], y_next.full()[0, 0], psi_next, s_next])
 
         self.u0 = np.zeros((self.N, NU))
-        self.u0[:, 1] = self.p_initial
-        self.u0[:, 2] = self.p_initial
+        self.u0[:, 1] = self.planner_params.p_initial
+        self.u0[:, 2] = self.planner_params.p_initial
 
         self.warm_start = False
 
-    def plot_vehicle_controls(self, p, controls):
-        fig, axs = plt.subplots(5, 1, num=3, clear=True, figsize=(8, 15))
-        axs[0].plot(controls[:, 0], '-o', color='red')
-        axs[0].set_ylabel('Steering Angle')
-        axs[0].set_ylim([-0.5, 0.5])
-        axs[0].grid(True)
 
-        axs[1].plot(controls[:, 1], '-o', color='red')
-        axs[1].set_ylabel('Speed')
-        axs[1].set_ylim([0, 9])
-        axs[1].grid(True)
-
-        forces = [controls[k, 1] **2 / p.wheelbase * ca.tan(ca.fabs(controls[k, 0])) *  p.vehicle_mass for k in range(self.N)]
-        axs[2].plot(forces, '-o', color='red')
-        axs[2].set_ylabel('Lateral Force')
-        axs[2].set_ylim([0, 40])
-        axs[2].grid(True)
-
-        axs[3].plot(controls[:, 2], '-o', color='red')
-        axs[3].set_ylabel('Centerline \nSpeed')
-        axs[3].set_ylim([0, 9])
-        axs[3].grid(True)
-
-        dv = np.diff(controls[:, 1])
-        axs[4].plot(dv, '-o', color='red')
-        axs[4].set_ylabel('Acceleration')
-        axs[4].grid(True)
-
-        plt.pause(0.001)
-
-    def plot_vehicle_position(self, x0, states, controls):
-        c_pts = [[self.rp.center_lut_x(states[k, 3]).full()[0, 0], self.rp.center_lut_y(states[k, 3]).full()[0, 0]] for k in range(self.N + 1)]
-
-        self.rp.plot_path()
-        plt.figure(2)
-        points = states[:, 0:2].reshape(-1, 1, 2)
-        segments = np.concatenate([points[:-1], points[1:]], axis=1)
-        norm = plt.Normalize(0, 8)
-        lc = LineCollection(segments, cmap='jet', norm=norm)
-        lc.set_array(controls[:, 1])
-        lc.set_linewidth(4)
-        line = plt.gca().add_collection(lc)
-        plt.colorbar(line, fraction=0.046, pad=0.04, shrink=0.99)
-
-        for i in range(self.N + 1):
-            xs = [states[i, 0], c_pts[i][0]]
-            ys = [states[i, 1], c_pts[i][1]]
-            plt.plot(xs, ys, '--', color='orange')
-
-        size = 12
-        plt.xlim([x0[0] - size, x0[0] + size])
-        plt.ylim([x0[1] - size, x0[1] + size])
-        plt.pause(0.001)# return the first control action
+def normalise_psi(psi):
+    while psi > np.pi:
+        psi -= 2*np.pi
+    while psi < -np.pi:
+        psi += 2*np.pi
+    return psi

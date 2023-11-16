@@ -1,0 +1,12 @@
+
+bubble_radius: 160
+preprocess_conv_size: 3
+best_point_conv_size: 80
+max_lidar_dist: 10.0
+fast_speed: 5
+straights_speed: 5.0
+corners_speed: 3.0
+straights_steering_angle: 0.174
+fast_steering_angle: 0.0785
+safe_threshold: 5
+max_steer: 0.4
