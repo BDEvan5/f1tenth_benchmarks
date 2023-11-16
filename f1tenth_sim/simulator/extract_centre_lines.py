@@ -100,7 +100,7 @@ def caluclate_centre_line(b1, b2):
     n_pts = int(line_length / CENTRE_SEP_DISTANCE)
 
     tck = interpolate.splprep([centre_line[:, 0], centre_line[:, 1]], k=3, s=0, per=True)[0]
-    centre_line = np.array(interpolate.splev(np.linspace(0, 1, n_pts), tck)).T
+    centre_line = np.array(interpolate.splev(np.linspace(0, 1, n_pts), tck)).T[:-1] # remove duplicate point
     
     start_ind = np.argmin(np.linalg.norm(centre_line, axis=1))
     centre_line = np.roll(centre_line, -start_ind, axis=0)

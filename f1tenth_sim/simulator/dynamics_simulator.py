@@ -26,13 +26,12 @@ from f1tenth_sim.simulator.dynamic_models import vehicle_dynamics_st, pid
 '''
 
 class DynamicsSimulator:
-    def __init__(self, seed, timestep):
-        np.random.seed(seed)
-        self.time_step = timestep
+    def __init__(self, params):
+        np.random.seed(params.random_seed)
+        self.time_step = params.timestep
 
         # These parameters are related to the vehicle model...,not simulation.
-        self.params = {'mu': 1.0489, 'C_Sf': 4.718, 'C_Sr': 5.4562, 'lf': 0.15875, 'lr': 0.17145, 'h': 0.074, 'm': 3.74, 'I': 0.04712, 's_min': -0.4189, 's_max': 0.4189, 'sv_min': -3.2, 'sv_max': 3.2, 'v_switch': 7.319, 'a_max': 9.51, 'v_min':-5.0, 'v_max': 20.0, 'width': 0.31, 'length': 0.58}
-        self.mu_std = 0.2
+        self.params = vars(params)
 
         # state is [x, y, steer_angle, vel, yaw_angle, yaw_rate, slip_angle]
         self.state = np.zeros((7, ))
@@ -71,11 +70,10 @@ class DynamicsSimulator:
         # steering angle velocity input to steering velocity acceleration input
         accl, sv = pid(vel, steer, self.state[3], self.state[2], self.params['sv_max'], self.params['a_max'], self.params['v_max'], self.params['v_min'])
         
-        sample_mu = self.params['mu'] + np.random.randn() * self.mu_std
         f = vehicle_dynamics_st(
             self.state,
             np.array([sv, accl]),
-            sample_mu,
+            self.params['mu'],
             self.params['C_Sf'],
             self.params['C_Sr'],
             self.params['lf'],
