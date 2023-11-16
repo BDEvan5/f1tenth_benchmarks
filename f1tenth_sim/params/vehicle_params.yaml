@@ -1,0 +1,8 @@
+wheelbase: 0.33
+max_steer: 0.4
+max_speed: 8
+gravity: 9.81
+vehicle_mass: 3.71
+
+
+

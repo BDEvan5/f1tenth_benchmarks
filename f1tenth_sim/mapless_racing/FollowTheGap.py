@@ -1,19 +1,9 @@
 import numpy as np
+from f1tenth_sim.general_utils import BasePlanner
 
-class FollowTheGap:
-    BUBBLE_RADIUS = 160
-    PREPROCESS_CONV_SIZE = 3
-    BEST_POINT_CONV_SIZE = 80
-    MAX_LIDAR_DIST = 10.0
-    FAST_SPEED = 5
-    STRAIGHTS_SPEED = 5.0
-    CORNERS_SPEED = 3.0
-    STRAIGHTS_STEERING_ANGLE = np.pi / 18
-    FAST_STEERING_ANGLE = np.pi / 40
-    SAFE_THRESHOLD = 5
-    MAX_STEER = 0.4
-
-    def __init__(self):
+class FollowTheGap(BasePlanner):
+    def __init__(self, test_id):
+        super().__init__("FollowTheGap", test_id)
         self.name = 'FollowTheGap'
 
     def plan(self, obs):
@@ -23,8 +13,8 @@ class FollowTheGap:
         closest = proc_ranges.argmin()
 
         # Eliminate all points inside 'bubble' (set them to zero)
-        min_index = closest - self.BUBBLE_RADIUS
-        max_index = closest + self.BUBBLE_RADIUS
+        min_index = closest - self.planner_params.bubble_radius
+        max_index = closest + self.planner_params.bubble_radius
         if min_index < 0: min_index = 0
         if max_index >= len(proc_ranges): max_index = len(proc_ranges) - 1
         proc_ranges[min_index:max_index] = 0
@@ -37,12 +27,12 @@ class FollowTheGap:
 
         # Publish Drive message
         steering_angle = self.get_angle(best, len(proc_ranges))
-        if abs(steering_angle) > self.STRAIGHTS_STEERING_ANGLE:
-            speed = self.CORNERS_SPEED
-        elif abs(steering_angle) > self.FAST_STEERING_ANGLE:
-            speed = self.STRAIGHTS_SPEED
+        if abs(steering_angle) > self.planner_params.straights_steering_angle:
+            speed = self.planner_params.corners_speed
+        elif abs(steering_angle) > self.planner_params.fast_steering_angle:
+            speed = self.planner_params.straights_speed
         else:
-            speed = self.FAST_SPEED
+            speed = self.planner_params.fast_speed
     
         action = np.array([steering_angle, speed])
 
@@ -57,8 +47,8 @@ class FollowTheGap:
         # we won't use the LiDAR data from directly behind us
         proc_ranges = np.array(ranges[135:-135])
         # sets each value to the mean over a given window
-        proc_ranges = np.convolve(proc_ranges, np.ones(self.PREPROCESS_CONV_SIZE), 'same') / self.PREPROCESS_CONV_SIZE
-        proc_ranges = np.clip(proc_ranges, 0, self.MAX_LIDAR_DIST)
+        proc_ranges = np.convolve(proc_ranges, np.ones(self.planner_params.preprocess_conv_size), 'same') / self.planner_params.preprocess_conv_size
+        proc_ranges = np.clip(proc_ranges, 0, self.planner_params.max_lidar_dist)
         return proc_ranges
 
     def find_max_gap(self, free_space_ranges):
@@ -77,7 +67,7 @@ class FollowTheGap:
         for sl in slices[::-1]:
             # print(sl)
             sl_len = sl.stop - sl.start
-            if sl_len > self.SAFE_THRESHOLD:
+            if sl_len > self.planner_params.safe_threshold:
                 chosen_slice = sl
                 # print("Slice choosen")
                 return chosen_slice.start, chosen_slice.stop
@@ -89,16 +79,16 @@ class FollowTheGap:
         """
         # do a sliding window average over the data in the max gap, this will
         # help the car to avoid hitting corners
-        averaged_max_gap = np.convolve(ranges[start_i:end_i], np.ones(self.BEST_POINT_CONV_SIZE),
-                                       'same') / self.BEST_POINT_CONV_SIZE
+        averaged_max_gap = np.convolve(ranges[start_i:end_i], np.ones(self.planner_params.best_point_conv_size),
+                                       'same') / self.planner_params.best_point_conv_size
         return averaged_max_gap.argmax() + start_i
 
     def get_angle(self, range_index, range_len):
-        """ Get the angle of a particular element in the LiDAR data and transform it into an appropriate steering angle
+        """ Get the angle of a particular element in the lidar data and transform it into an appropriate steering angle
         """
         lidar_angle = (range_index - (range_len / 2)) * self.radians_per_elem
         steering_angle = lidar_angle / 2
-        steering_angle = np.clip(steering_angle, -self.MAX_STEER, self.MAX_STEER)
+        steering_angle = np.clip(steering_angle, -self.planner_params.max_steer, self.planner_params.max_steer)
         return steering_angle
     
         
