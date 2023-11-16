@@ -17,19 +17,17 @@ def ensure_path_exists(folder):
 
 class F1TenthSimBase:
     def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False):
-        with open(f"f1tenth_sim/simulator/simulator_params.yaml", 'r') as file:
+        with open(f"f1tenth_sim/params/simulator_params.yaml", 'r') as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
         self.params = Namespace(**params)
         self.planner_name = planner_name
         self.map_name = map_name
         self.path = f"Logs/{planner_name}/"
         self.test_id = test_id
-        ensure_path_exists(self.path)
-        ensure_path_exists(self.path + f"RawData_{test_id}/")
         self.training = training
 
         self.scan_simulator = ScanSimulator2D(self.params.num_beams, self.params.fov, map_name, self.params.random_seed)
-        self.dynamics_simulator = DynamicsSimulator(self.params.random_seed, self.params.timestep)
+        self.dynamics_simulator = DynamicsSimulator(self.params)
         self.center_line = CenterLine(map_name)
 
         # state is [x, y, steer_angle, vel, yaw_angle, yaw_rate, slip_angle]
@@ -51,20 +49,23 @@ class F1TenthSimBase:
         self.pr.enable()
 
     def __del__(self):
-        self.pr.disable()
-        ps = pstats.Stats(self.pr).sort_stats('cumulative')
-        stats_profile_functions = ps.get_stats_profile().func_profiles
-        df_entries = []
-        for k in stats_profile_functions.keys():
-            v = stats_profile_functions[k]
-            entry = {"func": k, "ncalls": v.ncalls, "tottime": v.tottime, "percall_tottime": v.percall_tottime, "cumtime": v.cumtime, "percall_cumtime": v.percall_cumtime, "file_name": v.file_name, "line_number": v.line_number}
-            df_entries.append(entry)
-        df = pd.DataFrame(df_entries)
-        df = df[df.cumtime > 0]
-        df = df[df.file_name != "~"] # this removes internatl file calls.
-        df = df[~df['file_name'].str.startswith('<')]
-        df = df.sort_values(by=['cumtime'], ascending=False)
-        df.to_csv(f"Logs/{self.planner_name}/RawData_{self.test_id}/Profile_{self.map_name}_{self.test_id}.csv")
+        try:
+            self.pr.disable()
+            ps = pstats.Stats(self.pr).sort_stats('cumulative')
+            stats_profile_functions = ps.get_stats_profile().func_profiles
+            df_entries = []
+            for k in stats_profile_functions.keys():
+                v = stats_profile_functions[k]
+                entry = {"func": k, "ncalls": v.ncalls, "tottime": v.tottime, "percall_tottime": v.percall_tottime, "cumtime": v.cumtime, "percall_cumtime": v.percall_cumtime, "file_name": v.file_name, "line_number": v.line_number}
+                df_entries.append(entry)
+            df = pd.DataFrame(df_entries)
+            df = df[df.cumtime > 0]
+            df = df[df.file_name != "~"] # this removes internatl file calls.
+            df = df[~df['file_name'].str.startswith('<')]
+            df = df.sort_values(by=['cumtime'], ascending=False)
+            df.to_csv(f"Logs/{self.planner_name}/RawData_{self.test_id}/Profile_{self.map_name}_{self.test_id}.csv")
+        except:
+            return
 
         if self.history and len(self.history.states) > 1:
             self.history.save_history()
@@ -106,7 +107,7 @@ class F1TenthSimBase:
         self.progress = self.center_line.calculate_pose_progress(pose) - self.starting_progress
         
         done = False
-        if self.progress > 0.99 and self.current_time > 5: done = True
+        if self.progress > 0.998 and self.current_time > 5: done = True
         if self.current_time > 250: 
             print("Time limit reached --> Lap not complete but no collision")
             done = True

@@ -33,7 +33,6 @@ def ensure_path_exists(folder):
 class SimulatorHistory:
     def __init__(self, path, test_id, save_scan=False):
         self.path = path + f"RawData_{test_id}/"
-        ensure_path_exists(self.path)
         self.save_scan = save_scan
 
         self.map_name = ""
