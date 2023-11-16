@@ -26,10 +26,10 @@ def run_planning_test_single(planner, map_name, test_id):
     print(f"Testing on {map_name}...")
     simulator = F1TenthSim_TrueLocation(map_name, planner.name, test_id)
     planner.set_map(map_name)
-    run_simulation_loop_laps(simulator, planner, 1)
+    run_simulation_loop_laps(simulator, planner, 10)
 
     # calculate_tracking_accuracy(planner.name)
-    # plot_analysis(planner.name, test_id)
+    plot_analysis(planner.name, test_id)
     # plot_raceline_tracking(planner.name, test_id)
 
 
@@ -40,8 +40,8 @@ def test_pure_pursuit():
     map_name = "aut"
     planner = PurePursuit(test_id, False)
     # planner = PurePursuit(test_id, True)
-    # run_planning_test_single(planner, map_name, test_id)
-    run_planning_tests_all_maps(planner, test_id)
+    run_planning_test_single(planner, map_name, test_id)
+    # run_planning_tests_all_maps(planner, test_id)
 
 
 def test_mpcc():

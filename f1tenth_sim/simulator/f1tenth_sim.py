@@ -102,10 +102,16 @@ class F1TenthSimBase:
         raise NotImplementedError("The build_observation method has not been implemented")
 
     def check_lap_complete(self, pose):
-        self.progress = self.center_line.calculate_pose_progress(pose) - self.starting_progress
+        centre_line_progress = self.center_line.calculate_pose_progress(pose)
+        if centre_line_progress > self.starting_progress:
+            self.progress = centre_line_progress - self.starting_progress
+        else:
+            self.progress = centre_line_progress - self.starting_progress + 1 
+        # self.progress = self.center_line.calculate_pose_progress(pose) + 1 - self.starting_progress
+        if self.progress > 0.999: self.progress =0
         
         done = False
-        if self.progress > 0.998 and self.current_time > 5: done = True
+        if self.progress > 0.995 and self.current_time > 5: done = True
         if self.current_time > 250: 
             print("Time limit reached")
             done = True
@@ -129,12 +135,14 @@ class F1TenthSimBase:
     
 
     def reset(self):
-        # self.starting_progress = np.random.random()
-        # start_pose = self.center_line.get_pose_from_progress(self.starting_progress)
+        self.starting_progress = np.random.random()
+        start_pose = self.center_line.get_pose_from_progress(self.starting_progress)
         # print(f"Resetting to {self.starting_progress:.2f} progress with pose: {start_pose}")
-        start_pose = np.zeros(3)
         self.dynamics_simulator.reset(start_pose)
         self.current_state = np.zeros((7, ))
+        self.current_state[0:2] = start_pose[0:2]
+        self.current_state[4] = start_pose[2]
+        self.progress = 0
 
         self.current_time = 0.0
         action = np.zeros(2)

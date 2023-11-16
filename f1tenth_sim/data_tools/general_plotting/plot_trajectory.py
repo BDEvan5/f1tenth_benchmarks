@@ -43,9 +43,10 @@ class TrajectoryPlotter:
     def process_folder(self, folder, test_id):
         self.load_folder = folder + f"RawData_{test_id}/"
         self.save_folder = folder + f"Images_{test_id}/"
-        self.pdf_save_folder = folder + f"Images_pdf_{test_id}/"
         ensure_path_exists(self.save_folder)
-        ensure_path_exists(self.pdf_save_folder)
+        if SAVE_PDF:
+            self.pdf_save_folder = folder + f"Images_pdf_{test_id}/"
+            ensure_path_exists(self.pdf_save_folder)
 
         self.vehicle_name = folder.split("/")[-2]
         print(f"Vehicle name: {self.vehicle_name}")
@@ -133,8 +134,10 @@ class TrajectoryPlotter:
         name = self.save_folder + f"Trajectory_{self.test_log_key}"
         # std_img_saving(name)
         plt.savefig(name + ".svg", bbox_inches='tight', pad_inches=0)
-        name = self.pdf_save_folder + f"Trajectory_{self.test_log_key}"
-        plt.savefig(name + ".pdf", bbox_inches='tight', pad_inches=0)
+        
+        if SAVE_PDF:
+            name = self.pdf_save_folder + f"Trajectory_{self.test_log_key}"
+            plt.savefig(name + ".pdf", bbox_inches='tight', pad_inches=0)
 
 
 def plot_analysis(vehicle_name, test_id):

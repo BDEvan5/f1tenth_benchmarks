@@ -46,9 +46,13 @@ class RaceTrackGenerator(RaceTrack):
 
     def generate_minimum_curvature_path(self):
         coeffs_x, coeffs_y, A, normvec_normalized = tph.calc_splines.calc_splines(self.centre_line.path, self.centre_line.el_lengths, psi_s=self.centre_line.psi[0], psi_e=self.centre_line.psi[-1])
+        # self.centre_line.path = np.row_stack([self.centre_line.path, self.centre_line.path[-1, :]])
+        # self.centre_line.widths = np.row_stack([self.centre_line.widths, self.centre_line.widths[-1, :]])
+        # self.centre_line.calculate_track_quantities()
 
         widths = self.centre_line.widths.copy() - self.params.vehicle_width / 2
         track = np.concatenate([self.centre_line.path, widths], axis=1)
+        # alpha, error = tph.opt_min_curv.opt_min_curv(track, self.centre_line.nvecs, A, self.params.max_kappa, 0, print_debug=True, closed=True, fix_s=False, fix_e=False)
         alpha, error = tph.opt_min_curv.opt_min_curv(track, self.centre_line.nvecs, A, self.params.max_kappa, 0, print_debug=True, closed=False, fix_s=True, psi_s=self.centre_line.psi[0], psi_e=self.centre_line.psi[-1], fix_e=True)
 
         self.path, A_raceline, coeffs_x_raceline, coeffs_y_raceline, spline_inds_raceline_interp, t_values_raceline_interp, self.s_raceline, spline_lengths_raceline, el_lengths_raceline_interp_cl = tph.create_raceline.create_raceline(self.centre_line.path, self.centre_line.nvecs, alpha, self.params.raceline_step) 
@@ -75,21 +79,23 @@ class RaceTrackGenerator(RaceTrack):
         np.savetxt(f"racelines/{self.raceline_id}/"+ self.map_name+ '_raceline.csv', raceline, delimiter=',')
 
     def __del__(self):
-        self.pr.disable()
-        ps = pstats.Stats(self.pr).sort_stats('cumulative')
-        stats_profile_functions = ps.get_stats_profile().func_profiles
-        df_entries = []
-        for k in stats_profile_functions.keys():
-            v = stats_profile_functions[k]
-            entry = {"func": k, "ncalls": v.ncalls, "tottime": v.tottime, "percall_tottime": v.percall_tottime, "cumtime": v.cumtime, "percall_cumtime": v.percall_cumtime, "file_name": v.file_name, "line_number": v.line_number}
-            df_entries.append(entry)
-        df = pd.DataFrame(df_entries)
-        df = df[df.cumtime > 0]
-        df = df[df.file_name != "~"] # this removes internatl file calls.
-        df = df[~df['file_name'].str.startswith('<')]
-        df = df.sort_values(by=['cumtime'], ascending=False)
-        df.to_csv(f"racelines/{self.raceline_id}_data/Profile_{self.map_name}.csv")
-
+        try:
+            self.pr.disable()
+            ps = pstats.Stats(self.pr).sort_stats('cumulative')
+            stats_profile_functions = ps.get_stats_profile().func_profiles
+            df_entries = []
+            for k in stats_profile_functions.keys():
+                v = stats_profile_functions[k]
+                entry = {"func": k, "ncalls": v.ncalls, "tottime": v.tottime, "percall_tottime": v.percall_tottime, "cumtime": v.cumtime, "percall_cumtime": v.percall_cumtime, "file_name": v.file_name, "line_number": v.line_number}
+                df_entries.append(entry)
+            df = pd.DataFrame(df_entries)
+            df = df[df.cumtime > 0]
+            df = df[df.file_name != "~"] # this removes internatl file calls.
+            df = df[~df['file_name'].str.startswith('<')]
+            df = df.sort_values(by=['cumtime'], ascending=False)
+            df.to_csv(f"racelines/{self.raceline_id}_data/Profile_{self.map_name}.csv")
+        except Exception as e:
+            pass
     
 class Track:
     def __init__(self, track) -> None:
