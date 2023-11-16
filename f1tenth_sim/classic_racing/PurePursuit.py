@@ -26,7 +26,12 @@ class PurePursuit(BasePlanner):
         pose = obs["pose"]
         vehicle_speed = obs["vehicle_speed"]
 
-        lookahead_distance = self.constant_lookahead + vehicle_speed * self.variable_lookahead
+        s = self.racetrack.calculate_s(pose[:2])
+        s_point = self.racetrack.find_nearest_point(s)
+        perpendicular_distance = np.linalg.norm(s_point - pose[:2])
+        # print(f"S: {s:.4f} --> Perpendicular distance: {perpendicular_distance:.2f}")
+
+        lookahead_distance = self.constant_lookahead + (vehicle_speed/self.vehicle_params.max_speed) * (self.variable_lookahead + perpendicular_distance)
         lookahead_point, i = self.get_lookahead_point(pose[:2], lookahead_distance)
 
         if vehicle_speed < 1:

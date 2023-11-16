@@ -1,7 +1,5 @@
 import numpy as np
 from scipy import interpolate
-import datetime 
-import os
 
 class CenterLine:
     def __init__(self, map_name) -> None:
@@ -23,12 +21,9 @@ class CenterLine:
         point = np.array(interpolate.splev(s_progress, self.tck, ext=3)).T
         dx, dy = interpolate.splev(s_progress, self.tck, der=1, ext=3)
         theta = np.arctan2(dy, dx)
-        pose = np.array([point[0], point[1], -theta])
+        pose = np.array([point[0], point[1], theta])
         return pose
 
-def ensure_path_exists(folder):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
 
 class SimulatorHistory:
     def __init__(self, path, test_id, save_scan=False):

@@ -1,6 +1,8 @@
 
 
 constant_lookahead: 0.5
-variable_lookahead: 0.1
+variable_lookahead: 0.9
+# constant_lookahead: 0.5
+# variable_lookahead: 0.1
 
 constant_speed: 3

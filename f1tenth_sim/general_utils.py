@@ -31,6 +31,7 @@ class BasePlanner:
         ensure_path_exists(f"Logs/{planner_name}/")
         ensure_path_exists(self.data_root_path)
         self.planner_params = load_parameter_file(planner_name)
+        save_params(self.planner_params, self.data_root_path)
         self.vehicle_params = load_parameter_file("vehicle_params")
         self.map_name = None
 
