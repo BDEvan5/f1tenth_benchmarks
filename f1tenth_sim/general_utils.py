@@ -17,6 +17,11 @@ def load_parameter_file(planner_name):
         params = yaml.load(file, Loader=yaml.FullLoader)
     return Namespace(**params)
 
+def save_params(params, folder):
+    file_name = f"{folder}/params.yaml"
+    with open(file_name, 'w') as file:
+        yaml.dump(params, file)
+
 
 class BasePlanner:
     def __init__(self, planner_name, test_id):

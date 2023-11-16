@@ -38,7 +38,8 @@ def test_pure_pursuit():
     test_id = "mu50"
     # test_id = "mu70"
     map_name = "aut"
-    planner = PurePursuit(test_id)
+    planner = PurePursuit(test_id, False)
+    # planner = PurePursuit(test_id, True)
     run_planning_test_single(planner, map_name, test_id)
     # run_planning_tests_all_maps(planner, test_id)
 
@@ -56,8 +57,8 @@ def test_mpcc():
 
 if __name__ == "__main__":
 
-    # test_pure_pursuit()
-    test_mpcc()
+    test_pure_pursuit()
+    # test_mpcc()
 
 
 
