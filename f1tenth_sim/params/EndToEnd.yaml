@@ -1,6 +1,6 @@
 
-# algorithm: "SAC"
-algorithm: "TD3"
+algorithm: "SAC"
+# algorithm: "TD3"
 
 training_steps: 60000
 

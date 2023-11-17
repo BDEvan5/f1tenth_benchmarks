@@ -1,0 +1,6 @@
+number_of_beams: 45
+
+dt: 0.04
+number_of_particles: 100
+motion_q: [0.05, 0.05, 0.05]
+
