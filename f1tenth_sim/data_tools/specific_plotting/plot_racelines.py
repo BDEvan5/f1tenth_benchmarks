@@ -5,11 +5,13 @@ from matplotlib.collections import LineCollection
 from f1tenth_sim.classic_racing.planner_utils import RaceTrack, CentreLineTrack
 from f1tenth_sim.data_tools.plotting_utils import *
 
+
 class RaceTrackPlotter(RaceTrack):
     def __init__(self, map_name, raceline_id) -> None:
         super().__init__(map_name, raceline_id)
         self.raceline_id = raceline_id
         self.centre_line = CentreLineTrack(map_name)
+        self.raceline_data_path = f"Data/raceline_data/{raceline_id}/"
 
         self.plot_minimum_curvature_path()
         self.plot_raceline_trajectory()
@@ -30,7 +32,7 @@ class RaceTrackPlotter(RaceTrack):
         plt.xticks([])
         plt.yticks([])
         plt.tight_layout()
-        plt.savefig(f"racelines/{self.raceline_id}_data/raceline_path_{self.map_name}.svg", pad_inches=0)
+        plt.savefig(self.raceline_data_path + f"raceline_path_{self.map_name}.svg", pad_inches=0)
 
     def plot_raceline_trajectory(self):
         plt.figure(1)
@@ -60,13 +62,13 @@ class RaceTrackPlotter(RaceTrack):
         plt.xticks([])
         plt.yticks([])
         plt.tight_layout()
-        plt.savefig(f"racelines/{self.raceline_id}_data/raceline_speeds_{self.map_name}.svg", pad_inches=0)
+        plt.savefig(self.raceline_data_path + f"raceline_speeds_{self.map_name}.svg", pad_inches=0)
 
 
 
 if __name__ == '__main__':
     map_list = ['aut', 'esp', 'gbr', 'mco']
-    raceline_id = "mu70"
+    raceline_id = "mu50"
     for map_name in map_list:
         RaceTrackPlotter(map_name, raceline_id)
 

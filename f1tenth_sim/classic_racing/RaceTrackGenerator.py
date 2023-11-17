@@ -22,14 +22,18 @@ class RaceTrackGenerator(RaceTrack):
         super().__init__(map_name, load=False)
         self.raceline_id = raceline_id
         try:
-            self.centre_line = CentreLineTrack(map_name, "racelines/")
+            self.centre_line = CentreLineTrack(map_name, "Data/smooth_centre_lines/")
         except:
             generate_smooth_centre_lines()
-        ensure_path_exists(f"racelines/{raceline_id}/")
-        ensure_path_exists(f"racelines/{raceline_id}_data/")
+        ensure_path_exists(f"Data/racelines/")
+        ensure_path_exists(f"Data/raceline_data/")
+        self.raceline_path = f"Data/racelines/{raceline_id}/"
+        ensure_path_exists(self.raceline_path)
+        self.raceline_data_path = f"Data/raceline_data/{raceline_id}/"
+        ensure_path_exists(self.raceline_data_path)
 
         self.params = params
-        save_params(params, f"racelines/{raceline_id}_data/")
+        save_params(params, self.raceline_data_path)
         self.vehicle = load_parameter_file("vehicle_params")
         self.prepare_centre_line()
 
@@ -74,7 +78,7 @@ class RaceTrackGenerator(RaceTrack):
 
         self.s_track = np.insert(np.cumsum(self.el_lengths), 0, 0)
         raceline = np.concatenate([self.s_track[:, None], self.path, self.psi[:, None], self.kappa[:, None], self.speeds[:, None], acc[:, None]], axis=1)
-        np.savetxt(f"racelines/{self.raceline_id}/"+ self.map_name+ '_raceline.csv', raceline, delimiter=',')
+        np.savetxt(self.raceline_path + self.map_name+ '_raceline.csv', raceline, delimiter=',')
 
     def __del__(self):
         try:
@@ -91,7 +95,7 @@ class RaceTrackGenerator(RaceTrack):
             df = df[df.file_name != "~"] # this removes internatl file calls.
             df = df[~df['file_name'].str.startswith('<')]
             df = df.sort_values(by=['cumtime'], ascending=False)
-            df.to_csv(f"racelines/{self.raceline_id}_data/Profile_{self.map_name}.csv")
+            df.to_csv(self.raceline_data_path + f"Profile_{self.map_name}.csv")
         except Exception as e:
             pass
     
@@ -112,6 +116,8 @@ class Track:
         return crossing 
 
 def smooth_centre_line(map_name, smoothing):
+    save_path = "Data/smooth_centre_lines/"
+    ensure_path_exists(save_path)
     centre_line = CentreLineTrack(map_name)
     centre_track = np.concatenate([centre_line.path, centre_line.widths], axis=1)
     old_track = copy(centre_track)
@@ -130,7 +136,7 @@ def smooth_centre_line(map_name, smoothing):
         txt = f"Smoothing ({smoothing}) FAILED --> Minimum widths, L: {np.min(new_track.widths[:, 0]):.2f}, R: {np.min(new_track.widths[:, 1]):.2f}"
 
     smooth_track = np.concatenate([new_track.path, new_track.widths], axis=1)
-    map_c_name = f"racelines/{map_name}_centerline.csv"
+    map_c_name = save_path + f"{map_name}_centerline.csv"
     with open(map_c_name, 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerows(smooth_track)
@@ -159,7 +165,8 @@ def smooth_centre_line(map_name, smoothing):
 
     plt.gca().set_aspect('equal', adjustable='box')
     plt.legend()
-    save_path = f"Logs/map_generation/"
+    save_path = f"Data/MapSmoothing/"
+    ensure_path_exists(save_path)
     plt.savefig(save_path + f"Smoothing_{map_name}.svg")
 
     print("")
@@ -189,5 +196,6 @@ def generate_racelines():
 
 if __name__ == "__main__":
     generate_racelines()
+    # generate_smooth_centre_lines()
 
 

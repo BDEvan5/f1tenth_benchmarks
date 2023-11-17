@@ -1,6 +1,8 @@
 # Custom
 !Logs/.gitkeep
 Logs/
+!Data/.gitkeep
+Data/
 
 
 
