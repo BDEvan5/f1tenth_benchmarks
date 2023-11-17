@@ -1,8 +1,8 @@
 
 import numpy as np
 from numba import njit
-from f1tenth_sim.classic_racing.planner_utils import RaceTrack, CentreLine
-from f1tenth_sim.general_utils import BasePlanner
+from f1tenth_sim.utils.track_utils import RaceTrack, CentreLine
+from f1tenth_sim.utils.BasePlanner import BasePlanner
 
 
 class GlobalPurePursuit(BasePlanner):
@@ -26,10 +26,9 @@ class GlobalPurePursuit(BasePlanner):
         pose = obs["pose"]
         vehicle_speed = obs["vehicle_speed"]
 
-        s = self.racetrack.calculate_s(pose[:2])
+        s = self.racetrack.calculate_progress_percent(pose[:2])
         s_point = self.racetrack.find_nearest_point(s)
         perpendicular_distance = np.linalg.norm(s_point - pose[:2])
-        # print(f"S: {s:.4f} --> Perpendicular distance: {perpendicular_distance:.2f}")
 
         lookahead_distance = self.constant_lookahead + (vehicle_speed/self.vehicle_params.max_speed) * (self.variable_lookahead + perpendicular_distance)
         lookahead_point, i = self.get_lookahead_point(pose[:2], lookahead_distance)

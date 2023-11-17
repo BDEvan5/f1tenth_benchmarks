@@ -1,9 +1,8 @@
 import numpy as np 
 import casadi as ca
 
-from f1tenth_sim.classic_racing.planner_utils import RaceTrack
 from f1tenth_sim.classic_racing.ReferencePath import ReferencePath
-from f1tenth_sim.general_utils import BasePlanner
+from f1tenth_sim.utils.BasePlanner import BasePlanner
 
 
 NX = 4

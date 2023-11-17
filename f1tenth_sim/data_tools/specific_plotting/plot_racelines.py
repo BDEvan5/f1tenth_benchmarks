@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 from matplotlib.collections import LineCollection
-from f1tenth_sim.classic_racing.planner_utils import RaceTrack, CentreLineTrack
+from f1tenth_sim.utils.track_utils import RaceTrack, CentreLine
 from f1tenth_sim.data_tools.plotting_utils import *
 
 
@@ -10,7 +10,7 @@ class RaceTrackPlotter(RaceTrack):
     def __init__(self, map_name, raceline_id) -> None:
         super().__init__(map_name, raceline_id)
         self.raceline_id = raceline_id
-        self.centre_line = CentreLineTrack(map_name)
+        self.centre_line = CentreLine(map_name)
         self.raceline_data_path = f"Data/raceline_data/{raceline_id}/"
 
         self.plot_minimum_curvature_path()

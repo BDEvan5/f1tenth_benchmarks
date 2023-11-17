@@ -6,23 +6,6 @@ import os, shutil
 np.printoptions(precision=2, suppress=True)
 
 
-def ensure_path_exists(folder):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
-
-def load_parameter_file(planner_name):
-    file_name = f"f1tenth_sim/params/{planner_name}.yaml"
-    with open(file_name, 'r') as file:
-        params = yaml.load(file, Loader=yaml.FullLoader)
-    return Namespace(**params)
-
-def save_params(params, folder):
-    file_name = f"{folder}/params.yaml"
-    with open(file_name, 'w') as file:
-        yaml.dump(params, file)
-
-
 class BasePlanner:
     def __init__(self, planner_name, test_id, params_name=None):
         self.name = planner_name
@@ -53,3 +36,18 @@ class BasePlanner:
         os.makedirs(path)
 
 
+def ensure_path_exists(folder):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+
+def load_parameter_file(planner_name):
+    file_name = f"f1tenth_sim/params/{planner_name}.yaml"
+    with open(file_name, 'r') as file:
+        params = yaml.load(file, Loader=yaml.FullLoader)
+    return Namespace(**params)
+
+def save_params(params, folder):
+    file_name = f"{folder}/params.yaml"
+    with open(file_name, 'w') as file:
+        yaml.dump(params, file)

@@ -1,9 +1,7 @@
-import matplotlib.pyplot as plt
 import numpy as np 
 import casadi as ca
 from argparse import Namespace
 
-from f1tenth_sim.classic_racing.planner_utils import RaceTrack
 from f1tenth_sim.classic_racing.ReferencePath import ReferencePath
 
 VERBOSE = False

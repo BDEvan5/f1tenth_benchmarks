@@ -2,7 +2,7 @@ import numpy as np
 from f1tenth_sim.drl_racing.sac import TrainSAC, TestSAC
 from f1tenth_sim.drl_racing.td3 import TrainTD3, TestTD3
 from f1tenth_sim.drl_racing.reward_functions import TrajectoryAidedLearningReward
-from f1tenth_sim.general_utils import BasePlanner
+from f1tenth_sim.utils.BasePlanner import BasePlanner
 import torch
 
 def create_train_agent(state_dim, algorithm):

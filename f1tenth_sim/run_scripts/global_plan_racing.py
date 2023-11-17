@@ -9,12 +9,10 @@ from f1tenth_sim.run_scripts.testing_functions import *
 
 
 def test_pure_pursuit():
-    # test_id = "mu75"
-    test_id = "mu50"
-    # test_id = "mu70"
+    # test_id = "mu50"
+    test_id = "mu70"
     map_name = "aut"
     planner = GlobalPurePursuit(test_id, False, planner_name="GlobalPlanPP")
-    # planner = PurePursuit(test_id, True)
     # test_planning_single_map(planner, map_name, test_id)
     test_planning_all_maps(planner, test_id)
 
