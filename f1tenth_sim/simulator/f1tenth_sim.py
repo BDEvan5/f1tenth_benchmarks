@@ -135,15 +135,14 @@ class F1TenthSimBase:
     
 
     def reset(self):
-        self.starting_progress = np.random.random()
-        start_pose = self.center_line.get_pose_from_progress(self.starting_progress)
-        # print(f"Resetting to {self.starting_progress:.2f} progress with pose: {start_pose}")
-        self.dynamics_simulator.reset(start_pose)
-        self.current_state = np.zeros((7, ))
-        self.current_state[0:2] = start_pose[0:2]
-        self.current_state[4] = start_pose[2]
-        self.progress = 0
+        if self.params.use_random_starts:
+            self.starting_progress = np.random.random()
+            start_pose = self.center_line.get_pose_from_progress(self.starting_progress)
+        else:
+            self.starting_progress = 0
+            start_pose = np.zeros(3)
 
+        self.current_state = self.dynamics_simulator.reset(start_pose)
         self.current_time = 0.0
         action = np.zeros(2)
         obs, done = self.step(action)
@@ -154,6 +153,13 @@ class F1TenthSimBase:
         return obs, done, start_pose
 
     def save_data_frame(self):
+        if self.training:
+            save_df = pd.DataFrame(self.lap_history)
+            save_df = save_df.sort_values(by=["Lap"])
+            file_name = self.path + f"RawData_{self.test_id}/TrainingData_{self.test_id}.csv"
+            save_df.to_csv(file_name, index=False, float_format='%.4f')
+            return
+
         if os.path.exists(self.path + f"Results_{self.planner_name}.csv"):
             history_df = pd.read_csv(self.path + f"Results_{self.planner_name}.csv")
             history_dict = history_df.to_dict('records')
@@ -168,12 +174,8 @@ class F1TenthSimBase:
         else:
             save_df = pd.DataFrame(self.lap_history)
         
-        save_df = save_df.sort_values(by=["EntryID"])
-        if self.training:
-            file_name = self.path + f"RawData_{self.test_id}/TrainingData_{self.test_id}.csv"
-        else:
-            file_name = self.path + f"Results_{self.planner_name}.csv"
-
+        save_df = save_df.sort_values(by=["TestID", "TestMap", "Lap"])
+        file_name = self.path + f"Results_{self.planner_name}.csv"
         save_df.to_csv(file_name, index=False, float_format='%.4f')
 
 

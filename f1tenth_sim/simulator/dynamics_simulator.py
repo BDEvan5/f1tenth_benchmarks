@@ -108,3 +108,5 @@ class DynamicsSimulator:
         self.state[0:2] = pose[0:2]
         self.state[4] = pose[2]
         self.steer_buffer = np.empty((0, ))
+
+        return self.state

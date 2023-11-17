@@ -74,6 +74,11 @@ class DoublePolicyNet(nn.Module):
         x = F.relu(self.fc2(x))
         mu = torch.tanh(self.fc_mu(x)) 
         return mu
+    
+    def test_action(self, state):
+        state = torch.FloatTensor(state).unsqueeze(0)
+        action = self.forward(state)
+        return action.detach().numpy()[0]
 
 
 LOG_STD_MIN = -20
@@ -105,6 +110,11 @@ class PolicyNetworkSAC(nn.Module):
         log_prob = log_prob.sum(-1, keepdim=True)
             
         return action, log_prob
+    
+    def test_action(self, state):
+        state = torch.FloatTensor(state).unsqueeze(0)
+        action, _ = self.forward(state)
+        return action.detach().numpy()[0]
    
 
 class DoubleQNet(nn.Module):

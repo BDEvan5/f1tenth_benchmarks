@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import csv
+import os
 import glob
 
 red_orange = "#ff3f34"
@@ -33,7 +34,9 @@ def std_img_saving(name):
     plt.savefig(name + ".svg", bbox_inches='tight', pad_inches=0)
 
 
-
+def ensure_path_exists(folder):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
 
 
 def true_moving_average(data, period):

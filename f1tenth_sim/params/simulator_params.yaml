@@ -11,6 +11,8 @@ num_beams: 1080
 vehicle_width: 0.31
 vehicle_length: 0.58
 
+use_random_starts: True
+
 
 
 mu: 1.0489 

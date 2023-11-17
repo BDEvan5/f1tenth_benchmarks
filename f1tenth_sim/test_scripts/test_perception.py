@@ -1,5 +1,5 @@
 from f1tenth_sim.simulator import F1TenthSim_TrueLocation 
-from f1tenth_sim.classic_racing.PurePursuit import PurePursuit
+from f1tenth_sim.classic_racing.GlobalPurePursuit import GlobalPurePursuit
 from f1tenth_sim.classic_racing.particle_filter import ParticleFilter
 import numpy as np
 from f1tenth_sim.data_tools.general_plotting.plot_trajectory import plot_analysis
@@ -32,7 +32,7 @@ def test_pf_perception():
     n_particles = 100
     test_id = f"{n_particles}"
     simulator = F1TenthSim_TrueLocation(tuning_map, perception_name, test_id)
-    planner = PurePursuit(test_id)
+    planner = GlobalPurePursuit(test_id)
     pf_localisation = ParticleFilter(perception_name, n_particles)
     
     planner.set_map_centerline(tuning_map)
@@ -44,7 +44,7 @@ def test_pf_perception():
     
 def test_single_perception_config(tuning_map, perception_name, n_particles, test_id):
     simulator = F1TenthSim_TrueLocation(tuning_map, perception_name, test_id)
-    planner = PurePursuit(test_id)
+    planner = GlobalPurePursuit(test_id)
     pf_localisation = ParticleFilter(perception_name, n_particles)
         
     planner.set_map_centerline(tuning_map)
