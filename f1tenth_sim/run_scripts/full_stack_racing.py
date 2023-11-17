@@ -23,10 +23,8 @@ def test_full_stack_pure_pursuit():
     test_id = "mu50"
     map_name = "aut"
     planner = GlobalPurePursuit(test_id, False, planner_name="FullStackPP")
-    # planner = PurePursuit(test_id, True)
-    # test_full_stack_all_maps(planner, test_id)
-    test_full_stack_single_map(planner, map_name, test_id)
-    # test_planning_all_maps(planner, test_id)
+    test_full_stack_all_maps(planner, test_id)
+    # test_full_stack_single_map(planner, map_name, test_id)
 
     # calculate_tracking_accuracy(planner.name)
     plot_trajectory_analysis(planner.name, test_id)
@@ -53,7 +51,7 @@ def test_full_stack_mpcc():
 if __name__ == "__main__":
     # test_pf_perception()
     test_full_stack_pure_pursuit()
-    test_full_stack_mpcc()
+    # test_full_stack_mpcc()
 
 
 
