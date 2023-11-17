@@ -38,6 +38,7 @@ class RaceTrackGenerator(RaceTrack):
 
         self.generate_minimum_curvature_path()
         self.generate_velocity_profile()
+        self.save_raceline()
 
     def prepare_centre_line(self):
         track = np.concatenate([self.centre_line.path, self.centre_line.widths - self.params.vehicle_width / 2], axis=1)
@@ -46,13 +47,9 @@ class RaceTrackGenerator(RaceTrack):
 
     def generate_minimum_curvature_path(self):
         coeffs_x, coeffs_y, A, normvec_normalized = tph.calc_splines.calc_splines(self.centre_line.path, self.centre_line.el_lengths, psi_s=self.centre_line.psi[0], psi_e=self.centre_line.psi[-1])
-        # self.centre_line.path = np.row_stack([self.centre_line.path, self.centre_line.path[-1, :]])
-        # self.centre_line.widths = np.row_stack([self.centre_line.widths, self.centre_line.widths[-1, :]])
-        # self.centre_line.calculate_track_quantities()
 
         widths = self.centre_line.widths.copy() - self.params.vehicle_width / 2
         track = np.concatenate([self.centre_line.path, widths], axis=1)
-        # alpha, error = tph.opt_min_curv.opt_min_curv(track, self.centre_line.nvecs, A, self.params.max_kappa, 0, print_debug=True, closed=True, fix_s=False, fix_e=False)
         alpha, error = tph.opt_min_curv.opt_min_curv(track, self.centre_line.nvecs, A, self.params.max_kappa, 0, print_debug=True, closed=False, fix_s=True, psi_s=self.centre_line.psi[0], psi_e=self.centre_line.psi[-1], fix_e=True)
 
         self.path, A_raceline, coeffs_x_raceline, coeffs_y_raceline, spline_inds_raceline_interp, t_values_raceline_interp, self.s_raceline, spline_lengths_raceline, el_lengths_raceline_interp_cl = tph.create_raceline.create_raceline(self.centre_line.path, self.centre_line.nvecs, alpha, self.params.raceline_step) 
@@ -75,6 +72,7 @@ class RaceTrackGenerator(RaceTrack):
     def save_raceline(self):
         acc = tph.calc_ax_profile.calc_ax_profile(self.speeds, self.el_lengths, True)
 
+        self.s_track = np.insert(np.cumsum(self.el_lengths), 0, 0)
         raceline = np.concatenate([self.s_track[:, None], self.path, self.psi[:, None], self.kappa[:, None], self.speeds[:, None], acc[:, None]], axis=1)
         np.savetxt(f"racelines/{self.raceline_id}/"+ self.map_name+ '_raceline.csv', raceline, delimiter=',')
 
@@ -174,14 +172,22 @@ def generate_smooth_centre_lines():
     smooth_centre_line("gbr", 650)
     smooth_centre_line("mco", 300)
 
-
-if __name__ == "__main__":
+def generate_racelines():
     params = load_parameter_file("RaceTrackGenerator")
-    params.mu = 0.7
-    raceline_id = f"mu{int(params.mu*100)}"
+    params.mu = 0.6
+    raceline_id = f"_drl_training"
+    # params.mu = 0.7
+    # raceline_id = f"mu{int(params.mu*100)}"
     map_list = ['aut', 'esp', 'gbr', 'mco']
     # map_list = ['mco']
     # map_list = ['aut']
     for map_name in map_list: 
         RaceTrackGenerator(map_name, raceline_id, params)
         RaceTrackPlotter(map_name, raceline_id)
+
+
+
+if __name__ == "__main__":
+    generate_racelines()
+
+

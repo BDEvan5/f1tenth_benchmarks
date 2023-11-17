@@ -18,10 +18,10 @@ def run_simulation_loop_laps_100(sim, planner, n_steps=100):
 
 
 
-def run_training_loop_steps(sim, planner, steps):
+def run_training_loop_steps(sim, planner):
     observation, done, init_pose = sim.reset()
     
-    for i in range(steps):
+    for i in range(planner.planner_params.training_steps):
         action = planner.plan(observation)
         observation, done = sim.step(action)
         if done:

@@ -5,7 +5,7 @@ from f1tenth_sim.classic_racing.planner_utils import RaceTrack, CentreLine
 from f1tenth_sim.general_utils import BasePlanner
 
 
-class PurePursuit(BasePlanner):
+class GlobalPurePursuit(BasePlanner):
     def __init__(self, test_id, use_centre_line=False):
         if use_centre_line:
             test_id = test_id + "_centre"
