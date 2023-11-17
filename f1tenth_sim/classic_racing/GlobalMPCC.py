@@ -11,14 +11,13 @@ NU = 3
 
 
 class GlobalMPCC(BasePlanner):
-    def __init__(self, test_id, save_data=False):
-        super().__init__("GlobalMPCC", test_id)
+    def __init__(self, test_id, save_data=False, planner_name="GlobalMPCC"):
+        super().__init__(planner_name, test_id, params_name="GlobalMPCC")
         self.save_data = save_data
         if self.save_data: 
             self.mpcc_data_path = self.data_root_path + "mpcc_data/"
             self.create_clean_path(self.mpcc_data_path)
         self.rp = None
-        self.rt = None
         self.g, self.obj = None, None
         self.dt = self.planner_params.dt
         self.N = self.planner_params.N
@@ -33,7 +32,6 @@ class GlobalMPCC(BasePlanner):
     
     def set_map(self, map_name):
         self.rp = ReferencePath(map_name, 0.4)
-        self.rt = RaceTrack(map_name)
 
         self.init_objective()
         self.init_bounds()

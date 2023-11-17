@@ -6,10 +6,10 @@ from f1tenth_sim.general_utils import BasePlanner
 
 
 class GlobalPurePursuit(BasePlanner):
-    def __init__(self, test_id, use_centre_line=False):
+    def __init__(self, test_id, use_centre_line=False, planner_name="GlobalPurePursuit"):
         if use_centre_line:
             test_id = test_id + "_centre"
-        super().__init__("GlobalPurePursuit", test_id)
+        super().__init__(planner_name, test_id, params_name="GlobalPurePursuit")
         self.racetrack = None
         self.use_centre_line = use_centre_line
 
@@ -56,6 +56,7 @@ class GlobalPurePursuit(BasePlanner):
             i2 = i + int(lookahead_distance / np.sqrt(self.racetrack.l2s[i]))
             # return None
         lookahead_point = np.empty((3, ))
+        if i2 >= len(self.racetrack.path) - 1: i2 = len(self.racetrack.path) - 2
         lookahead_point[0:2] = self.racetrack.path[i2, :]
         
         return lookahead_point, i

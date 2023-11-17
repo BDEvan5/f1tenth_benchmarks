@@ -70,7 +70,7 @@ class ScanSimulator2D:
         return np.stack((c, r), axis=1)
     
 
-# @njit(cache=True)
+@njit(cache=True)
 def xy_2_rc(x, y, orig_x, orig_y, orig_c, orig_s, height, width, resolution):
     x_trans = x - orig_x
     y_trans = y - orig_y
@@ -88,7 +88,7 @@ def xy_2_rc(x, y, orig_x, orig_y, orig_c, orig_s, height, width, resolution):
 
     return r, c
 
-# @njit(cache=True)
+@njit(cache=True)
 def xy_2_rc_vec(x, y, orig_x, orig_y, orig_c, orig_s, resolution):
     x_trans = x - orig_x
     y_trans = y - orig_y
@@ -101,13 +101,13 @@ def xy_2_rc_vec(x, y, orig_x, orig_y, orig_c, orig_s, resolution):
 
     return r, c
 
-# @njit(cache=True)
+@njit(cache=True)
 def distance_transform(x, y, orig_x, orig_y, orig_c, orig_s, height, width, resolution, dt):
     r, c = xy_2_rc(x, y, orig_x, orig_y, orig_c, orig_s, height, width, resolution)
     distance = dt[r, c]
     return distance
 
-# @njit(cache=True)
+@njit(cache=True)
 def trace_ray(x, y, theta_index, sines, cosines, eps, orig_x, orig_y, orig_c, orig_s, height, width, resolution, dt, max_range):
     theta_index_ = int(theta_index)
     s = sines[theta_index_]
@@ -128,7 +128,7 @@ def trace_ray(x, y, theta_index, sines, cosines, eps, orig_x, orig_y, orig_c, or
     
     return total_dist
 
-# @njit(cache=True)
+@njit(cache=True)
 def get_scan(pose, theta_dis, fov, num_beams, theta_index_increment, sines, cosines, eps, orig_x, orig_y, orig_c, orig_s, height, width, resolution, dt, max_range):
     scan = np.empty((num_beams,))
 
