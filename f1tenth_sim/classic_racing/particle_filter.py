@@ -5,7 +5,7 @@ from PIL import Image
 import os 
 from scipy.ndimage import distance_transform_edt as edt
 
-from f1tenth_sim.general_utils import load_parameter_file
+from f1tenth_sim.utils.BasePlanner import load_parameter_file
 
 
 class ParticleFilter:

@@ -1,5 +1,5 @@
 import numpy as np
-from f1tenth_sim.general_utils import BasePlanner
+from f1tenth_sim.utils.BasePlanner import BasePlanner
 
 class FollowTheGap(BasePlanner):
     def __init__(self, test_id):

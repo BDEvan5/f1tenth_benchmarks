@@ -2,15 +2,13 @@ import numpy as np
 import cProfile, pstats
 import pandas as pd
 import trajectory_planning_helpers as tph
-from f1tenth_sim.general_utils import *
-from f1tenth_sim.classic_racing.planner_utils import CentreLineTrack, RaceTrack
+from f1tenth_sim.utils.BasePlanner import *
+from f1tenth_sim.utils.track_utils import CentreLine, RaceTrack
 from f1tenth_sim.data_tools.specific_plotting.plot_racelines import RaceTrackPlotter
-import numpy as np 
 import matplotlib.pyplot as plt
 import csv
 
 from copy import copy
-from f1tenth_sim.classic_racing.planner_utils import *
 from f1tenth_sim.data_tools.plotting_utils import *
 
 
@@ -22,9 +20,10 @@ class RaceTrackGenerator(RaceTrack):
         super().__init__(map_name, load=False)
         self.raceline_id = raceline_id
         try:
-            self.centre_line = CentreLineTrack(map_name, "Data/smooth_centre_lines/")
+            self.centre_line = CentreLine(map_name, "Data/smooth_centre_lines/")
         except:
             generate_smooth_centre_lines()
+            self.centre_line = CentreLine(map_name, "Data/smooth_centre_lines/")
         ensure_path_exists(f"Data/racelines/")
         ensure_path_exists(f"Data/raceline_data/")
         self.raceline_path = f"Data/racelines/{raceline_id}/"
@@ -181,8 +180,8 @@ def generate_smooth_centre_lines():
 
 def generate_racelines():
     params = load_parameter_file("RaceTrackGenerator")
-    params.mu = 0.5
-    # params.mu = 0.7
+    # params.mu = 0.5
+    params.mu = 0.7
     # raceline_id = f"_drl_training"
     raceline_id = f"mu{int(params.mu*100)}"
     map_list = ['aut', 'esp', 'gbr', 'mco']

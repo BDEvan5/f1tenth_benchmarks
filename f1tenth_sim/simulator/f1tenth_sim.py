@@ -2,7 +2,8 @@
 
 from f1tenth_sim.simulator.dynamics_simulator import DynamicsSimulator
 from f1tenth_sim.simulator.laser_models import ScanSimulator2D
-from f1tenth_sim.simulator.utils import CenterLine, SimulatorHistory
+from f1tenth_sim.simulator.utils import SimulatorHistory
+from f1tenth_sim.utils.track_utils import CentreLine
 import yaml
 from argparse import Namespace
 import numpy as np
@@ -28,7 +29,7 @@ class F1TenthSimBase:
 
         self.scan_simulator = ScanSimulator2D(self.params.num_beams, self.params.fov, map_name, self.params.random_seed)
         self.dynamics_simulator = DynamicsSimulator(self.params)
-        self.center_line = CenterLine(map_name)
+        self.centre_line = CentreLine(map_name)
 
         # state is [x, y, steer_angle, vel, yaw_angle, yaw_rate, slip_angle]
         self.current_state = np.zeros((7, ))
@@ -102,7 +103,7 @@ class F1TenthSimBase:
         raise NotImplementedError("The build_observation method has not been implemented")
 
     def check_lap_complete(self, pose):
-        centre_line_progress = self.center_line.calculate_pose_progress(pose)
+        centre_line_progress = self.centre_line.calculate_progress_percent(pose)
         if centre_line_progress > self.starting_progress:
             self.progress = centre_line_progress - self.starting_progress
         else:
@@ -137,7 +138,7 @@ class F1TenthSimBase:
     def reset(self):
         if self.params.use_random_starts:
             self.starting_progress = np.random.random()
-            start_pose = self.center_line.get_pose_from_progress(self.starting_progress)
+            start_pose = self.centre_line.calculate_pose(self.starting_progress)
         else:
             self.starting_progress = 0
             start_pose = np.zeros(3)
