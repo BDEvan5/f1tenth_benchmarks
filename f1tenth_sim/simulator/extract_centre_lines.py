@@ -10,7 +10,7 @@ import os
 from PIL import Image 
 
 
-save_path = f"Logs/map_generation/"
+save_path = f"Data/CentreLineExtraction/"
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)

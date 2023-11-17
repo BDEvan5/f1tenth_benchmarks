@@ -40,8 +40,8 @@ def make_time_particle_plot():
     plt.ylabel("Mean error (cm)")
 
     plt.grid(True)
-    plt.savefig(f"Logs/BenchmarkArticle/PerceptionTesting_particle_times.svg", pad_inches=0, bbox_inches='tight')
-    plt.savefig(f"Logs/BenchmarkArticle/PerceptionTesting_particle_times.pdf", pad_inches=0, bbox_inches='tight')
+    plt.savefig(f"Data/BenchmarkArticle/PerceptionTesting_particle_times.svg", pad_inches=0, bbox_inches='tight')
+    plt.savefig(f"Data/BenchmarkArticle/PerceptionTesting_particle_times.pdf", pad_inches=0, bbox_inches='tight')
 
 
 if __name__ == "__main__":

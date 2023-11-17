@@ -22,10 +22,7 @@ class RaceTrack:
             self.load_track(map_name, raceline_id)
 
     def load_track(self, map_name, raceline_set):
-        if raceline_set is None:
-            filename = "racelines/" + map_name + "_raceline.csv"
-        else:
-            filename = f"racelines/{raceline_set}/" + map_name + "_raceline.csv"
+        filename = f"Data/racelines/{raceline_set}/" + map_name + "_raceline.csv"
         track = np.loadtxt(filename, delimiter=',', skiprows=1)
 
         self.path = track[:, 1:3]

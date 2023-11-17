@@ -6,14 +6,12 @@ import glob
 import os
 
 import glob
-from matplotlib.ticker import PercentFormatter
 from matplotlib.collections import LineCollection
 
 from f1tenth_controllers.map_utils.MapData import MapData
 from f1tenth_controllers.map_utils.Track import Track 
 from f1tenth_controllers.analysis.plotting_utils import *
 from matplotlib.ticker import MultipleLocator
-import trajectory_planning_helpers as tph
 
 SAVE_PDF = False
 # SAVE_PDF = True
@@ -51,7 +49,7 @@ class TrajectoryPlotter:
         self.vehicle_name = folder.split("/")[-2]
         print(f"Vehicle name: {self.vehicle_name}")
         
-        testing_logs = glob.glob(f"{self.load_folder}/*.npy")
+        testing_logs = glob.glob(f"{self.load_folder}/SimLog*.npy")
         for test_log in testing_logs:
             test_folder_name = test_log.split("/")[-1]
             self.test_log_key = test_folder_name.split(".")[0].split("_")[1:]
@@ -140,7 +138,7 @@ class TrajectoryPlotter:
             plt.savefig(name + ".pdf", bbox_inches='tight', pad_inches=0)
 
 
-def plot_analysis(vehicle_name, test_id):
+def plot_trajectory_analysis(vehicle_name, test_id):
     TestData = TrajectoryPlotter()
 
     TestData.process_folder(f"Logs/{vehicle_name}/", test_id)
@@ -149,8 +147,7 @@ def plot_analysis(vehicle_name, test_id):
 
 if __name__ == '__main__':
     # analyse_folder()
-    plot_analysis("LocalMPCC2", "r1")
-    # plot_analysis("PurePursuit", "mu75")
+    plot_trajectory_analysis("PurePursuit", "mu75")
     # plot_analysis("follow_the_gap")
     # plot_analysis("TD3_endToEnd_5")
     # plot_analysis("SAC_endToEnd_5")

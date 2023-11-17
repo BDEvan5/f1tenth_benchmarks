@@ -20,6 +20,6 @@ def build_main_df():
     times_df.columns = times_df.columns.str.upper()
     print(times_df)
 
-    times_df.to_latex(f"Logs/BenchmarkArticle/Laptimes.tex", float_format="%.2f")
+    times_df.to_latex(f"Data/BenchmarkArticle/Laptimes.tex", float_format="%.2f")
 
 build_main_df()
