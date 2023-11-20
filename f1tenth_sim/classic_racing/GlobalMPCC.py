@@ -33,23 +33,13 @@ class GlobalMPCC(BasePlanner):
     
     def set_map(self, map_name):
         self.centre_line = CentreLine(map_name)
-        widths = np.row_stack((self.centre_line.widths, self.centre_line.widths[1:int(self.centre_line.widths.shape[0] / 2), :]))
-        path = np.row_stack((self.centre_line.path, self.centre_line.path[1:int(self.centre_line.path.shape[0] / 2), :]))
-        extended_track = TrackLine(path)
-        extended_track.init_path()
-        extended_track.init_track()
-
         self.track_length = self.centre_line.s_path[-1]
-        self.centre_interpolant = LineInterpolant(extended_track.path, extended_track.s_path, extended_track.psi)
-
-        left_path = extended_track.path - extended_track.nvecs * np.clip((widths[:, 0][:, None]  - self.planner_params.exclusion_width), 0, np.inf)
-        self.left_interpolant = LineInterpolant(left_path, extended_track.s_path)
-        right_path = extended_track.path + extended_track.nvecs * np.clip((widths[:, 1][:, None] - self.planner_params.exclusion_width), 0, np.inf)
-        self.right_interpolant = LineInterpolant(right_path, extended_track.s_path)
+        self.centre_interpolant, self.left_interpolant, self.right_interpolant = init_track_interpolants(self.centre_line, self.planner_params.exclusion_width)
 
         self.init_objective()
         self.init_bounds()
         self.init_solver()
+        self.init_bound_limits()
 
     def init_optimisation(self):
         states = ca.MX.sym('states', NX) # [x, y, psi, s]
@@ -94,22 +84,18 @@ class GlobalMPCC(BasePlanner):
         self.g = []  # constraints vector
         self.g = ca.vertcat(self.g, self.X[:, 0] - self.P[:NX])  # initial condition constraints
         for k in range(self.N):
-            st = self.X[:, k]
-            st_next = self.X[:, k + 1]
-            con = self.U[:, k]
+            st_next_euler = self.X[:, k] + (self.dt * self.f(self.X[:, k], self.U[:, k])) # Vehicle dynamics constraints
+            self.g = ca.vertcat(self.g, self.X[:, k + 1] - st_next_euler)  
 
-            st_next_euler = st + (self.dt * self.f(st, con)) # Vehicle dynamics constraints
-            self.g = ca.vertcat(self.g, st_next - st_next_euler)  
-
-            self.g = ca.vertcat(self.g, self.P[NX + 2 * k] * st_next[0] - self.P[NX + 2 * k + 1] * st_next[1])  # path boundary constraints
+            self.g = ca.vertcat(self.g, self.P[NX + 2 * k] * self.X[0, k + 1] - self.P[NX + 2 * k + 1] * self.X[1, k + 1])  # path boundary constraints
             
-            force_lateral = con[1] **2 / self.vehicle_params.wheelbase * ca.tan(ca.fabs(con[0])) *  self.vehicle_params.vehicle_mass
+            force_lateral = self.U[1, k] **2 / self.vehicle_params.wheelbase * ca.tan(ca.fabs(self.U[0, k])) *  self.vehicle_params.vehicle_mass
             self.g = ca.vertcat(self.g, force_lateral) # frictional constraint
 
             if k == 0: 
-                self.g = ca.vertcat(self.g, ca.fabs(con[1] - self.P[-1])) # ensure initial speed matches current speed
+                self.g = ca.vertcat(self.g, ca.fabs(self.U[1, k] - self.P[-1])) # ensure initial speed matches current speed
             else:
-                self.g = ca.vertcat(self.g, ca.fabs(con[1] - self.U[1, k - 1]))  # limit decceleration
+                self.g = ca.vertcat(self.g, ca.fabs(self.U[1, k] - self.U[1, k - 1]))  # limit decceleration
 
     def init_solver(self):
         variables = ca.vertcat(ca.reshape(self.X, NX * (self.N + 1), 1),
@@ -118,27 +104,21 @@ class GlobalMPCC(BasePlanner):
         opts = {"ipopt": {"max_iter": 1000, "print_level": 0}, "print_time": 0}
         self.solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts)
 
-    def prepare_input(self, obs):
-        x0 = np.append(obs["pose"], self.centre_line.calculate_progress_m(obs["pose"][0:2]))
-        x0[2] = normalise_psi(x0[2]) 
-
-        x0[3] = self.filter_estimate(x0[3]) # I think that I can remove this???
-
-        return x0, obs["vehicle_speed"]
-
     def plan(self, obs):
         self.step_counter += 1
-        x0, vehicle_speed = self.prepare_input(obs)
+        x0 = np.append(obs["pose"], self.centre_line.calculate_progress_m(obs["pose"][0:2]))
+        x0[2] = normalise_psi(x0[2])
 
-        p = self.generate_constraints_and_parameters(x0, vehicle_speed)
+        p = self.generate_constraints_and_parameters(x0, obs["vehicle_speed"])
         states, controls, solved_status = self.solve(p)
         if not solved_status:
             self.warm_start = True
-            p = self.generate_constraints_and_parameters(x0, vehicle_speed)
+            p = self.generate_constraints_and_parameters(x0, obs["vehicle_speed"])
             states, controls, solved_status = self.solve(p)
+            print(f"{self.step_counter} --> Solve failed: ReWarm Start: New outcome: {solved_status}")
             if not solved_status:
-                print(f"Solve failed: ReWarm Start: New outcome: {solved_status}")
-                print(f"S:{x0[3]:2f} --> Action: {controls[0, 0:2]}")
+                print(f"{self.step_counter} --> Second solved failed :-(")
+                print(f"S:{x0[3]:2f} Theta: {x0[2]:2f} --> Action: {controls[0, 0:2]}")
                 return np.array([0, 1])
 
         if self.save_data:
@@ -149,8 +129,17 @@ class GlobalMPCC(BasePlanner):
 
         return action 
 
-    def generate_constraints_and_parameters(self, x0_in, x0_speed):
+    def init_bound_limits(self):
         self.lbg, self.ubg = np.zeros((self.g.shape[0], 1)), np.zeros((self.g.shape[0], 1))
+        for k in range(self.N):  # set the reference controls and path boundary conditions to track
+            self.lbg[NX - 2 + (NX + 3) * (k + 1), 0] = - self.f_max
+            self.ubg[NX - 2 + (NX + 3) * (k + 1) , 0] = self.f_max
+            # Adjust indicies.
+            self.lbg[NX -1 + (NX + 3) * (k + 1), 0] = - self.planner_params.max_decceleration * self.dt
+            self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = ca.inf # do not limit speeding up
+
+    def generate_constraints_and_parameters(self, x0_in, x0_speed):
+        # self.lbg, self.ubg = np.zeros((self.g.shape[0], 1)), np.zeros((self.g.shape[0], 1))
         if self.warm_start:
             self.construct_warm_start_soln(x0_in) 
 
@@ -158,26 +147,34 @@ class GlobalMPCC(BasePlanner):
         pp[:NX] = x0_in
 
         for k in range(self.N):  # set the reference controls and path boundary conditions to track
-            s = self.X0[k, 3]
-            if s > self.track_length:
-                s = s - self.track_length
-            right_point = [self.right_interpolant.lut_x(s).full()[0, 0], self.right_interpolant.lut_y(s).full()[0, 0]]
-            left_point = [self.left_interpolant.lut_x(s).full()[0, 0], self.left_interpolant.lut_y(s).full()[0, 0]]
+            right_point = self.right_interpolant.get_point(self.X0[k, 3])
+            left_point = self.left_interpolant.get_point(self.X0[k, 3])
+            delta_point = right_point - left_point
+            delta_point[0] = -delta_point[0]
 
-            delta_x_path = right_point[0] - left_point[0]
-            delta_y_path = right_point[1] - left_point[1]
-            pp[NX + 2 * k:NX + 2 * k + 2] = [-delta_x_path, delta_y_path]
+            pp[NX + 2 * k:NX + 2 * k + 2] = delta_point
 
-            right_bound = -delta_x_path * right_point[0] - delta_y_path * right_point[1]
-            left_bound = -delta_x_path * left_point[0] - delta_y_path * left_point[1]
+            right_bound = delta_point[0] * right_point[0] - delta_point[1] * right_point[1]
+            left_bound = delta_point[0] * left_point[0] - delta_point[1] * left_point[1]
+
+            # s = self.X0[k, 3]
+            # right_point = [self.right_interpolant.lut_x(s).full()[0, 0], self.right_interpolant.lut_y(s).full()[0, 0]]
+            # left_point = [self.left_interpolant.lut_x(s).full()[0, 0], self.left_interpolant.lut_y(s).full()[0, 0]]
+
+            # delta_x_path = right_point[0] - left_point[0]
+            # delta_y_path = right_point[1] - left_point[1]
+            # pp[NX + 2 * k:NX + 2 * k + 2] = [-delta_x_path, delta_y_path]
+
+            # right_bound = -delta_x_path * right_point[0] - delta_y_path * right_point[1]
+            # left_bound = -delta_x_path * left_point[0] - delta_y_path * left_point[1]
 
             self.lbg[NX - 3 + (NX + 3) * (k + 1), 0] = min(left_bound, right_bound)
             self.ubg[NX - 3 + (NX + 3) * (k + 1), 0] = max(left_bound, right_bound)
-            self.lbg[NX - 2 + (NX + 3) * (k + 1), 0] = - self.f_max
-            self.ubg[NX - 2 + (NX + 3) * (k + 1) , 0] = self.f_max
-            #Adjust indicies.
-            self.lbg[NX -1 + (NX + 3) * (k + 1), 0] = - self.planner_params.max_decceleration * self.dt
-            self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = ca.inf # do not limit speeding up
+            # self.lbg[NX - 2 + (NX + 3) * (k + 1), 0] = - self.f_max
+            # self.ubg[NX - 2 + (NX + 3) * (k + 1) , 0] = self.f_max
+            # # Adjust indicies.
+            # self.lbg[NX -1 + (NX + 3) * (k + 1), 0] = - self.planner_params.max_decceleration * self.dt
+            # self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = ca.inf # do not limit speeding up
             # self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = self.max_v_dot
 
         # the optimizer cannot control the init state.
@@ -210,14 +207,6 @@ class GlobalMPCC(BasePlanner):
         self.u0 = ca.vertcat(u[1:, :], u[u.size1() - 1, :])
 
         return trajectory, inputs, solved_status
-        
-    def filter_estimate(self, initial_arc_pos):
-        if (self.X0[0, 3] >= self.track_length) and (
-                (initial_arc_pos >= self.track_length) or (initial_arc_pos <= 5)):
-            self.X0[:, 3] = self.X0[:, 3] - self.track_length
-        if initial_arc_pos >= self.track_length:
-            initial_arc_pos -= self.track_length
-        return initial_arc_pos
 
     def construct_warm_start_soln(self, initial_state):
         self.X0 = np.zeros((self.N + 1, NX))
@@ -248,13 +237,28 @@ class GlobalMPCC(BasePlanner):
         self.warm_start = False
 
 
+def init_track_interpolants(centre_line, exclusion_width):
+    widths = np.row_stack((centre_line.widths, centre_line.widths[1:int(centre_line.widths.shape[0] / 2), :]))
+    path = np.row_stack((centre_line.path, centre_line.path[1:int(centre_line.path.shape[0] / 2), :]))
+    extended_track = TrackLine(path)
+    extended_track.init_path()
+    extended_track.init_track()
+
+    centre_interpolant = LineInterpolant(extended_track.path, extended_track.s_path, extended_track.psi)
+
+    left_path = extended_track.path - extended_track.nvecs * np.clip((widths[:, 0][:, None]  - exclusion_width), 0, np.inf)
+    left_interpolant = LineInterpolant(left_path, extended_track.s_path)
+    right_path = extended_track.path + extended_track.nvecs * np.clip((widths[:, 1][:, None] - exclusion_width), 0, np.inf)
+    right_interpolant = LineInterpolant(right_path, extended_track.s_path)
+
+    return centre_interpolant, left_interpolant, right_interpolant
+
 def normalise_psi(psi):
     while psi > np.pi:
         psi -= 2*np.pi
     while psi < -np.pi:
         psi += 2*np.pi
     return psi
-
 
 
 class LineInterpolant:
@@ -264,3 +268,5 @@ class LineInterpolant:
         if angles is not None:
             self.lut_angle = ca.interpolant('lut_angle', 'bspline', [s_path], angles)
 
+    def get_point(self, s):
+        return np.array([self.lut_x(s).full()[0, 0], self.lut_y(s).full()[0, 0]])
