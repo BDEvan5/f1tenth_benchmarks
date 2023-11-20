@@ -1,8 +1,8 @@
 import numpy as np 
 import casadi as ca
 
-from f1tenth_sim.classic_racing.ReferencePath import ReferencePath
 from f1tenth_sim.utils.BasePlanner import BasePlanner
+from f1tenth_sim.utils.track_utils import CentreLine, TrackLine
 
 
 NX = 4
@@ -16,12 +16,14 @@ class GlobalMPCC(BasePlanner):
         if self.save_data: 
             self.mpcc_data_path = self.data_root_path + "mpcc_data/"
             self.create_clean_path(self.mpcc_data_path)
-        self.rp = None
+        self.track_width = None
+        self.centre_interpolant = None
+        self.left_interpolant, self.right_interpolant = None, None
         self.g, self.obj = None, None
-        self.dt = self.planner_params.dt
-        self.N = self.planner_params.N
         self.f_max = self.planner_params.friction_mu * self.vehicle_params.vehicle_mass * self.vehicle_params.gravity
 
+        self.dt = self.planner_params.dt
+        self.N = self.planner_params.N
         self.u0 = np.zeros((self.N, NU))
         self.X0 = np.zeros((self.N + 1, NX))
         self.warm_start = True # warm start every time
@@ -30,7 +32,20 @@ class GlobalMPCC(BasePlanner):
         self.init_constraints()
     
     def set_map(self, map_name):
-        self.rp = ReferencePath(map_name, 0.4)
+        self.centre_line = CentreLine(map_name)
+        widths = np.row_stack((self.centre_line.widths, self.centre_line.widths[1:int(self.centre_line.widths.shape[0] / 2), :]))
+        path = np.row_stack((self.centre_line.path, self.centre_line.path[1:int(self.centre_line.path.shape[0] / 2), :]))
+        extended_track = TrackLine(path)
+        extended_track.init_path()
+        extended_track.init_track()
+
+        self.track_length = self.centre_line.s_path[-1]
+        self.centre_interpolant = LineInterpolant(extended_track.path, extended_track.s_path, extended_track.psi)
+
+        left_path = extended_track.path - extended_track.nvecs * np.clip((widths[:, 0][:, None]  - self.planner_params.exclusion_width), 0, np.inf)
+        self.left_interpolant = LineInterpolant(left_path, extended_track.s_path)
+        right_path = extended_track.path + extended_track.nvecs * np.clip((widths[:, 1][:, None] - self.planner_params.exclusion_width), 0, np.inf)
+        self.right_interpolant = LineInterpolant(right_path, extended_track.s_path)
 
         self.init_objective()
         self.init_bounds()
@@ -63,9 +78,9 @@ class GlobalMPCC(BasePlanner):
 
         for k in range(self.N):
             st_next = self.X[:, k + 1]
-            t_angle = self.rp.angle_lut_t(st_next[3])
-            delta_x = st_next[0] - self.rp.center_lut_x(st_next[3])
-            delta_y = st_next[1] - self.rp.center_lut_y(st_next[3])
+            t_angle = self.centre_interpolant.lut_angle(st_next[3])
+            delta_x = st_next[0] - self.centre_interpolant.lut_x(st_next[3])
+            delta_y = st_next[1] - self.centre_interpolant.lut_y(st_next[3])
             
             contouring_error = ca.sin(t_angle) * delta_x - ca.cos(t_angle) * delta_y 
             lag_error = -ca.cos(t_angle) * delta_x - ca.sin(t_angle) * delta_y 
@@ -104,7 +119,7 @@ class GlobalMPCC(BasePlanner):
         self.solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts)
 
     def prepare_input(self, obs):
-        x0 = np.append(obs["pose"], self.rp.calculate_s(obs["pose"][0:2]))
+        x0 = np.append(obs["pose"], self.centre_line.calculate_progress_m(obs["pose"][0:2]))
         x0[2] = normalise_psi(x0[2]) 
 
         x0[3] = self.filter_estimate(x0[3]) # I think that I can remove this???
@@ -144,10 +159,10 @@ class GlobalMPCC(BasePlanner):
 
         for k in range(self.N):  # set the reference controls and path boundary conditions to track
             s = self.X0[k, 3]
-            if s > self.rp.track_length:
-                s = s - self.rp.track_length
-            right_point = [self.rp.right_lut_x(s).full()[0, 0], self.rp.right_lut_y(s).full()[0, 0]]
-            left_point = [self.rp.left_lut_x(s).full()[0, 0], self.rp.left_lut_y(s).full()[0, 0]]
+            if s > self.track_length:
+                s = s - self.track_length
+            right_point = [self.right_interpolant.lut_x(s).full()[0, 0], self.right_interpolant.lut_y(s).full()[0, 0]]
+            left_point = [self.left_interpolant.lut_x(s).full()[0, 0], self.left_interpolant.lut_y(s).full()[0, 0]]
 
             delta_x_path = right_point[0] - left_point[0]
             delta_y_path = right_point[1] - left_point[1]
@@ -197,11 +212,11 @@ class GlobalMPCC(BasePlanner):
         return trajectory, inputs, solved_status
         
     def filter_estimate(self, initial_arc_pos):
-        if (self.X0[0, 3] >= self.rp.track_length) and (
-                (initial_arc_pos >= self.rp.track_length) or (initial_arc_pos <= 5)):
-            self.X0[:, 3] = self.X0[:, 3] - self.rp.track_length
-        if initial_arc_pos >= self.rp.track_length:
-            initial_arc_pos -= self.rp.track_length
+        if (self.X0[0, 3] >= self.track_length) and (
+                (initial_arc_pos >= self.track_length) or (initial_arc_pos <= 5)):
+            self.X0[:, 3] = self.X0[:, 3] - self.track_length
+        if initial_arc_pos >= self.track_length:
+            initial_arc_pos -= self.track_length
         return initial_arc_pos
 
     def construct_warm_start_soln(self, initial_state):
@@ -209,11 +224,11 @@ class GlobalMPCC(BasePlanner):
         self.X0[0, :] = initial_state
         for k in range(1, self.N + 1):
             s_next = self.X0[k - 1, 3] + self.planner_params.p_initial * self.dt
-            if s_next > self.rp.track_length:
-                s_next = s_next - self.rp.track_length
+            if s_next > self.track_length:
+                s_next = s_next - self.track_length
 
-            psi_next = self.rp.angle_lut_t(s_next).full()[0, 0]
-            x_next, y_next = self.rp.center_lut_x(s_next), self.rp.center_lut_y(s_next)
+            psi_next = self.centre_interpolant.lut_angle(s_next).full()[0, 0]
+            x_next, y_next = self.centre_interpolant.lut_x(s_next), self.centre_interpolant.lut_y(s_next)
 
             # adjusts the centerline angle to be continuous
             psi_diff = self.X0[k-1, 2] - psi_next
@@ -239,3 +254,13 @@ def normalise_psi(psi):
     while psi < -np.pi:
         psi += 2*np.pi
     return psi
+
+
+
+class LineInterpolant:
+    def __init__(self, path, s_path, angles=None):
+        self.lut_x = ca.interpolant('lut_x', 'bspline', [s_path], path[:, 0])
+        self.lut_y = ca.interpolant('lut_y', 'bspline', [s_path], path[:, 1])
+        if angles is not None:
+            self.lut_angle = ca.interpolant('lut_angle', 'bspline', [s_path], angles)
+

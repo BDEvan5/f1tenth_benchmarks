@@ -34,8 +34,8 @@ def test_mpcc():
 
 if __name__ == "__main__":
 
-    test_pure_pursuit()
-    # test_mpcc()
+    # test_pure_pursuit()
+    test_mpcc()
 
 
 
