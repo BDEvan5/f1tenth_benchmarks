@@ -26,6 +26,7 @@ class GlobalMPCC(BasePlanner):
         self.N = self.planner_params.N
         self.u0 = np.zeros((self.N, NU))
         self.X0 = np.zeros((self.N + 1, NX))
+        self.optimisation_parameters = np.zeros(NX + 2 * self.N + 1)
         self.warm_start = True # warm start every time
 
         self.init_optimisation()
@@ -97,6 +98,14 @@ class GlobalMPCC(BasePlanner):
             else:
                 self.g = ca.vertcat(self.g, ca.fabs(self.U[1, k] - self.U[1, k - 1]))  # limit decceleration
 
+    def init_bound_limits(self):
+        self.lbg, self.ubg = np.zeros((self.g.shape[0], 1)), np.zeros((self.g.shape[0], 1))
+        for k in range(self.N):  # set the reference controls and path boundary conditions to track
+            self.lbg[NX - 2 + (NX + 3) * (k + 1), 0] = - self.f_max
+            self.ubg[NX - 2 + (NX + 3) * (k + 1) , 0] = self.f_max
+            self.lbg[NX -1 + (NX + 3) * (k + 1), 0] = - self.planner_params.max_decceleration * self.dt
+            self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = ca.inf # do not limit speeding up
+
     def init_solver(self):
         variables = ca.vertcat(ca.reshape(self.X, NX * (self.N + 1), 1),
                                 ca.reshape(self.U, NU * self.N, 1))
@@ -104,92 +113,61 @@ class GlobalMPCC(BasePlanner):
         opts = {"ipopt": {"max_iter": 1000, "print_level": 0}, "print_time": 0}
         self.solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts)
 
-    def plan(self, obs):
-        self.step_counter += 1
+    def prepare_input(self, obs):
         x0 = np.append(obs["pose"], self.centre_line.calculate_progress_m(obs["pose"][0:2]))
         x0[2] = normalise_psi(x0[2])
+        self.optimisation_parameters[:NX] = x0
+        self.optimisation_parameters[-1] = max(obs["vehicle_speed"], 1) # prevent constraint violation
 
-        p = self.generate_constraints_and_parameters(x0, obs["vehicle_speed"])
-        states, controls, solved_status = self.solve(p)
+        if self.warm_start:
+            self.construct_warm_start_soln(x0) 
+
+    def plan(self, obs):
+        self.prepare_input(obs)
+        self.set_path_constraints()
+        states, controls, solved_status = self.solve()
+
         if not solved_status:
             self.warm_start = True
-            p = self.generate_constraints_and_parameters(x0, obs["vehicle_speed"])
-            states, controls, solved_status = self.solve(p)
-            print(f"{self.step_counter} --> Solve failed: ReWarm Start: New outcome: {solved_status}")
+            self.set_path_constraints()
+            states, controls, solved_status = self.solve()
             if not solved_status:
-                print(f"{self.step_counter} --> Second solved failed :-(")
-                print(f"S:{x0[3]:2f} Theta: {x0[2]:2f} --> Action: {controls[0, 0:2]}")
+                print(f"{self.step_counter} --> Optimisation has not been solved!!!!!!!!")
                 return np.array([0, 1])
 
         if self.save_data:
             np.save(self.mpcc_data_path + f"States_{self.step_counter}.npy", states)
             np.save(self.mpcc_data_path + f"Controls_{self.step_counter}.npy", controls)
 
+        self.step_counter += 1
         action = controls[0, 0:2]
 
         return action 
 
-    def init_bound_limits(self):
-        self.lbg, self.ubg = np.zeros((self.g.shape[0], 1)), np.zeros((self.g.shape[0], 1))
-        for k in range(self.N):  # set the reference controls and path boundary conditions to track
-            self.lbg[NX - 2 + (NX + 3) * (k + 1), 0] = - self.f_max
-            self.ubg[NX - 2 + (NX + 3) * (k + 1) , 0] = self.f_max
-            # Adjust indicies.
-            self.lbg[NX -1 + (NX + 3) * (k + 1), 0] = - self.planner_params.max_decceleration * self.dt
-            self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = ca.inf # do not limit speeding up
-
-    def generate_constraints_and_parameters(self, x0_in, x0_speed):
-        # self.lbg, self.ubg = np.zeros((self.g.shape[0], 1)), np.zeros((self.g.shape[0], 1))
-        if self.warm_start:
-            self.construct_warm_start_soln(x0_in) 
-
-        pp = np.zeros(NX + 2 * self.N + 1)
-        pp[:NX] = x0_in
-
+    def set_path_constraints(self):
         for k in range(self.N):  # set the reference controls and path boundary conditions to track
             right_point = self.right_interpolant.get_point(self.X0[k, 3])
             left_point = self.left_interpolant.get_point(self.X0[k, 3])
             delta_point = right_point - left_point
             delta_point[0] = -delta_point[0]
 
-            pp[NX + 2 * k:NX + 2 * k + 2] = delta_point
+            self.optimisation_parameters[NX + 2 * k:NX + 2 * k + 2] = delta_point
 
             right_bound = delta_point[0] * right_point[0] - delta_point[1] * right_point[1]
             left_bound = delta_point[0] * left_point[0] - delta_point[1] * left_point[1]
 
-            # s = self.X0[k, 3]
-            # right_point = [self.right_interpolant.lut_x(s).full()[0, 0], self.right_interpolant.lut_y(s).full()[0, 0]]
-            # left_point = [self.left_interpolant.lut_x(s).full()[0, 0], self.left_interpolant.lut_y(s).full()[0, 0]]
-
-            # delta_x_path = right_point[0] - left_point[0]
-            # delta_y_path = right_point[1] - left_point[1]
-            # pp[NX + 2 * k:NX + 2 * k + 2] = [-delta_x_path, delta_y_path]
-
-            # right_bound = -delta_x_path * right_point[0] - delta_y_path * right_point[1]
-            # left_bound = -delta_x_path * left_point[0] - delta_y_path * left_point[1]
-
             self.lbg[NX - 3 + (NX + 3) * (k + 1), 0] = min(left_bound, right_bound)
             self.ubg[NX - 3 + (NX + 3) * (k + 1), 0] = max(left_bound, right_bound)
-            # self.lbg[NX - 2 + (NX + 3) * (k + 1), 0] = - self.f_max
-            # self.ubg[NX - 2 + (NX + 3) * (k + 1) , 0] = self.f_max
-            # # Adjust indicies.
-            # self.lbg[NX -1 + (NX + 3) * (k + 1), 0] = - self.planner_params.max_decceleration * self.dt
-            # self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = ca.inf # do not limit speeding up
-            # self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = self.max_v_dot
 
-        # the optimizer cannot control the init state.
-        # self.lbg[NX *2, 0] = - ca.inf #! I think this is wrong....
-        # self.ubg[NX *2, 0] = ca.inf
-
-        pp[-1] = max(x0_speed, 1) # prevent constraint violation
-
-        return pp
-
-    def solve(self, p):
+    def solve(self):
         x_init = ca.vertcat(ca.reshape(self.X0.T, NX * (self.N + 1), 1),
                          ca.reshape(self.u0.T, NU * self.N, 1))
 
-        sol = self.solver(x0=x_init, lbx=self.lbx, ubx=self.ubx, lbg=self.lbg, ubg=self.ubg, p=p)
+        sol = self.solver(x0=x_init, lbx=self.lbx, ubx=self.ubx, lbg=self.lbg, ubg=self.ubg, p=self.optimisation_parameters)
+
+        # x_result = sol['x'].full()
+        # trajectory = np.reshape(x_result[0:NX * (self.N + 1)], (NX, self.N + 1)).T
+        # inputs = np.reshape(x_result[NX * (self.N + 1):], (NU, self.N)).T
 
         # Get state and control solution
         self.X0 = ca.reshape(sol['x'][0:NX * (self.N + 1)], NX, self.N + 1).T  # get soln trajectory
@@ -197,13 +175,17 @@ class GlobalMPCC(BasePlanner):
 
         trajectory = self.X0.full()  # size is (N+1,n_states)
         inputs = u.full()
-        stats = self.solver.stats()
+        # stats = self.solver.stats()
         solved_status = True
-        if stats['return_status'] == 'Infeasible_Problem_Detected':
+        if self.solver.stats()['return_status'] == 'Infeasible_Problem_Detected':
             solved_status = False
 
         # Shift trajectory and control solution to initialize the next step
+        # self.X0 = np.roll(trajectory, 1, axis=0)
+        # self.u0 = np.roll(inputs, 1, axis=0)
+        # self.X0 = ca.vertcat(trajectory[1:, :], trajectory[trajectory.size1() - 1, :])
         self.X0 = ca.vertcat(self.X0[1:, :], self.X0[self.X0.size1() - 1, :])
+        # self.u0 = ca.vertcat(inputs[1:, :], inputs[inputs.size1() - 1, :])
         self.u0 = ca.vertcat(u[1:, :], u[u.size1() - 1, :])
 
         return trajectory, inputs, solved_status
