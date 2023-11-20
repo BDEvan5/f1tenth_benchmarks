@@ -20,6 +20,6 @@ dt: 0.04
 N: 20
 p_initial: 5
 
-
+exclusion_width: 0.4
 
 
