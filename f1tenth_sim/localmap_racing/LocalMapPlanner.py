@@ -21,12 +21,14 @@ LOOKAHEAD_DISTANCE = 1.4
 WHEELBASE = 0.33
 MAX_STEER = 0.4
 
-class LocalMapPlanner:
+
+class LocalMapPP: #! INHERIT HERE....
     def __init__(self, test_id, save_data=False, raceline=True):
-        self.name = "LocalMapPlanner"
+        self.name = "LocalMapPP"
         self.path = f"Logs/{self.name}/"
         ensure_path_exists(self.path)
         ensure_path_exists(self.path + f"RawData_{test_id}/")
+        self.path = f"Logs/{self.name}/" + f"RawData_{test_id}/"
         self.counter = 0
                 
         self.local_map_generator = LocalMapGenerator(self.path, test_id, save_data)

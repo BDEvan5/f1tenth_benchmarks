@@ -1,5 +1,5 @@
 from f1tenth_sim.simulator import F1TenthSim_TrueLocation  
-from f1tenth_sim.localmap_racing.LocalMapPlanner import LocalMapPlanner
+from f1tenth_sim.localmap_racing.LocalMapPlanner import LocalMapPP
 from f1tenth_sim.localmap_racing.LocalMPCC import LocalMPCC
 from f1tenth_sim.localmap_racing.LocalMPCC2 import LocalMPCC2
 
@@ -39,7 +39,7 @@ def test__localmap_planner():
     map_name = "aut"
     # planner = LocalMapPlanner(test_id, save_data=True, raceline=False)
     # planner = LocalMapPlanner(test_id, save_data=False, raceline=False)
-    planner = LocalMapPlanner(test_id, save_data=True, raceline=True)
+    planner = LocalMapPP(test_id, save_data=True, raceline=True)
     # run_planning_test_single(planner, map_name, test_id)
     run_planning_tests_all_maps(planner, test_id)
 

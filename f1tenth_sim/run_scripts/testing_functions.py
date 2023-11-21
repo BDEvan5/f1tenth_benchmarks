@@ -1,6 +1,10 @@
 from f1tenth_sim.simulator import F1TenthSim_TrueLocation, F1TenthSim
 from f1tenth_sim.classic_racing.particle_filter import ParticleFilter
 
+from f1tenth_sim.data_tools.general_plotting.plot_trajectory_analysis import plot_trajectory_analysis
+from f1tenth_sim.data_tools.general_plotting.plot_raceline_tracking import plot_raceline_tracking
+
+
 NUMBER_OF_LAPS = 1
 
 def simulate_laps(sim, planner, n_laps):
