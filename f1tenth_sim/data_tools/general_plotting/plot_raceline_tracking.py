@@ -51,7 +51,8 @@ class TrajectoryPlotter:
         self.vehicle_name = folder.split("/")[-2]
         print(f"Vehicle name: {self.vehicle_name}")
         
-        testing_logs = glob.glob(f"{self.load_folder}*.npy")
+        testing_logs = glob.glob(f"{self.load_folder}Sim*.npy")
+        # testing_logs = glob.glob(f"{agent_path}RawData_{test_id}/Sim*.npy")
         for test_log in testing_logs:
             test_folder_name = test_log.split("/")[-1]
             self.test_log_key = test_folder_name.split(".")[0].split("_")[1:]
@@ -170,4 +171,5 @@ def plot_raceline_tracking(vehicle_name, test_id):
 
 
 if __name__ == '__main__':
-    plot_raceline_tracking("GlobalPlanPP", "mu70")
+    # plot_raceline_tracking("GlobalPlanPP", "mu70")
+    plot_raceline_tracking("FullStackPP", "mu60")
