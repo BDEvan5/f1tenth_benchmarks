@@ -26,12 +26,7 @@ class GlobalPurePursuit(BasePlanner):
         pose = obs["pose"]
         vehicle_speed = obs["vehicle_speed"]
 
-        s = self.racetrack.calculate_progress_percent(pose[:2])
-        s_point = self.racetrack.find_nearest_point(s)
-        perpendicular_distance = np.linalg.norm(s_point - pose[:2])
-
-        lookahead_distance = self.constant_lookahead + (vehicle_speed/self.vehicle_params.max_speed) * (self.variable_lookahead + perpendicular_distance)
-        # lookahead_distance += max(2, vehicle_speed) /self.vehicle_params.max_speed * perpendicular_distance
+        lookahead_distance = self.constant_lookahead + (vehicle_speed/self.vehicle_params.max_speed) * (self.variable_lookahead)
         lookahead_point, i = self.get_lookahead_point(pose[:2], lookahead_distance)
 
         if vehicle_speed < 1:
@@ -45,9 +40,7 @@ class GlobalPurePursuit(BasePlanner):
             speed = self.planner_params.constant_speed
         else:
             speed = min(self.racetrack.speeds[i], self.vehicle_params.max_speed)
-            # if perpendicular_distance > 0.2:
             speed = min(speed, calculate_speed_limit(steering_angle, self.planner_params.friction_limit))
-            # speed = speed - (1+perpendicular_distance) ** 4 + 1
         action = np.array([steering_angle, speed])
 
         return action

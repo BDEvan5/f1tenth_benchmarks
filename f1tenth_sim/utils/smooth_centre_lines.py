@@ -119,9 +119,14 @@ def plot_line_and_boundaries(new_track, color, normals=False):
     plt.plot(l2[:, 0], l2[:, 1], linewidth=1, color=color)
 
 
-
-if __name__ == "__main__":
+def smooth_centre_lines():
     run_smoothing_process("aut")
     run_smoothing_process("esp")
     run_smoothing_process("gbr")
     run_smoothing_process("mco")
+
+
+if __name__ == "__main__":
+    smooth_centre_lines()
+
+

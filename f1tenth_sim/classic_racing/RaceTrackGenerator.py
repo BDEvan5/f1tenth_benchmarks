@@ -6,6 +6,7 @@ from f1tenth_sim.utils.BasePlanner import *
 from f1tenth_sim.utils.track_utils import CentreLine, RaceTrack
 from f1tenth_sim.data_tools.specific_plotting.plot_racelines import RaceTrackPlotter
 import matplotlib.pyplot as plt
+from f1tenth_sim.utils.smooth_centre_lines import smooth_centre_lines
 import csv
 
 from copy import copy
@@ -22,7 +23,7 @@ class RaceTrackGenerator(RaceTrack):
         try:
             self.centre_line = CentreLine(map_name, "Data/smooth_centre_lines/")
         except:
-            generate_smooth_centre_lines()
+            smooth_centre_lines()
             self.centre_line = CentreLine(map_name, "Data/smooth_centre_lines/")
         ensure_path_exists(f"Data/racelines/")
         ensure_path_exists(f"Data/raceline_data/")
@@ -56,14 +57,6 @@ class RaceTrackGenerator(RaceTrack):
         widths = self.centre_line.widths.copy() - self.params.vehicle_width / 2
         track = np.concatenate([self.centre_line.path, widths], axis=1)
         alpha, error = tph.opt_min_curv.opt_min_curv(track, self.centre_line.nvecs, A, 1, 0, print_debug=True, closed=True)
-
-        # self.path, A_raceline, coeffs_x_raceline, coeffs_y_raceline, spline_inds_raceline_interp, t_values_raceline_interp, s_raceline, spline_lengths_raceline, el_lengths_raceline_interp_cl = tph.create_raceline.create_raceline(self.path, self.nvecs, alpha, 0.2) 
-
-        # coeffs_x, coeffs_y, A, normvec_normalized = tph.calc_splines.calc_splines(self.centre_line.path, self.centre_line.el_lengths, psi_s=self.centre_line.psi[0], psi_e=self.centre_line.psi[-1])
-
-        # widths = self.centre_line.widths.copy() - self.params.vehicle_width / 2
-        # track = np.concatenate([self.centre_line.path, widths], axis=1)
-        # alpha, error = tph.opt_min_curv.opt_min_curv(track, self.centre_line.nvecs, A, self.params.max_kappa, 0, print_debug=True, closed=False, fix_s=True, psi_s=self.centre_line.psi[0], psi_e=self.centre_line.psi[-1], fix_e=True)
 
         self.path, A_raceline, coeffs_x_raceline, coeffs_y_raceline, spline_inds_raceline_interp, t_values_raceline_interp, self.s_raceline, spline_lengths_raceline, el_lengths_raceline_interp_cl = tph.create_raceline.create_raceline(self.centre_line.path, self.centre_line.nvecs, alpha, self.params.raceline_step) 
         self.psi, self.kappa = tph.calc_head_curv_num.calc_head_curv_num(self.path, el_lengths_raceline_interp_cl, True)
@@ -124,69 +117,7 @@ class Track:
 
         return crossing 
 
-def smooth_centre_line(map_name, smoothing):
-    save_path = "Data/smooth_centre_lines/"
-    ensure_path_exists(save_path)
-    centre_line = CentreLineTrack(map_name)
-    centre_track = np.concatenate([centre_line.path, centre_line.widths], axis=1)
-    old_track = copy(centre_track)
-    centre_track = Track(centre_track)
 
-    crossing = centre_track.check_normals_crossing()
-    if not crossing: print(f"No smoothing needed!!!!!!!!!!!!!!")
-
-    track = np.concatenate([centre_track.path, centre_track.widths], axis=1)
-    new_track = tph.spline_approximation.spline_approximation(track, 5, smoothing, 0.01, 0.3, True)   
-    new_track = Track(new_track)
-
-    if not new_track.check_normals_crossing():
-        txt = f"Smoothing ({smoothing}) successful --> Minimum widths, L: {np.min(new_track.widths[:, 0]):.2f}, R: {np.min(new_track.widths[:, 1]):.2f}"
-    else: 
-        txt = f"Smoothing ({smoothing}) FAILED --> Minimum widths, L: {np.min(new_track.widths[:, 0]):.2f}, R: {np.min(new_track.widths[:, 1]):.2f}"
-
-    smooth_track = np.concatenate([new_track.path, new_track.widths], axis=1)
-    map_c_name = save_path + f"{map_name}_centerline.csv"
-    with open(map_c_name, 'w') as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerows(smooth_track)
-
-    plt.figure(6, figsize=(12, 12))
-    plt.clf()
-    plt.plot(old_track[:, 0], old_track[:, 1], '-', linewidth=2, color=periwinkle, label="Centre line")
-    plt.plot(new_track.path[:, 0], new_track.path[:, 1], '-', linewidth=2, color=red_orange, label="Smoothed track")
-
-    l1 = centre_line.path + centre_line.nvecs * centre_line.widths[:, 0][:, None] # inner
-    l2 = centre_line.path - centre_line.nvecs * centre_line.widths[:, 1][:, None] # outer
-    plt.plot(l1[:, 0], l1[:, 1], linewidth=1, color=fresh_t)
-    plt.plot(l2[:, 0], l2[:, 1], linewidth=1, color=fresh_t)
-
-    l1 = new_track.path + new_track.nvecs * new_track.widths[:, 0][:, None] # inner
-    l2 = new_track.path - new_track.nvecs * new_track.widths[:, 1][:, None] # outer
-
-    for i in range(len(new_track.path)):
-        plt.plot([l1[i, 0], l2[i, 0]], [l1[i, 1], l2[i, 1]], linewidth=1, color=nartjie)
-
-    plt.plot(l1[:, 0], l1[:, 1], linewidth=1, color=sweedish_green)
-    plt.plot(l2[:, 0], l2[:, 1], linewidth=1, color=sweedish_green)
-
-    print(txt)
-    plt.title(txt)
-
-    plt.gca().set_aspect('equal', adjustable='box')
-    plt.legend()
-    save_path = f"Data/MapSmoothing/"
-    ensure_path_exists(save_path)
-    plt.savefig(save_path + f"Smoothing_{map_name}.svg")
-
-    print("")
-
-    # plt.show()
-
-def generate_smooth_centre_lines():
-    smooth_centre_line("aut", 250)
-    smooth_centre_line("esp", 300)
-    smooth_centre_line("gbr", 650)
-    smooth_centre_line("mco", 300)
 
 def generate_racelines():
     params = load_parameter_file("RaceTrackGenerator")
