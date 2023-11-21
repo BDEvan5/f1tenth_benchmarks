@@ -20,7 +20,7 @@ class LocalMapGenerator:
 
         self.save_data = save_data
         if save_data:
-            self.local_map_data_path = path + f"RawData_{test_id}/LocalMapData_{test_id}/"
+            self.local_map_data_path = path + f"LocalMapData_{test_id}/"
             ensure_path_exists(self.local_map_data_path)
         self.counter = 0
         self.left_longer = None
@@ -68,9 +68,16 @@ class LocalMapGenerator:
         candidate_lines = [z[arr_inds[i]+2:arr_inds[i+1]+1] for i in range(len(arr_inds)-1)]
         # Remove any boundaries that are not realistic
         candidate_lines = [line for line in candidate_lines if not np.all(line[:, 0] < -0.8) or np.all(np.abs(line[:, 1]) > 2.5)]
+        candidate_lines = [line for line in candidate_lines if len(line) > 1]
 
-        left_line = resample_track_points(candidate_lines[0], BOUNDARY_STEP_SIZE, BOUNDARY_SMOOTHING)
-        right_line = resample_track_points(candidate_lines[-1], BOUNDARY_STEP_SIZE, BOUNDARY_SMOOTHING)
+        try:
+            left_line = resample_track_points(candidate_lines[0], BOUNDARY_STEP_SIZE, BOUNDARY_SMOOTHING)
+            right_line = resample_track_points(candidate_lines[-1], BOUNDARY_STEP_SIZE, BOUNDARY_SMOOTHING)
+        except Exception as e:
+            print("Exception in track boundary extraction")
+            print(e)
+            print(len(candidate_lines))
+            print(arr_inds)
         if left_line.shape[0] > right_line.shape[0]:
             self.left_longer = True
         else:

@@ -10,22 +10,25 @@ def ensure_path_exists(path):
 def render_local_maps(planner_name, test_id, map_name="aut"):
     root = f"Logs/{planner_name}/"
     localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
-    logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
-    scans = np.load(root + f"RawData_{test_id}/ScanLog_{map_name}_0.npy")
+    try:
+        logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
+        scans = np.load(root + f"RawData_{test_id}/ScanLog_{map_name}_0.npy")
+    except:
+        logs, scans = None, None
     save_path = root + f"LocalMapGeneration_{test_id}/"
     ensure_path_exists(save_path)
-    # in the future, I could load the scans from here and not hae to save them seperately....
 
     angles = np.linspace(-2.35619449615, 2.35619449615, 1080)
     coses = np.cos(angles)
     sines = np.sin(angles)
 
-    for i in range(len(logs)-50, len(logs)):
+    # for i in range(len(logs)-50, len(logs)):
     # for i in range(490, 510):
     # for i in range(250,  350):
-    # for i in range(0, 100):
+    for i in range(100, 200):
     # for i in range(len(logs)):
-        scan_xs, scan_ys = scans[i+1] * np.array([coses, sines])
+        if scans:
+            scan_xs, scan_ys = scans[i+1] * np.array([coses, sines])
 
         local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
         line_1 = np.load(localmap_data_path + f"line1_{i}.npy")
@@ -67,7 +70,8 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
 
 if __name__ == '__main__':
     # render_local_maps("LocalMapPlanner", "c1")
-    render_local_maps("LocalMapPlanner", "r1", "mco")
+    render_local_maps("LocalMPCC", "mu60", "aut")
+    # render_local_maps("LocalMapPlanner", "r1", "mco")
 
 
 

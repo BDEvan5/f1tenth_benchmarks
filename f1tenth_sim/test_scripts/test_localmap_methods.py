@@ -1,7 +1,7 @@
 from f1tenth_sim.simulator import F1TenthSim_TrueLocation  
 from f1tenth_sim.localmap_racing.LocalMapPlanner import LocalMapPP
 from f1tenth_sim.localmap_racing.LocalMPCC import LocalMPCC
-from f1tenth_sim.localmap_racing.LocalMPCC2 import LocalMPCC2
+from f1tenth_sim.localmap_racing.LocalMPCC import LocalMPCC2
 
 from f1tenth_sim.data_tools.calculations.calculate_tracking_accuracy import calculate_tracking_accuracy
 from f1tenth_sim.data_tools.general_plotting.plot_raceline_tracking import plot_raceline_tracking
