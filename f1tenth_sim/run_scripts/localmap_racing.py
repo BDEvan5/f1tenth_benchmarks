@@ -16,7 +16,7 @@ def test_localmap_pp():
 
 
 def test_localmap_mpcc():
-    test_id = "mu70"
+    test_id = "mu60"
     # test_id = "mu70"
     map_name = "aut"
     planner = LocalMPCC(test_id, True)

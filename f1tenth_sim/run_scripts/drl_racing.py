@@ -19,12 +19,12 @@ def train_and_test_agents():
     seed_randomness(10)
     train_map = "mco"
     # train_map = "gbr" # test_id is the training map.
-    # test_id = "TestTD3"
-    test_id = "TestSAC2"
+    test_id = "TestTD3"
+    # test_id = "TestSAC2"
 
-    training_agent = TrainEndToEndAgent(train_map, test_id)
-    simulate_training_steps(training_agent, train_map, test_id)
-    plot_drl_training(training_agent.name, test_id)
+    # training_agent = TrainEndToEndAgent(train_map, test_id)
+    # simulate_training_steps(training_agent, train_map, test_id)
+    # plot_drl_training(training_agent.name, test_id)
 
     testing_agent = EndToEndAgent(test_id)
     test_mapless_all_maps(testing_agent, test_id)

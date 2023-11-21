@@ -100,7 +100,10 @@ class LocalMPCC(BasePlanner):
 
 
     def plan(self, obs):
+        self.step_counter += 1
         self.local_map = self.local_map_generator.generate_line_local_map(obs['scan'])
+        if len(self.local_map.track) <= 2:
+            return np.array([0, 1])
 
         self.rp = LocalReference(self.local_map)
 
@@ -128,7 +131,6 @@ class LocalMPCC(BasePlanner):
         np.save(self.mpcc_data_path + f"States_{self.step_counter}.npy", states)
         np.save(self.mpcc_data_path + f"Controls_{self.step_counter}.npy", controls)
         
-        self.step_counter += 1
 
         return action 
 

@@ -14,7 +14,7 @@ def build_main_df():
                   "EndToEnd_TestSAC": "End-to-end SAC", 
                   "EndToEnd_TestTD3": "End-to-end TD3", 
                   "LocalMapPP_mu60": "Local two-stage", 
-                  "LocalMPCC_mu60": "Local MPCC"}
+                  "LocalMPCC_mu70": "Local MPCC"}
 
 
     results_df = summary_df.loc[summary_df.VehicleID.isin(vehicle_id)]
