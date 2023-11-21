@@ -147,8 +147,8 @@ def plot_trajectory_analysis(vehicle_name, test_id):
 
 if __name__ == '__main__':
     # analyse_folder()
-    # plot_trajectory_analysis("PurePursuit", "mu75")
-    plot_trajectory_analysis("GlobalPlanMPCC", "mu70")
+    plot_trajectory_analysis("GlobalPlanPP", "mu70")
+    # plot_trajectory_analysis("GlobalPlanMPCC", "mu70")
     # plot_analysis("follow_the_gap")
     # plot_analysis("TD3_endToEnd_5")
     # plot_analysis("SAC_endToEnd_5")

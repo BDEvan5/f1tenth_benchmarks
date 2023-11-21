@@ -38,13 +38,15 @@ class TrajectoryPlotter:
         
         self.track_progresses = None
         self.tracking_accuracy = None
+        self.tracking_points = None
 
     def process_folder(self, folder, test_id):
         self.load_folder = folder + f"RawData_{test_id}/"
         self.save_folder = folder + f"Images_{test_id}/"
-        self.pdf_save_folder = folder + f"Images_pdf_{test_id}/"
         ensure_path_exists(self.save_folder)
-        ensure_path_exists(self.pdf_save_folder)
+        if SAVE_PDF:
+            self.pdf_save_folder = self.save_folder + f"Images_pdf_{test_id}/"
+            ensure_path_exists(self.pdf_save_folder)
 
         self.vehicle_name = folder.split("/")[-2]
         print(f"Vehicle name: {self.vehicle_name}")
@@ -74,6 +76,7 @@ class TrajectoryPlotter:
         self.track_progresses = accuracy_data[:, 0] * 100
         # rather use racing line progresses here
         self.tracking_accuracy = accuracy_data[:, 1] * 100
+        self.tracking_points = accuracy_data[:, 2:4]
         
         return 1 # to say success
 
@@ -103,8 +106,9 @@ class TrajectoryPlotter:
         
         name = self.save_folder + f"RacelineTrackingHeatMap_{self.test_log_key}"
         plt.savefig(name + ".svg", bbox_inches='tight', pad_inches=0)
-        name = self.pdf_save_folder + f"RacelineTrackingHeatMap_{self.test_log_key}"
-        plt.savefig(name + ".pdf", bbox_inches='tight', pad_inches=0)
+        if SAVE_PDF:
+            name = self.pdf_save_folder + f"RacelineTrackingHeatMap_{self.test_log_key}"
+            plt.savefig(name + ".pdf", bbox_inches='tight', pad_inches=0)
     
     def plot_tracking_path(self): 
         plt.figure(1)
@@ -114,7 +118,7 @@ class TrajectoryPlotter:
         xs, ys = self.map_data.pts2rc(self.states[:, 0:2])
         plt.plot(xs, ys, color=sunset_orange, alpha=0.6, linewidth=1, label="Vehicle")
 
-        xs, ys = self.map_data.xy2rc(self.map_data.xs, self.map_data.ys)
+        xs, ys = self.map_data.pts2rc(self.tracking_points)
         plt.plot(xs, ys, color=periwinkle, alpha=0.6, linewidth=1, label="Raceline")
 
         plt.legend(fontsize=16)
@@ -166,4 +170,4 @@ def plot_raceline_tracking(vehicle_name, test_id):
 
 
 if __name__ == '__main__':
-    plot_raceline_tracking("PurePursuit", "mu75")
+    plot_raceline_tracking("GlobalPlanPP", "mu70")

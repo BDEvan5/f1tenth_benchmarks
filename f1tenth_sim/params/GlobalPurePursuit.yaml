@@ -6,3 +6,8 @@ variable_lookahead: 0.9
 # variable_lookahead: 0.1
 
 constant_speed: 3
+
+racetrack_set: "mu70"
+
+friction_limit: 1.2
+
