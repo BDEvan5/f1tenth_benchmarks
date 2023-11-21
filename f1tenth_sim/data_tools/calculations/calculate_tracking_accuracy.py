@@ -109,5 +109,5 @@ def calculate_tracking_accuracy(planner_name, centerline=False):
 
 
 if __name__ == "__main__":
-    calculate_tracking_accuracy("PurePursuit")
+    calculate_tracking_accuracy("GlobalPlanPP")
 

@@ -2,7 +2,7 @@ import numpy as np
 from f1tenth_sim.drl_racing.sac import TrainSAC, TestSAC
 from f1tenth_sim.drl_racing.td3 import TrainTD3, TestTD3
 from f1tenth_sim.drl_racing.reward_functions import TrajectoryAidedLearningReward
-from f1tenth_sim.utils.BasePlanner import BasePlanner
+from f1tenth_sim.utils.BasePlanner import BasePlanner, save_params
 import torch
 
 def create_train_agent(state_dim, algorithm):
@@ -91,6 +91,7 @@ class TrainEndToEndAgent(EndToEndAgent):
         BasePlanner.__init__(self, "EndToEnd", test_id) #NOTE: do not call the inherited __init__()
 
         self.reward_generator = TrajectoryAidedLearningReward(map_name, self.planner_params) 
+        save_params(self.reward_generator.pp.planner_params, self.data_root_path, "pp_params")
         self.state = None
         self.nn_state = None
         self.nn_act = None

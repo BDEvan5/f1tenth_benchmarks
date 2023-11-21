@@ -6,10 +6,10 @@ from f1tenth_sim.utils.BasePlanner import BasePlanner
 
 
 class GlobalPurePursuit(BasePlanner):
-    def __init__(self, test_id, use_centre_line=False, planner_name="GlobalPurePursuit"):
+    def __init__(self, test_id, use_centre_line=False, planner_name="GlobalPurePursuit", init_folder=True):
         if use_centre_line:
             test_id = test_id + "_centre"
-        super().__init__(planner_name, test_id, params_name="GlobalPurePursuit")
+        super().__init__(planner_name, test_id, params_name="GlobalPurePursuit", init_folder=init_folder)
         self.racetrack = None
         self.use_centre_line = use_centre_line
 
@@ -20,7 +20,7 @@ class GlobalPurePursuit(BasePlanner):
         if self.use_centre_line:
             self.racetrack = CentreLine(map_name)
         else:
-            self.racetrack = RaceTrack(map_name, self.test_id)
+            self.racetrack = RaceTrack(map_name, self.planner_params.racetrack_set)
 
     def plan(self, obs):
         pose = obs["pose"]
@@ -31,18 +31,23 @@ class GlobalPurePursuit(BasePlanner):
         perpendicular_distance = np.linalg.norm(s_point - pose[:2])
 
         lookahead_distance = self.constant_lookahead + (vehicle_speed/self.vehicle_params.max_speed) * (self.variable_lookahead + perpendicular_distance)
+        # lookahead_distance += max(2, vehicle_speed) /self.vehicle_params.max_speed * perpendicular_distance
         lookahead_point, i = self.get_lookahead_point(pose[:2], lookahead_distance)
 
         if vehicle_speed < 1:
             return np.array([0.0, 4])
 
-        steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], lookahead_distance, self.vehicle_params.wheelbase)
+        true_lookahead_distance = np.linalg.norm(lookahead_point[:2] - pose[:2])
+        steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], true_lookahead_distance, self.vehicle_params.wheelbase)
         steering_angle = np.clip(steering_angle, -self.vehicle_params.max_steer, self.vehicle_params.max_steer)
             
         if self.use_centre_line:
             speed = self.planner_params.constant_speed
         else:
             speed = min(self.racetrack.speeds[i], self.vehicle_params.max_speed)
+            # if perpendicular_distance > 0.2:
+            speed = min(speed, calculate_speed_limit(steering_angle, self.planner_params.friction_limit))
+            # speed = speed - (1+perpendicular_distance) ** 4 + 1
         action = np.array([steering_angle, speed])
 
         return action
@@ -61,7 +66,18 @@ class GlobalPurePursuit(BasePlanner):
         return lookahead_point, i
 
 
+GRAVITY = 9.81
+MAX_SPEED = 8
+WHEELBASE = 0.33
+@njit(cache=True)
+def calculate_speed_limit(delta, friction_limit=1.2):
+    if abs(delta) < 0.03:
+        return MAX_SPEED
 
+    V = np.sqrt(friction_limit*GRAVITY*WHEELBASE/np.tan(abs(delta)))
+    V = min(V, MAX_SPEED)
+
+    return V
 
 @njit(fastmath=False, cache=True)
 def get_actuation(pose_theta, lookahead_point, position, lookahead_distance, wheelbase):

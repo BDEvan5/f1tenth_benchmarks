@@ -49,11 +49,21 @@ class RaceTrackGenerator(RaceTrack):
         if crossing: print(f"Major problem: nvecs are crossing. Result will be incorrect. Fix the center line file.")
 
     def generate_minimum_curvature_path(self):
-        coeffs_x, coeffs_y, A, normvec_normalized = tph.calc_splines.calc_splines(self.centre_line.path, self.centre_line.el_lengths, psi_s=self.centre_line.psi[0], psi_e=self.centre_line.psi[-1])
-
+        path_cl = np.row_stack([self.centre_line.path, self.centre_line.path[0]])
+        el_lengths_cl = np.append(self.centre_line.el_lengths, self.centre_line.el_lengths[0])
+        coeffs_x, coeffs_y, A, normvec_normalized = tph.calc_splines.calc_splines(path_cl, el_lengths_cl)
+    
         widths = self.centre_line.widths.copy() - self.params.vehicle_width / 2
         track = np.concatenate([self.centre_line.path, widths], axis=1)
-        alpha, error = tph.opt_min_curv.opt_min_curv(track, self.centre_line.nvecs, A, self.params.max_kappa, 0, print_debug=True, closed=False, fix_s=True, psi_s=self.centre_line.psi[0], psi_e=self.centre_line.psi[-1], fix_e=True)
+        alpha, error = tph.opt_min_curv.opt_min_curv(track, self.centre_line.nvecs, A, 1, 0, print_debug=True, closed=True)
+
+        # self.path, A_raceline, coeffs_x_raceline, coeffs_y_raceline, spline_inds_raceline_interp, t_values_raceline_interp, s_raceline, spline_lengths_raceline, el_lengths_raceline_interp_cl = tph.create_raceline.create_raceline(self.path, self.nvecs, alpha, 0.2) 
+
+        # coeffs_x, coeffs_y, A, normvec_normalized = tph.calc_splines.calc_splines(self.centre_line.path, self.centre_line.el_lengths, psi_s=self.centre_line.psi[0], psi_e=self.centre_line.psi[-1])
+
+        # widths = self.centre_line.widths.copy() - self.params.vehicle_width / 2
+        # track = np.concatenate([self.centre_line.path, widths], axis=1)
+        # alpha, error = tph.opt_min_curv.opt_min_curv(track, self.centre_line.nvecs, A, self.params.max_kappa, 0, print_debug=True, closed=False, fix_s=True, psi_s=self.centre_line.psi[0], psi_e=self.centre_line.psi[-1], fix_e=True)
 
         self.path, A_raceline, coeffs_x_raceline, coeffs_y_raceline, spline_inds_raceline_interp, t_values_raceline_interp, self.s_raceline, spline_lengths_raceline, el_lengths_raceline_interp_cl = tph.create_raceline.create_raceline(self.centre_line.path, self.centre_line.nvecs, alpha, self.params.raceline_step) 
         self.psi, self.kappa = tph.calc_head_curv_num.calc_head_curv_num(self.path, el_lengths_raceline_interp_cl, True)

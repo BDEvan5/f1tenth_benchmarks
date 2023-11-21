@@ -20,7 +20,7 @@ def train_and_test_agents():
     train_map = "mco"
     # train_map = "gbr" # test_id is the training map.
     # test_id = "TestTD3"
-    test_id = "TestSAC"
+    test_id = "TestSAC2"
 
     training_agent = TrainEndToEndAgent(train_map, test_id)
     simulate_training_steps(training_agent, train_map, test_id)
