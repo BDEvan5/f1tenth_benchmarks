@@ -119,6 +119,71 @@ def plot_line_and_boundaries(new_track, color, normals=False):
     plt.plot(l2[:, 0], l2[:, 1], linewidth=1, color=color)
 
 
+import cv2 as cs 
+from PIL import Image
+from scipy import ndimage
+
+def clip_widths_with_dt(map_name):
+    smooth_centre_line = CentreLine(map_name, directory=track_save_path)
+
+    file_name = 'maps/' + map_name + '.yaml'
+    with open(file_name) as file:
+        documents = yaml.full_load(file)
+
+    yaml_file = dict(documents.items())
+    resolution = yaml_file['resolution']
+    origin = yaml_file['origin']
+
+
+    flipped_map_img = np.array(Image.open('maps/' + yaml_file['image']).transpose(Image.FLIP_TOP_BOTTOM))
+    dt = ndimage.distance_transform_edt(flipped_map_img)
+    np.array(dt *resolution)
+
+    l1 = smooth_centre_line.path + smooth_centre_line.nvecs * smooth_centre_line.widths[:, 0][:, None] 
+    for i in range(l1.shape[0]):
+        new_width = smooth_centre_line.widths[i, 0]
+        new_pt = l1[i]
+        while get_dt_value(new_pt, origin, resolution, dt) < 0.01:
+            new_width -= 0.01
+            new_pt = smooth_centre_line.path[i] + smooth_centre_line.nvecs[i] * new_width
+        smooth_centre_line.widths[i, 0] = new_width
+
+    l2 = smooth_centre_line.path - smooth_centre_line.nvecs * smooth_centre_line.widths[:, 1][:, None] 
+    for i in range(l2.shape[0]):
+        new_width = smooth_centre_line.widths[i, 1]
+        new_pt = l2[i]
+        while get_dt_value(new_pt, origin, resolution, dt) < 0.05:
+            new_width -= 0.01
+            new_pt = smooth_centre_line.path[i] - smooth_centre_line.nvecs[i] * new_width
+        smooth_centre_line.widths[i, 1] = new_width
+
+
+    centre_line = CentreLine(map_name)
+    plot_map_line(map_name, centre_line, "final2", smooth_centre_line)
+
+    map_c_name = track_save_path + f"{map_name}_centerline.csv"
+    track = np.concatenate([smooth_centre_line.path, smooth_centre_line.widths], axis=1)
+    with open(map_c_name, 'w') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerows(track)
+    
+
+    print(f"Min widths: {np.min(smooth_centre_line.widths, axis=0)}")
+
+def get_dt_value(pt_xy, origin, resolution, dt):
+    c = int((pt_xy[0] - origin[0]) / resolution)
+    r = int((pt_xy[1] - origin[1]) / resolution)
+
+    if c >= dt.shape[1]:
+        c = dt.shape[1] - 1
+    if r >= dt.shape[0]:
+        r = dt.shape[0] - 1
+
+    distance = dt[r, c] * resolution
+
+    return distance
+
+
 def smooth_centre_lines():
     run_smoothing_process("aut")
     run_smoothing_process("esp")
@@ -127,6 +192,12 @@ def smooth_centre_lines():
 
 
 if __name__ == "__main__":
-    smooth_centre_lines()
+    # smooth_centre_lines()
+
+    # run_smoothing_process("mco")
+    clip_widths_with_dt("mco")
+    # clip_widths_with_dt("aut")
+    # clip_widths_with_dt("aut")
+    # clip_widths_with_dt("aut")
 
 

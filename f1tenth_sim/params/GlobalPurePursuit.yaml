@@ -1,6 +1,7 @@
 
 
-constant_lookahead: 0.6
+constant_lookahead: 0.5
+# constant_lookahead: 0.6
 variable_lookahead: 0.7
 # constant_lookahead: 0.5
 # variable_lookahead: 0.1

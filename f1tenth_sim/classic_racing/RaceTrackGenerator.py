@@ -126,7 +126,7 @@ def generate_racelines():
     # raceline_id = f"_drl_training"
     raceline_id = f"mu{int(params.mu*100)}"
     map_list = ['aut', 'esp', 'gbr', 'mco']
-    # map_list = ['mco']
+    map_list = ['mco']
     # map_list = ['aut']
     for map_name in map_list: 
         RaceTrackGenerator(map_name, raceline_id, params)

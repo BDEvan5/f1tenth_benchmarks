@@ -10,8 +10,8 @@ def test_pf_perception():
     map_name = "aut"
     planner = GlobalPurePursuit(test_id, False, planner_name="pf_testing")
     # planner = PurePursuit(test_id, True)
-    test_full_stack_all_maps(planner, test_id)
-    # test_full_stack_single_map(planner, map_name, test_id)
+    # test_full_stack_all_maps(planner, test_id)
+    test_full_stack_single_map(planner, map_name, test_id)
     # test_planning_all_maps(planner, test_id)
 
     plot_pf_errors("pf_testing", test_id)
@@ -20,13 +20,14 @@ def test_pf_perception():
 
 def test_full_stack_pure_pursuit():
     test_id = "mu60"
-    map_name = "aut"
+    # map_name = "aut"
+    map_name = "mco"
     planner = GlobalPurePursuit(test_id, False, planner_name="FullStackPP")
-    test_full_stack_all_maps(planner, test_id)
-    # test_full_stack_single_map(planner, map_name, test_id)
+    # test_full_stack_all_maps(planner, test_id)
+    test_full_stack_single_map(planner, map_name, test_id)
 
-    plot_trajectory_analysis(planner.name, test_id)
-    plot_raceline_tracking(planner.name, test_id)
+    # plot_trajectory_analysis(planner.name, test_id)
+    # plot_raceline_tracking(planner.name, test_id)
 
 
 def test_full_stack_mpcc():
@@ -47,8 +48,8 @@ def test_full_stack_mpcc():
 
 if __name__ == "__main__":
     # test_pf_perception()
-    # test_full_stack_pure_pursuit()
-    test_full_stack_mpcc()
+    test_full_stack_pure_pursuit()
+    # test_full_stack_mpcc()
 
 
 
