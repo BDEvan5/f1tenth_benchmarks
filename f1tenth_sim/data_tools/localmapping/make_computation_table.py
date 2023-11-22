@@ -5,19 +5,21 @@ map_name = "esp"
 from f1tenth_sim.data_tools.plotting_utils import *
 
 def make_computation_table():
-    vehicle_id = {"FullStackPP_mu60": "Global \ntwo-stage", 
-                  "FullStackMPCC_mu60": "Global \nMPCC", 
+    vehicle_id = {
                   "FollowTheGap_Std": "Follow \nthe gap", 
                   "EndToEnd_TestSAC": "End-to-end \nSAC", 
                   "EndToEnd_TestTD3": "End-to-end \nTD3", 
+                    "FullStackPP_mu60": "Global \ntwo-stage", 
+                  "FullStackMPCC_mu60": "Global \nMPCC", 
                   "LocalMapPP_mu60": "Local \ntwo-stage", 
                   "LocalMPCC_mu60": "Local \nMPCC"}
 
-    perception_id = {"FullStackPP_mu60": "localise", 
-                  "FullStackMPCC_mu60": "localise", 
+    perception_id = {
                   "FollowTheGap_Std": None, 
                   "EndToEnd_TestSAC": None, 
                   "EndToEnd_TestTD3": None, 
+                "FullStackPP_mu60": "localise", 
+                  "FullStackMPCC_mu60": "localise", 
                   "LocalMapPP_mu60": "generate_line_local_map", 
                   "LocalMPCC_mu60": "generate_line_local_map"}
 
@@ -56,9 +58,12 @@ def make_computation_table():
     computation_table = pd.concat([perception_times, planning_times], axis=1)
     print(computation_table)
 
-    computation_table.plot(kind='bar', use_index=True, stacked=True, logy=True, color=[sweedish_green, nartjie], figsize=(5, 2.1), rot=0)
-    plt.plot(plt.xlim(), [0.04, 0.04], 'k--', linewidth=1, label="25 Hz")
-    plt.legend(ncol=3, loc="upper center", bbox_to_anchor=(0.5, 1.3), fontsize=8)
+    computation_table.plot(kind='bar', use_index=True, stacked=True, logy=True, color=[sweedish_green, nartjie], figsize=(5, 2.), rot=0)
+    # plt.plot(plt.xlim(), [0.04, 0.04], 'k--', linewidth=1, label="25 Hz")
+    # plt.legend(ncol=3, loc="upper center", bbox_to_anchor=(0.5, 1.3), fontsize=8)
+    plt.legend(["Perception", "Planning"], ncol=2, loc="center", bbox_to_anchor=(0.28, 0.9), fontsize=8)
+    # plt.legend(ncol=1, loc="center", bbox_to_anchor=(0.4, 0.8), fontsize=8)
+    plt.plot(plt.xlim(), [0.04, 0.04], 'k--', linewidth=1)
     plt.gca().set_xticklabels(plt.gca().get_xticklabels(), fontsize=7)
     # plt.gca().set_yticklabels(plt.gca().get_yticklabels(), fontsize=8)
     plt.yticks(fontsize=9)
