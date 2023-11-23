@@ -5,14 +5,15 @@ import quadprog
 import time
 import os
 from numba import njit
+import trajectory_planning_helpers as tph
 
 def local_opt_min_curv(reftrack: np.ndarray,
-                 normvectors: np.ndarray,
+                #  normvectors: np.ndarray,
                  kappa_bound: float,
                  w_veh: float,
                  print_debug: bool = False,
-                 psi_s: float = None,
-                 psi_e: float = None,
+                #  psi_s: float = None,
+                #  psi_e: float = None,
                  fix_s: bool = False,
                  fix_e: bool = False) -> tuple:
     """
@@ -79,6 +80,12 @@ def local_opt_min_curv(reftrack: np.ndarray,
     # ------------------------------------------------------------------------------------------------------------------
     # PREPARATIONS -----------------------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
+    el_lengths = np.linalg.norm(np.diff(reftrack[:, :2], axis=0), axis=1)
+    s_track = np.insert(np.cumsum(el_lengths), 0, 0)
+    psi, kappa = tph.calc_head_curv_num.calc_head_curv_num(reftrack, el_lengths, False)
+    normvectors = tph.calc_normal_vectors_ahead.calc_normal_vectors_ahead(psi)
+    psi_s = psi[0]
+    psi_e = psi[-1]
 
     no_points = reftrack.shape[0]
     no_splines = no_points -1
@@ -247,7 +254,7 @@ def local_opt_min_curv(reftrack: np.ndarray,
 
 
 
-    return alpha_mincurv
+    return alpha_mincurv, normvectors
 
 @njit(cache=True)
 def set_up_mtrxs(A_inv, no_points, no_splines):

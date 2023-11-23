@@ -6,6 +6,7 @@ from matplotlib.collections import LineCollection
 from f1tenth_sim.localmap_racing.LocalMapGenerator import LocalMapGenerator
 from f1tenth_sim.localmap_racing.LocalReference import LocalReference
 from f1tenth_sim.utils.BasePlanner import BasePlanner, ensure_path_exists
+from f1tenth_sim.localmap_racing.LocalMap import *
 
 
 NX = 4
@@ -101,10 +102,11 @@ class LocalMPCC(BasePlanner):
 
     def plan(self, obs):
         self.step_counter += 1
-        self.local_map = self.local_map_generator.generate_line_local_map(obs['scan'])
+        local_track = self.local_map_generator.generate_line_local_map(obs['scan'])
         if len(self.local_map.track) <= 2:
             return np.array([0, 1])
 
+        self.local_map = LocalMap(local_track)
         self.rp = LocalReference(self.local_map)
 
         x0 = np.zeros(3)

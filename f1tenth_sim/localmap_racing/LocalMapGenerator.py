@@ -1,6 +1,8 @@
 import numpy as np
 import os
-from f1tenth_sim.localmap_racing.LocalMap import *
+import numpy as np 
+from scipy import interpolate, spatial, optimize
+import trajectory_planning_helpers as tph
 
 np.set_printoptions(precision=4)
 
@@ -33,10 +35,8 @@ class LocalMapGenerator:
         left_extension, right_extension = self.estimate_semi_visible_segments(left_line, right_line, left_boundary, right_boundary)
         local_track = self.regularise_track(left_boundary, right_boundary, left_extension, right_extension)
 
-        local_map = LocalMap(local_track)
-
         if self.save_data:
-            np.save(self.local_map_data_path + f"local_map_{self.counter}", local_map.track)
+            np.save(self.local_map_data_path + f"local_map_{self.counter}", local_track)
             np.save(self.local_map_data_path + f"line1_{self.counter}", left_line)
             np.save(self.local_map_data_path + f"line2_{self.counter}", right_line)
             boundaries = np.concatenate((left_boundary, right_boundary), axis=1)
@@ -48,9 +48,8 @@ class LocalMapGenerator:
                 np.save(self.local_map_data_path + f"boundExtension_{self.counter}", np.array([]))
 
         self.counter += 1
-        # print(f"Counter: {self.counter} Track length: {local_track.shape[0]}")
 
-        return local_map
+        return local_track
 
     def extract_track_boundaries(self, z):
         z = z[z[:, 0] > -2] # remove points behind the car 

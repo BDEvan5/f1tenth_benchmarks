@@ -4,7 +4,6 @@ import trajectory_planning_helpers as tph
 from scipy import interpolate
 import os
 
-from f1tenth_sim.localmap_racing.LocalMap import *
 from f1tenth_sim.localmap_racing.LocalMapGenerator import LocalMapGenerator
 from f1tenth_sim.localmap_racing.local_opt_min_curv import local_opt_min_curv
 from f1tenth_sim.utils.BasePlanner import BasePlanner
@@ -14,7 +13,7 @@ class LocalMapPP(BasePlanner):
     def __init__(self, test_id, save_data=False, raceline=True):
         super().__init__("LocalMapPP", test_id)
         self.local_map_generator = LocalMapGenerator(self.data_root_path, test_id, save_data)
-        self.local_map = None
+        self.local_track = None
 
         self.use_raceline = raceline
         if self.use_raceline:
@@ -31,14 +30,14 @@ class LocalMapPP(BasePlanner):
                                             [self.vehicle_params.max_speed, p.max_longitudinal_acc]])
 
     def plan(self, obs):
-        self.local_map = self.local_map_generator.generate_line_local_map(np.copy(obs['scan']))
+        self.local_track = self.local_map_generator.generate_line_local_map(np.copy(obs['scan']))
         self.step_counter += 1 
-        if len(self.local_map.track) < 4:
+        if len(self.local_track) < 4:
             self.step_counter += 1
             return np.zeros(2)
 
         if self.use_raceline:
-            self.generate_minimum_curvature_path(self.local_map)
+            self.generate_minimum_curvature_path()
             self.generate_max_speed_profile()
 
             raceline = np.concatenate([self.raceline, self.vs[:, None]], axis=-1)
@@ -62,13 +61,15 @@ class LocalMapPP(BasePlanner):
         
         return action
 
-    def generate_minimum_curvature_path(self, local_map):
-        track = local_map.track.copy()
+    def generate_minimum_curvature_path(self):
+        track = self.local_track.copy()
+
         track[:, 2:] -= self.planner_params.path_exclusion_width / 2
 
         try:
-            alpha = local_opt_min_curv(track, local_map.nvecs, self.planner_params.kappa_bound, 0, print_debug=False, psi_s=local_map.psi[0], psi_e=local_map.psi[-1], fix_s=True, fix_e=False)
-            self.raceline = track[:, :2] + np.expand_dims(alpha, 1) * local_map.nvecs
+            alpha, nvecs = local_opt_min_curv(track, self.planner_params.kappa_bound, 0, fix_s=True, fix_e=False)
+            # alpha, nvecs = local_opt_min_curv(track, local_map.nvecs, self.planner_params.kappa_bound, 0, print_debug=False, psi_s=local_map.psi[0], psi_e=local_map.psi[-1], fix_s=True, fix_e=False)
+            self.raceline = track[:, :2] + np.expand_dims(alpha, 1) * nvecs
         except Exception as e:
             self.raceline = track[:, :2]
 
