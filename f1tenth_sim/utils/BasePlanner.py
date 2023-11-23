@@ -43,7 +43,7 @@ def ensure_path_exists(folder):
 
 
 def load_parameter_file(planner_name):
-    file_name = f"f1tenth_sim/params/{planner_name}.yaml"
+    file_name = f"params/{planner_name}.yaml"
     with open(file_name, 'r') as file:
         params = yaml.load(file, Loader=yaml.FullLoader)
     return Namespace(**params)

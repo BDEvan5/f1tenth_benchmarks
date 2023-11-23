@@ -18,7 +18,7 @@ def ensure_path_exists(folder):
 
 class F1TenthSimBase:
     def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False):
-        with open(f"f1tenth_sim/params/simulator_params.yaml", 'r') as file:
+        with open(f"params/simulator_params.yaml", 'r') as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
         self.params = Namespace(**params)
         self.planner_name = planner_name
