@@ -49,11 +49,13 @@ class LocalMapPP(BasePlanner):
         return action
         
     def pure_pursuit_center_line(self):
-        current_progress = np.linalg.norm(self.local_map.track[0, 0:2])
+        current_progress = np.linalg.norm(self.local_track[0, 0:2])
         lookahead = self.planner_params.centre_lookahead_distance + current_progress
 
-        lookahead = min(lookahead, self.local_map.s_track[-1]) 
-        lookahead_point = interp_2d_points(lookahead, self.local_map.s_track, self.local_map.track[:, 0:2])
+        local_el = np.linalg.norm(np.diff(self.local_track[:, 0:2], axis=0), axis=1)
+        s_track = np.insert(np.cumsum(local_el), 0, 0)
+        lookahead = min(lookahead, s_track[-1]) 
+        lookahead_point = interp_2d_points(lookahead, s_track, self.local_track[:, 0:2])
 
         true_lookahead_distance = np.linalg.norm(lookahead_point)
         steering_angle = get_local_steering_actuation(lookahead_point, true_lookahead_distance, self.vehicle_params.wheelbase)

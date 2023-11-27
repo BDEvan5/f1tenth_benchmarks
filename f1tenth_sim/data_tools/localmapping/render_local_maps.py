@@ -54,13 +54,14 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
     logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
     scans = np.load(root + f"RawData_{test_id}/ScanLog_{map_name}_0.npy")
-    save_path = root + f"LocalMaps_{test_id}/"
+    ensure_path_exists(root + f"Images_{test_id}")
+    save_path = root + f"Images_{test_id}/LocalMapImgs_{test_id}/"
     ensure_path_exists(save_path)
 
     # for i in range(490, 510):
-    for i in range(250,  350):
+    # for i in range(250,  350):
     # for i in range(0, 50):
-    # for i in range(len(logs)):
+    for i in range(len(logs)):
         local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
 
 
@@ -147,7 +148,7 @@ def check_normals_crossing_complete(track):
     return crossing
 
 if __name__ == '__main__':
-    render_local_maps("LocalMapPlanner", "c1")
+    render_local_maps("LocalMapPP", "c1")
 
 
 

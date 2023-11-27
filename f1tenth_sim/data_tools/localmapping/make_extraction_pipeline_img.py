@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from f1tenth_sim.localmap_racing.LocalMap import LocalMap
 from f1tenth_sim.localmap_racing.LocalMapGenerator import LocalMapGenerator
 from f1tenth_sim.data_tools.plotting_utils import *
-from f1tenth_sim.data_tools.MapData import MapData
+from f1tenth_sim.utils.MapData import MapData
 
 
 from matplotlib.patches import RegularPolygon
@@ -13,7 +13,7 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.collections import LineCollection
 from matplotlib.transforms import Affine2D
 
-text_size = 8
+text_size = 9
 text_size2 = 14
 
 
@@ -41,12 +41,25 @@ def make_pipeline(planner_name, test_id, i, map_name):
 
     scan = scans[i]
 
-    plt.figure(1, figsize=(6, 4.5))
+    plt.figure(1, figsize=(10, 2.5))
     # plt.figure(1, figsize=(6, 4.5))
-    ax1 = plt.subplot(2, 2, 1)
-    ax2 = plt.subplot(2, 2, 2)
-    ax3 = plt.subplot(2, 2, 3)
-    ax4 = plt.subplot(2, 2, 4)
+    from matplotlib.gridspec import GridSpec
+    gs = GridSpec(1, 4, wspace=0, hspace=0, left=0, right=1, bottom=0, top=1)
+    # ax1 = plt.subplot(1, 4, 1)
+    # ax2 = plt.subplot(1, 4, 2)
+    # ax3 = plt.subplot(1, 4, 3)
+    # ax4 = plt.subplot(1, 4, 4)
+    ax1 = plt.subplot(gs[0, 0])
+    ax2 = plt.subplot(gs[0, 1])
+    ax3 = plt.subplot(gs[0, 2])
+    ax4 = plt.subplot(gs[0, 3])
+    plt.subplots_adjust(wspace=0, hspace=0)
+    # plt.figure(1, figsize=(6, 4.5))
+    # # plt.figure(1, figsize=(6, 4.5))
+    # ax1 = plt.subplot(2, 2, 1)
+    # ax2 = plt.subplot(2, 2, 2)
+    # ax3 = plt.subplot(2, 2, 3)
+    # ax4 = plt.subplot(2, 2, 4)
 
     plt.sca(ax1)
     map_data.plot_map_img_T()
@@ -166,7 +179,7 @@ def make_pipeline(planner_name, test_id, i, map_name):
 
     set_axis_limits(scan_pts)
 
-    plt.legend(loc='center', fontsize=text_size, bbox_to_anchor=(0.74, 0.12))
+    plt.legend(loc='center', fontsize=text_size, bbox_to_anchor=(0.72, 0.32))
     # plt.legend(loc='center', fontsize=text_size, bbox_to_anchor=(0.5, -0.05))
     # plt.title("2. Extract Boundaries")
     add_circle(2)
@@ -178,6 +191,7 @@ def make_pipeline(planner_name, test_id, i, map_name):
     l2 = boundaries[:, 2:]
     l1 = (np.matmul(rotation, l1.T).T + position - origin ) / map_data.map_resolution
     l2 = (np.matmul(rotation, l2.T).T + position - origin ) / map_data.map_resolution
+
 
     be1 = boundary_extension[:, :2]
     be2 = boundary_extension[:, 2:]
@@ -208,19 +222,21 @@ def make_pipeline(planner_name, test_id, i, map_name):
         else:
             plt.plot(n_ys, n_xs, '-', color=sweedish_green, linewidth=2)
     
+
     for z in range(0, len(be1)):
         n_xs = [be1[z, 0], be2[z, 0]]
         n_ys = [be1[z, 1], be2[z, 1]]
-        if z == 0:
+        if z == 0: 
             plt.plot(n_ys, n_xs, '-', color=jade_dust, linewidth=2, label="Projected segments")
         else:
             plt.plot(n_ys, n_xs, '-', color=jade_dust, linewidth=2)
-
     plt.plot(be1[:, 1], be1[:, 0], '-', color=boundary_color, linewidth=2)
-    plt.plot(be2[:, 1], be2[:, 0], 'o', color=london_square, linewidth=2, markersize=8, label="Estimated boundary")
+    plt.plot(be2[:, 1], be2[:, 0], 'o', color=jade_dust, linewidth=2, markersize=8)
+    # plt.plot(be2[:, 1], be2[:, 0], 'o', color=london_square, linewidth=2, markersize=8)
+    # plt.plot(be2[:, 1], be2[:, 0], 'o', color=london_square, linewidth=2, markersize=8, label="Estimated boundary")
     # plt.text(225, 378, "Estimated\nboundary\npoints")
 
-    plt.legend(loc='center', fontsize=text_size, bbox_to_anchor=(0.72, 0.15))
+    plt.legend(loc='center', fontsize=text_size, bbox_to_anchor=(0.66, 0.12))
     # plt.legend(loc='center', fontsize=text_size, bbox_to_anchor=(0.5, -0.08))
     set_axis_limits(scan_pts)
     # plt.title("3. Extract track segments")
@@ -318,8 +334,9 @@ def rotate_bound(image, angle):
 
 map_name = "aut"
 # n = 197
-n = 501
-make_pipeline("LocalMapPlanner", "c1", n, map_name)
+n = 550
+# n = 501
+make_pipeline("LocalMapPP", "c1", n, map_name)
 # make_lidar_scan_img("LocalCenter_1", 91, map_name)
 # make_boundary_img("LocalCenter_1", 91, map_name)
 
