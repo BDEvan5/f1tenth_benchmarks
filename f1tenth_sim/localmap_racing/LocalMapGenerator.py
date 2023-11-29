@@ -12,8 +12,8 @@ FOV = 4.7
 BOUNDARY_SMOOTHING = 0.2
 MAX_TRACK_WIDTH = 2.5
 TRACK_SEPEARTION_DISTANCE = 0.4
-BOUNDARY_STEP_SIZE = 0.6
-
+BOUNDARY_STEP_SIZE = 0.4
+# FILTER_THRESHOLD = 2.4
 
 class LocalMapGenerator:
     def __init__(self, path, test_id, save_data) -> None:
@@ -90,6 +90,15 @@ class LocalMapGenerator:
         else:
             right_boundary, left_boundary = calculate_boundary_segments(right_line, left_line)
 
+        # if len(left_boundary) == 0 or len(right_boundary) == 0:
+        #     return left_boundary, right_boundary
+        # distances = np.linalg.norm(left_boundary - right_boundary, axis=1)
+        # i = -1
+        # while distances[i] > FILTER_THRESHOLD and i > -len(distances)+3:
+        #     i -= 1
+        # left_boundary = left_boundary[:i]
+        # right_boundary = right_boundary[:i]
+
         return left_boundary, right_boundary
 
     def estimate_semi_visible_segments(self, left_line, right_line, left_boundary, right_boundary):
@@ -139,13 +148,18 @@ def resample_track_points(points, seperation_distance=0.2, smoothing=0.2):
     return resampled_points
 
 def calculate_boundary_segments(long_line, short_line):
+    found_normal = False
     long_boundary, short_boundary = np.zeros_like(long_line), np.zeros_like(long_line)
     for i in range(long_line.shape[0]):
         distances = np.linalg.norm(short_line - long_line[i], axis=1)
 
         idx = np.argmin(distances)
-        if distances[idx] > MAX_TRACK_WIDTH: break 
-        
+        if distances[idx] > MAX_TRACK_WIDTH: 
+            if found_normal: 
+                break
+        else:
+            found_normal = True
+
         long_boundary[i] = long_line[i]
         short_boundary[i] = short_line[idx]
 

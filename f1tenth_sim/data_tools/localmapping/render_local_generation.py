@@ -29,20 +29,20 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     n = 10
     start = 410
     # start = 300
-    for i in range(start, start+n):
+    # for i in range(start, start+n):
     # for i in range(len(logs)-50, len(logs)):
     # for i in range(490, 510):
     # for i in range(250,  350):
     # for i in range(200, 300):
     # for i in range(100, 200):
-    # for i in range(len(logs)):
+    for i in range(len(logs)-1):
         # if scans:
         scan_xs, scan_ys = scans[i+1] * np.array([coses, sines])
         position = logs[i+1, :2]
         orientation = logs[i+1, 4]
         
-        # if i % 5 != 0:
-        #     continue
+        if i % 5 != 0:
+            continue
 
         local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
         line_1 = np.load(localmap_data_path + f"line1_{i}.npy")
@@ -92,6 +92,9 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
                 # ys = [boundary_extension[z, 1], boundary_extension[z, 3]]
                 plt.plot(xs, ys, '-o', color=fresh_t, markersize=5)
                 # plt.plot(xs, ys, '-o', color='pink', markersize=5)
+        else:
+            xss1, xss2 = [xs1[0]], [xs2[0]]
+            yss1, yss2 = [ys1[0]], [ys2[0]]
         # plt.plot(local_track[:, 0], local_track[:, 1], '-', color='orange', linewidth=3)
         # plt.plot(line_1[:, 0], line_1[:, 1], '-', color=minty_green, linewidth=2)
         # plt.plot(line_2[:, 0], line_2[:, 1], '-', color=minty_green, linewidth=2)
@@ -101,21 +104,24 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         l = 12
         plt.arrow(xs[0], ys[0], np.cos(orientation)*l, np.sin(orientation)*l, color="#8854d0", zorder=10, width=3, head_width=6, head_length=5)
 
-        b = 10
-        x_min = min(np.min(xs1), np.min(xs2), np.min(xss1), np.min(xss2)) - b
-        x_max = max(np.max(xs1), np.max(xs2), np.max(xss1), np.max(xss2)) + b
-        y_min = min(np.min(ys1), np.min(ys2), np.min(yss1), np.min(yss2)) - b 
-        y_max = max(np.max(ys1), np.max(ys2), np.max(yss1), np.max(yss2)) + b
-        plt.xlim(x_min, x_max)
-        plt.ylim(y_min, y_max)
+        try:
+            b = 10
+            x_min = min(np.min(xs1), np.min(xs2), np.min(xss1), np.min(xss2)) - b
+            x_max = max(np.max(xs1), np.max(xs2), np.max(xss1), np.max(xss2)) + b
+            y_min = min(np.min(ys1), np.min(ys2), np.min(yss1), np.min(yss2)) - b 
+            y_max = max(np.max(ys1), np.max(ys2), np.max(yss1), np.max(yss2)) + b
+            plt.xlim(x_min, x_max)
+            plt.ylim(y_min, y_max)
 
+        except:
+            pass
 
         # plt.axis('equal')
         plt.tight_layout()
         plt.axis('off')
         name = save_path + f"LocalMapGeneration_{i}"
         plt.savefig(name + ".svg", bbox_inches="tight")
-        plt.savefig(f"Data/LocalMapRacing/LocalMaps/LocalGeneration_{i}_aut.pdf", bbox_inches="tight", pad_inches=0.05)
+        # plt.savefig(f"Data/LocalMapRacing/LocalMaps/LocalGeneration_{i}_aut.pdf", bbox_inches="tight", pad_inches=0.05)
         # plt.show()
         # break
 

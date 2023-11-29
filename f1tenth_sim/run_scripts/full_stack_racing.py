@@ -31,11 +31,12 @@ def test_full_stack_pure_pursuit():
 
 
 def test_full_stack_mpcc():
-    test_id = "mu60"
+    # test_id = "mu60"
+    test_id = "t1"
     map_name = "aut"
     planner = GlobalMPCC(test_id, True, planner_name="FullStackMPCC")
-    test_full_stack_all_maps(planner, test_id)
-    # test_full_stack_single_map(planner, map_name, test_id)
+    # test_full_stack_all_maps(planner, test_id)
+    test_full_stack_single_map(planner, map_name, test_id)
 
     plot_trajectory_analysis(planner.name, test_id)
     plot_raceline_tracking(planner.name, test_id)
@@ -48,8 +49,8 @@ def test_full_stack_mpcc():
 
 if __name__ == "__main__":
     # test_pf_perception()
-    test_full_stack_pure_pursuit()
-    # test_full_stack_mpcc()
+    # test_full_stack_pure_pursuit()
+    test_full_stack_mpcc()
 
 
 
