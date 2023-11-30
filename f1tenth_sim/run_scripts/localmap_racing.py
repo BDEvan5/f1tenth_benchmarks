@@ -23,7 +23,7 @@ def test_localmap_pp():
     # test_id = "mu70"
     map_name = "aut"
     planner = LocalMapPP(test_id, True, True)
-    # test_planning_single_map(planner, map_name, test_id)
+    test_planning_single_map(planner, map_name, test_id)
     test_planning_all_maps(planner, test_id)
 
     plot_trajectory_analysis(planner.name, test_id)
@@ -46,9 +46,9 @@ def test_localmap_mpcc():
 
 
 if __name__ == "__main__":
-    localmap_pp_centre()
+    # localmap_pp_centre()
     # test_localmap_pp()
-    # test_localmap_mpcc()
+    test_localmap_mpcc()
 
 
 

@@ -103,7 +103,7 @@ class LocalMPCC(BasePlanner):
     def plan(self, obs):
         self.step_counter += 1
         local_track = self.local_map_generator.generate_line_local_map(obs['scan'])
-        if len(self.local_map.track) <= 2:
+        if len(local_track) <= 2:
             return np.array([0, 1])
 
         self.local_map = LocalMap(local_track)
