@@ -10,9 +10,8 @@ import glob
 from matplotlib.ticker import PercentFormatter
 from matplotlib.collections import LineCollection
 
-from f1tenth_controllers.map_utils.MapData import MapData
-from f1tenth_controllers.map_utils.Track import Track 
-from f1tenth_controllers.analysis.plotting_utils import *
+from f1tenth_sim.utils.MapData import MapData
+from f1tenth_sim.data_tools.plotting_utils import *
 from matplotlib.ticker import MultipleLocator
 import trajectory_planning_helpers as tph
 
