@@ -20,7 +20,7 @@ def test_pf_perception():
 
 
 def test_full_stack_pure_pursuit():
-    test_id = "mu70"
+    test_id = "mu60"
     # map_name = "aut"
     map_name = "mco"
     planner = GlobalPurePursuit(test_id, False, planner_name="FullStackPP")
@@ -32,10 +32,10 @@ def test_full_stack_pure_pursuit():
 
 
 def test_full_stack_mpcc():
-    test_id = "mu70"
+    test_id = "mu60"
     # test_id = "t1"
-    # map_name = "aut"
-    map_name = "esp"
+    map_name = "aut"
+    # map_name = "esp"
     # map_name = "gbr"
     # planner = GlobalMPCC(test_id, True, planner_name="FullStackMPCC")
     planner = GlobalMPCC3(test_id, False, planner_name="FullStackMPCC3")
@@ -53,8 +53,8 @@ def test_full_stack_mpcc():
 
 if __name__ == "__main__":
     # test_pf_perception()
-    # test_full_stack_pure_pursuit()
-    test_full_stack_mpcc()
+    test_full_stack_pure_pursuit()
+    # test_full_stack_mpcc()
 
 
 
