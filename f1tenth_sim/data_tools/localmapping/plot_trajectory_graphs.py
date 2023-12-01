@@ -35,6 +35,7 @@ def plot_speed_profiles(planner1, planner2, test_id, map_name, test_lap, name=""
     ax1.set_ylim(0, 8.8)
 
     name = f"SpeedComparison_{test_id}_{map_name.upper()}_{test_lap}"
+    plt.rcParams['pdf.use14corefonts'] = True
 
     plt.savefig(save_path + name + ".svg", bbox_inches="tight", pad_inches=0)
     plt.savefig(save_path + name + ".pdf", bbox_inches="tight", pad_inches=0)

@@ -62,6 +62,7 @@ def generate_bar_plot():
     legend_names = ["SAC", "TD3", "FTG", "Global MPCC", "Global Two-stage", "Local MPCC", "Local Two-stage"]
     # legend_names = ["SAC", "TD3", "FTG", "Global MPCC", "Global Ts", "Local MPCC", "Local Ts"]
     plt.legend(legend_names, ncol=4, loc='upper center', bbox_to_anchor=(0.5, 1.35), fontsize=9)
+    plt.rcParams['pdf.use14corefonts'] = True
 
     plt.savefig("Data/LocalMapRacing/LaptimesBarPlot.svg", bbox_inches='tight', pad_inches=0)
     plt.savefig("Data/LocalMapRacing/LaptimesBarPlot.pdf", bbox_inches='tight', pad_inches=0)

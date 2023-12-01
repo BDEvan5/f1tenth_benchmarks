@@ -47,11 +47,13 @@ def make_trajectory_imgs(planner_name, test_id, map_name, test_lap, name="", cba
         cbar.ax.tick_params(labelsize=20)
         name = f"{planner_name}_{test_id}_{map_name.upper()}_{test_lap}_left"
 
+        plt.rcParams['pdf.use14corefonts'] = True
         plt.savefig(save_path + name + ".svg", bbox_inches="tight", pad_inches=0)
         plt.savefig(save_path + name + ".pdf", bbox_inches="tight", pad_inches=0)
     else:
         name = f"{planner_name}_{test_id}_{map_name.upper()}_{test_lap}_left_noC"
 
+        plt.rcParams['pdf.use14corefonts'] = True
         plt.savefig(save_path + name + ".svg", bbox_inches="tight", pad_inches=0)
         plt.savefig(save_path + name + ".pdf", bbox_inches="tight", pad_inches=0)
 
@@ -78,7 +80,7 @@ def left_limits():
 
 
 map_name = "gbr"
-lap_n = 4
+lap_n = 3
 
 make_trajectory_imgs("LocalMapPP", "mu60", map_name, lap_n, "Local two-stage", False)
 make_trajectory_imgs("FullStackPP", "mu60", map_name, lap_n, "Global two-stage", True)

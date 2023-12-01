@@ -45,11 +45,13 @@ def make_trajectory_imgs(planner_name, test_id, map_name, test_lap, name="", cba
         cbar.ax.tick_params(labelsize=20)
         name = f"{planner_name}_{test_id}_ESP_{test_lap}_left"
 
+        plt.rcParams['pdf.use14corefonts'] = True
         plt.savefig(save_path + name + ".svg", bbox_inches="tight", pad_inches=0)
         plt.savefig(save_path + name + ".pdf", bbox_inches="tight", pad_inches=0)
     else:
         name = f"{planner_name}_{test_id}_ESP_{test_lap}_left_noC"
 
+        plt.rcParams['pdf.use14corefonts'] = True
         plt.savefig(save_path + name + ".svg", bbox_inches="tight", pad_inches=0)
         plt.savefig(save_path + name + ".pdf", bbox_inches="tight", pad_inches=0)
 

@@ -116,6 +116,7 @@ def make_length_progress_plot(map_name, test_id):
     plt.tight_layout()
     ax1.grid()
     ax2.grid()
+    plt.rcParams['pdf.use14corefonts'] = True
 
     plt.savefig(f"Data/LocalMapRacing/LengthProgress_{map_name}_{test_id}.svg", bbox_inches='tight', pad_inches=0.01)
     plt.savefig(f"Data/LocalMapRacing/LengthProgress_{map_name}_{test_id}.pdf", bbox_inches='tight', pad_inches=0.01)

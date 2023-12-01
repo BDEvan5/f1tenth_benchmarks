@@ -79,6 +79,7 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         plt.tight_layout()
         plt.gca().set_aspect('equal', adjustable='box')
         plt.axis('off')
+        plt.rcParams['pdf.use14corefonts'] = True
 
         plt.savefig(raceline_img_path + f"Raceline_{i}.svg")
         plt.savefig(data_img_path + f"Raceline_{i}.pdf", bbox_inches="tight", pad_inches=0.05)
@@ -86,6 +87,7 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         cbar = plt.colorbar(line, shrink=0.5)
         plt.gca().set_aspect('equal', adjustable='box')
         cbar.ax.tick_params(labelsize=20)
+        plt.rcParams['pdf.use14corefonts'] = True
         plt.savefig(raceline_img_path + f"Raceline_{i}_c.svg")
         plt.savefig(data_img_path + f"Raceline_{i}_c.pdf", bbox_inches="tight", pad_inches=0.05)
         plt.savefig(data_img_path + f"Raceline_{i}_c.svg", bbox_inches="tight", pad_inches=0.05)

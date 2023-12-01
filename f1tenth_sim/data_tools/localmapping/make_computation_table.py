@@ -71,9 +71,11 @@ def make_computation_table():
 
     plt.tight_layout()
     plt.grid()
+    plt.rcParams['pdf.use14corefonts'] = True
 
     plt.savefig(f"Data/LocalMapRacing/computation_times.svg", bbox_inches='tight', pad_inches=0)
     plt.savefig(f"Data/LocalMapRacing/computation_times.pdf", bbox_inches='tight', pad_inches=0)
+    plt.savefig(f"Data/LocalMapRacing/computation_times.jpeg", bbox_inches='tight', pad_inches=0, dpi=300)
 
 make_computation_table()
 
