@@ -7,8 +7,9 @@ from f1tenth_sim.utils.MapData import MapData
 
 def make_trajectory_imgs(planner_name, test_id, map_name, test_lap, name="", cbar=False):
     root = f"Logs/{planner_name}/"
-    save_path = f"Data/LocalMapRacing/Trajectories/"
-    
+    save_path = f"Data/LocalMapRacing/Trajectories_{map_name.upper()}/"
+    ensure_path_exists(save_path)
+
     map_data = MapData(map_name)
     logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_{test_lap}.npy")
 
@@ -35,35 +36,32 @@ def make_trajectory_imgs(planner_name, test_id, map_name, test_lap, name="", cba
     plt.yticks([])
     plt.axis('off')
         
-    mco_left_limits()
-    plt.text(240, 780, name, fontsize=20)
+    esp_left_limits()
+    plt.text(150, 410, name, fontsize=20)
 
     plt.tight_layout()
 
     if cbar:
         cbar = plt.colorbar(line, fraction=0.046, pad=0.04, shrink=0.9)
         cbar.ax.tick_params(labelsize=20)
-        name = f"{planner_name}_{test_id}_MCO_{test_lap}_left"
+        name = f"{planner_name}_{test_id}_ESP_{test_lap}_left"
 
+        plt.rcParams['pdf.use14corefonts'] = True
         plt.savefig(save_path + name + ".svg", bbox_inches="tight", pad_inches=0)
         plt.savefig(save_path + name + ".pdf", bbox_inches="tight", pad_inches=0)
     else:
-        name = f"{planner_name}_{test_id}_MCO_{test_lap}_left_noC"
+        name = f"{planner_name}_{test_id}_ESP_{test_lap}_left_noC"
 
+        plt.rcParams['pdf.use14corefonts'] = True
         plt.savefig(save_path + name + ".svg", bbox_inches="tight", pad_inches=0)
         plt.savefig(save_path + name + ".pdf", bbox_inches="tight", pad_inches=0)
 
 
-# def esp_left_limits():
+def esp_left_limits():
 
-#     # plt.xlim(20, 620)
-#     plt.xlim(20, 420)
-#     plt.ylim(50, 520)
-
-def mco_left_limits():
-
-    plt.xlim(40, 520)
-    plt.ylim(710, 1010)
+    # plt.xlim(20, 620)
+    plt.xlim(20, 420)
+    plt.ylim(50, 520)
 
 
 
@@ -71,11 +69,12 @@ def mco_left_limits():
 
 
 
-map_name = "mco"
-lap_n = 4
+map_name = "esp"
+lap_n = 0
 
-make_trajectory_imgs("LocalMapPP", "mu60", map_name, lap_n, "Local two-stage", False)
-make_trajectory_imgs("FullStackPP", "mu60", map_name, lap_n, "Global two-stage", True)
+make_trajectory_imgs("LocalMPCC", "mu60", map_name, lap_n, "Local MPCC", True)
+make_trajectory_imgs("FollowTheGap", "Std", map_name, lap_n, "Follow the gap", False)
+make_trajectory_imgs("EndToEnd", "TestTD3", map_name, lap_n, "End-to-end TD3", False)
 
 
 # make_trajectory_imgs("LocalMapPP", "mu60", map_name, lap_n)
