@@ -8,7 +8,7 @@ variable_lookahead: 0.7
 
 constant_speed: 3
 
-racetrack_set: "mu60"
+racetrack_set: "mu70"
 
 friction_limit: 1.2
 max_steer: 0.4

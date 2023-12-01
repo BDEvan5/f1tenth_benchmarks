@@ -6,9 +6,9 @@ local_path_max_length: 300
 max_speed: 8
 min_speed: 2
 local_path_speed_min: 2
-local_path_speed_max: 10
+local_path_speed_max: 12
 wheelbase: 0.33
-friction_mu: 0.6
+friction_mu: 0.7
 vehicle_mass: 3.71
 max_decceleration: 8.5
 
@@ -21,3 +21,4 @@ p_initial: 5
 N: 20
 dt: 0.04
 
+exclusion_width: 0.35

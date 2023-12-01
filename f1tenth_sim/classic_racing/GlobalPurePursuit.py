@@ -23,10 +23,13 @@ class GlobalPurePursuit(BasePlanner):
             self.racetrack = RaceTrack(map_name, self.planner_params.racetrack_set)
 
     def plan(self, obs):
+        self.step_counter += 1
         pose = obs["pose"]
         vehicle_speed = obs["vehicle_speed"]
 
         lookahead_distance = self.constant_lookahead + (vehicle_speed/self.vehicle_params.max_speed) * (self.variable_lookahead)
+        # if self.step_counter < 40:
+            # lookahead_distance += (100 - self.step_counter) * 1/40 * 2
         lookahead_point, i = self.get_lookahead_point(pose[:2], lookahead_distance)
 
         if vehicle_speed < 1:

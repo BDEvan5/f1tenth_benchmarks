@@ -252,3 +252,7 @@ class LineInterpolant:
 
     def get_point(self, s):
         return np.array([self.lut_x(s).full()[0, 0], self.lut_y(s).full()[0, 0]])
+
+
+
+

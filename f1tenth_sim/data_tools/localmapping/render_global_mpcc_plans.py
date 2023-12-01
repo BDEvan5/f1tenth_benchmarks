@@ -4,6 +4,7 @@ import os
 from f1tenth_sim.data_tools.plotting_utils import *
 from matplotlib.collections import LineCollection
 import trajectory_planning_helpers as tph
+from f1tenth_sim.utils.track_utils import CentreLine
 
 def ensure_path_exists(path):
     if not os.path.exists(path): 
@@ -18,13 +19,15 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     ensure_path_exists(mpcc_img_path)
     # in the future, I could load the scans from here and not hae to save them seperately....
 
-    # for i in range(0, 60):
+    centre_line = CentreLine(map_name)
+
+    for i in range(1, 60):
     # for i in range(20, 60):
     # for i in range(0, 100):
     # for i in range(len(logs)-100, len(logs)-50):
     # for i in range(len(logs)-50, len(logs)):
-    for i in range(1, len(logs)):
-        local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
+    # for i in range(1, len(logs)):
+        # local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
         states = np.load(mpcc_data_path + f"States_{i}.npy")
         controls = np.load(mpcc_data_path + f"Controls_{i}.npy")
 
@@ -38,12 +41,8 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         a4 = plt.subplot2grid((4, 2), (2, 1))
         a5 = plt.subplot2grid((4, 2), (3, 1))
 
-        el_lengths = np.linalg.norm(np.diff(local_track[:, :2], axis=0), axis=1)
-        local_ss = np.insert(np.cumsum(el_lengths), 0, 0)
-        psi, kappa = tph.calc_head_curv_num.calc_head_curv_num(local_track, el_lengths, False)
-        nvecs = tph.calc_normal_vectors_ahead.calc_normal_vectors_ahead(psi)
-        xs = np.interp(states[:, 3], local_ss, local_track[:, 0])
-        ys = np.interp(states[:, 3], local_ss, local_track[:, 1])
+        xs = np.interp(states[:, 3], centre_line.s_path, centre_line.path[:, 0])
+        ys = np.interp(states[:, 3], centre_line.s_path, centre_line.path[:, 1])
         a1.plot(xs, ys, 'o', color='orange', markersize=10)
 
         for z in range(len(states)):
@@ -51,20 +50,27 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
             y_line = [states[z, 1], ys[z]]
             a1.plot(x_line, y_line, '--', color='gray', linewidth=1)
 
-        a1.plot(local_track[:, 0], local_track[:, 1], '--', linewidth=2, color='black')
-        l1 = local_track[:, :2] + nvecs * local_track[:, 2][:, None]
-        l2 = local_track[:, :2] - nvecs * local_track[:, 3][:, None]
+        a1.plot(centre_line.path[:, 0], centre_line.path[:, 1], '--', linewidth=2, color='black')
+        l1 = centre_line.path + centre_line.nvecs * centre_line.widths[:, 0][:, None]
+        l2 = centre_line.path - centre_line.nvecs * centre_line.widths[:, 1][:, None]
         a1.plot(l1[:, 0], l1[:, 1], color='green')
         a1.plot(l2[:, 0], l2[:, 1], color='green')
 
-        a1.plot(0, 0, '*', markersize=10, color='red')
+        a1.plot(logs[i, 0], logs[i, 1], '*', markersize=10, color='red')
         a1.set_title(f"Action: ({logs[i+1, 7]:.3f}, {logs[i+1, 8]:.1f})")
         a1.axis('off')
 
+        b = 1
+        x_min = np.min(xs) - b 
+        x_max = np.max(xs) + b
+        y_min = np.min(ys) - b
+        y_max = np.max(ys) + b
+        a1.set_xlim(x_min, x_max)
+        a1.set_ylim(y_min, y_max)
 
-        t_angle = np.interp(states[:, 3], local_ss, psi)
-        lag = np.sum(-np.cos(t_angle) * (states[:, 0] - xs) - np.sin(t_angle) * (states[:, 1] - ys)) * 10
-        contour = np.sum(np.sin(t_angle) * (states[:, 0] - xs) - np.cos(t_angle) * (states[:, 1] - ys)) * 200
+        # t_angle = np.interp(states[:, 3], local_ss, psi)
+        # lag = np.sum(-np.cos(t_angle) * (states[:, 0] - xs) - np.sin(t_angle) * (states[:, 1] - ys)) * 10
+        # contour = np.sum(np.sin(t_angle) * (states[:, 0] - xs) - np.cos(t_angle) * (states[:, 1] - ys)) * 200
         steer = np.sum(controls[:, 0] **2) * 10
         progress = -np.sum(controls[:, 2]) * 0.1
         base = -5
@@ -73,11 +79,11 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         # a1.text(3, base - 1, f"Steer o: {steer:.2f}")
         # a1.text(3, base - 1.5, f"Progress o: {progress:.2f}")
 
-        ae.bar(np.arange(4), [lag, contour, steer, progress])
-        ae.set_xticks(np.arange(4))
-        ae.set_xticklabels(["Lag", "Contour", "Steer", "Progress"])
-        ae.set_ylim([-8, 8])
-        ae.grid(True)
+        # ae.bar(np.arange(4), [lag, contour, steer, progress])
+        # ae.set_xticks(np.arange(4))
+        # ae.set_xticklabels(["Lag", "Contour", "Steer", "Progress"])
+        # ae.set_ylim([-8, 8])
+        # ae.grid(True)
 
         vs = controls[:, 1]
         points = states[:, :2].reshape(-1, 1, 2)
@@ -126,9 +132,8 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
 
 if __name__ == '__main__':
     # render_local_maps("LocalMapPlanner", "r1")
-    render_local_maps("LocalMPCC", "mu60", "aut")
     # render_local_maps("LocalMPCC2", "r1", "aut")
-    # render_local_maps("FullStackMPCC3", "m3u70", "aut")
+    render_local_maps("FullStackMPCC3", "m3u70", "aut")
 
 
 
