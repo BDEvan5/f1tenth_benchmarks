@@ -5,7 +5,7 @@ from f1tenth_sim.classic_racing.GlobalMPCC2 import GlobalMPCC2
 from f1tenth_sim.data_tools.general_plotting.plot_trajectory_analysis import plot_trajectory_analysis
 from f1tenth_sim.data_tools.general_plotting.plot_raceline_tracking import plot_raceline_tracking
 
-from f1tenth_sim.run_scripts.testing_functions import *
+from f1tenth_sim.run_scripts.run_functions import *
 
 
 def test_pure_pursuit():

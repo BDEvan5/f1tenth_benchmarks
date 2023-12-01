@@ -1,6 +1,6 @@
 from f1tenth_sim.localmap_racing.LocalMapPP import LocalMapPP
 from f1tenth_sim.localmap_racing.LocalMPCC import LocalMPCC
-from f1tenth_sim.run_scripts.testing_functions import *
+from f1tenth_sim.run_scripts.run_functions import *
 
 
 def localmap_pp_centre():

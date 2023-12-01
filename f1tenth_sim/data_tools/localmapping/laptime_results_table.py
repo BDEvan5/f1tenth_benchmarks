@@ -49,12 +49,18 @@ def generate_bar_plot():
     # norms = results_df.groupby('MapName')['AvgTime'].apply(lambda x: x / x.mean())
     # results_df.insert(3, 'NormTime', norms.values)
     results_df.insert(3, 'NormTime', results_df['AvgTime'] / results_df.groupby('MapName')['AvgTime'].transform('mean'))
+    results_df.insert(4, 'NormStd', results_df['StdTime'] / results_df.groupby('MapName')['AvgTime'].transform('mean'))
 
 
     times_df = results_df.pivot(index="VehicleID", columns="MapName", values="NormTime")
     times_df = times_df.drop(columns=["mco"])
     times_df.columns = times_df.columns.str.upper()
     times_df = times_df.T
+
+    std_df = results_df.pivot(index="VehicleID", columns="MapName", values="NormStd")
+    std_df = std_df.drop(columns=["mco"])
+    std_df.columns = std_df.columns.str.upper()
+    std_df = std_df.T
 
     print(times_df)
 
@@ -63,17 +69,19 @@ def generate_bar_plot():
     # color_list = [jade_dust, periwinkle, minty_green, chrome_yellow, high_pink, vibe_yellow, red_orange]
     
     times_df.plot.bar(rot=0, figsize=(6, 1.8), legend=False, color=color_list, width=0.8)
+    
 
     plt.ylabel("Lap time (s)")
     plt.xlabel("")
-    std = 0.2
+    std = 0.25
     plt.ylim(1-std, 1+std)
-    plt.gca().yaxis.set_major_locator(plt.MaxNLocator(4))
+    plt.gca().yaxis.set_major_locator(plt.MaxNLocator(5))
     plt.grid(True, axis="y")
 
     # legend_names = ["SAC", "TD3", "FTG", "Glob. MPCC", "Glob. Ts", "Loc. MPCC", "Loc. Ts"]
     # legend_names = ["SAC", "TD3", "FTG", "Glob. MPCC", "Loc. MPCC", "Glob. Ts", "Loc. Ts"]
-    legend_names = ["SAC", "TD3", "FTG", "Global MPCC", "Global Ts", "Local MPCC", "Local Ts"]
+    legend_names = ["SAC", "TD3", "FTG", "Global MPCC", "Global Two-stage", "Local MPCC", "Local Two-stage"]
+    # legend_names = ["SAC", "TD3", "FTG", "Global MPCC", "Global Ts", "Local MPCC", "Local Ts"]
     plt.legend(legend_names, ncol=4, loc='upper center', bbox_to_anchor=(0.5, 1.35), fontsize=9)
 
     plt.savefig("Data/LocalMapRacing/LaptimesBarPlot.svg", bbox_inches='tight', pad_inches=0)
@@ -196,5 +204,5 @@ def generate_relative_time_table2():
 
 
 # build_main_df()
-# generate_bar_plot()
-generate_relative_time_table2()
+generate_bar_plot()
+# generate_relative_time_table2()

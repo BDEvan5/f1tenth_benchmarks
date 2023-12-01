@@ -1,4 +1,4 @@
-from f1tenth_sim.run_scripts.testing_functions import *
+from f1tenth_sim.run_scripts.run_functions import *
 import numpy as np 
 import torch
 from f1tenth_sim.simulator import F1TenthSim_TrueLocation, F1TenthSim
