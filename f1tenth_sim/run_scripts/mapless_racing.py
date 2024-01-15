@@ -1,6 +1,6 @@
 from f1tenth_sim.mapless_racing.FollowTheGap import FollowTheGap
 
-from f1tenth_sim.run_scripts.testing_functions import *
+from f1tenth_sim.run_scripts.run_functions import *
 
 
 

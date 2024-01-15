@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from f1tenth_sim.localmap_racing.LocalMap import LocalMap
 from f1tenth_sim.localmap_racing.LocalMapGenerator import LocalMapGenerator
 from f1tenth_sim.data_tools.plotting_utils import *
-from f1tenth_sim.data_tools.MapData import MapData
+from f1tenth_sim.utils.MapData import MapData
 
 
 from matplotlib.patches import RegularPolygon
@@ -13,7 +13,7 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.collections import LineCollection
 from matplotlib.transforms import Affine2D
 
-text_size = 8
+text_size = 9
 text_size2 = 14
 
 
@@ -41,12 +41,25 @@ def make_pipeline(planner_name, test_id, i, map_name):
 
     scan = scans[i]
 
-    plt.figure(1, figsize=(6, 4.5))
+    plt.figure(1, figsize=(10, 2.5))
     # plt.figure(1, figsize=(6, 4.5))
-    ax1 = plt.subplot(2, 2, 1)
-    ax2 = plt.subplot(2, 2, 2)
-    ax3 = plt.subplot(2, 2, 3)
-    ax4 = plt.subplot(2, 2, 4)
+    from matplotlib.gridspec import GridSpec
+    gs = GridSpec(1, 4, wspace=0, hspace=0, left=0, right=1, bottom=0, top=1)
+    # ax1 = plt.subplot(1, 4, 1)
+    # ax2 = plt.subplot(1, 4, 2)
+    # ax3 = plt.subplot(1, 4, 3)
+    # ax4 = plt.subplot(1, 4, 4)
+    ax1 = plt.subplot(gs[0, 0])
+    ax2 = plt.subplot(gs[0, 1])
+    ax3 = plt.subplot(gs[0, 2])
+    ax4 = plt.subplot(gs[0, 3])
+    plt.subplots_adjust(wspace=0, hspace=0)
+    # plt.figure(1, figsize=(6, 4.5))
+    # # plt.figure(1, figsize=(6, 4.5))
+    # ax1 = plt.subplot(2, 2, 1)
+    # ax2 = plt.subplot(2, 2, 2)
+    # ax3 = plt.subplot(2, 2, 3)
+    # ax4 = plt.subplot(2, 2, 4)
 
     plt.sca(ax1)
     map_data.plot_map_img_T()
@@ -72,7 +85,7 @@ def make_pipeline(planner_name, test_id, i, map_name):
     scan_pts = np.column_stack((xs, ys))
 
     def plot_scan():
-        ind_arr = [0, 100, 300, 452, 500, 600, 650, 700, 760, 789, 790, 800, 900, 1079]
+        ind_arr = [0, 100, 300, 452, 500, 600, 650, 700, 760, 783, 784, 800, 900, 1079]
         poly_pts = np.array([scan_pts[ind] for ind in ind_arr])
         poly_pts = np.insert(poly_pts, 0, [x, y], axis=0)
         poly_pts = np.flip(poly_pts, axis=1)
@@ -80,7 +93,7 @@ def make_pipeline(planner_name, test_id, i, map_name):
         poly = Polygon(poly_pts, color=free_speech, alpha=0.2)
         plt.gca().add_patch(poly)
 
-        # ind = 790
+        # ind = 783
         # plt.plot(scan_pts[ind, 1], scan_pts[ind, 0], color='red', marker='o', markersize=20)
 
     def set_axis_limits(scan_pts):
@@ -147,8 +160,8 @@ def make_pipeline(planner_name, test_id, i, map_name):
     scan_pts = (scan_pts - origin) / map_data.map_resolution
 
     map_data.plot_map_img_T()
-    long_side = np.copy(line_1)
-    short_side = np.copy(line_2)
+    long_side = np.copy(line_1)[::2]
+    short_side = np.copy(line_2)[::2]
 
     long_side = (np.matmul(rotation, long_side.T).T + position - origin ) / map_data.map_resolution
     short_side = (np.matmul(rotation, short_side.T).T + position - origin ) / map_data.map_resolution
@@ -166,7 +179,7 @@ def make_pipeline(planner_name, test_id, i, map_name):
 
     set_axis_limits(scan_pts)
 
-    plt.legend(loc='center', fontsize=text_size, bbox_to_anchor=(0.74, 0.12))
+    plt.legend(loc='center', fontsize=text_size, bbox_to_anchor=(0.72, 0.32))
     # plt.legend(loc='center', fontsize=text_size, bbox_to_anchor=(0.5, -0.05))
     # plt.title("2. Extract Boundaries")
     add_circle(2)
@@ -174,13 +187,14 @@ def make_pipeline(planner_name, test_id, i, map_name):
 
     plt.sca(ax3)
 
-    l1 = boundaries[:, :2]
-    l2 = boundaries[:, 2:]
+    l1 = boundaries[:, :2][::2]
+    l2 = boundaries[:, 2:][::2]
     l1 = (np.matmul(rotation, l1.T).T + position - origin ) / map_data.map_resolution
     l2 = (np.matmul(rotation, l2.T).T + position - origin ) / map_data.map_resolution
 
-    be1 = boundary_extension[:, :2]
-    be2 = boundary_extension[:, 2:]
+
+    be1 = boundary_extension[:, :2][2::2]
+    be2 = boundary_extension[:, 2:][2::2]
     be1 = (np.matmul(rotation, be1.T).T + position - origin ) / map_data.map_resolution
     be2 = (np.matmul(rotation, be2.T).T + position - origin ) / map_data.map_resolution
 
@@ -208,19 +222,21 @@ def make_pipeline(planner_name, test_id, i, map_name):
         else:
             plt.plot(n_ys, n_xs, '-', color=sweedish_green, linewidth=2)
     
+
     for z in range(0, len(be1)):
         n_xs = [be1[z, 0], be2[z, 0]]
         n_ys = [be1[z, 1], be2[z, 1]]
-        if z == 0:
+        if z == 0: 
             plt.plot(n_ys, n_xs, '-', color=jade_dust, linewidth=2, label="Projected segments")
         else:
             plt.plot(n_ys, n_xs, '-', color=jade_dust, linewidth=2)
-
     plt.plot(be1[:, 1], be1[:, 0], '-', color=boundary_color, linewidth=2)
-    plt.plot(be2[:, 1], be2[:, 0], 'o', color=london_square, linewidth=2, markersize=8, label="Estimated boundary")
+    plt.plot(be2[:, 1], be2[:, 0], 'o', color=jade_dust, linewidth=2, markersize=8)
+    # plt.plot(be2[:, 1], be2[:, 0], 'o', color=london_square, linewidth=2, markersize=8)
+    # plt.plot(be2[:, 1], be2[:, 0], 'o', color=london_square, linewidth=2, markersize=8, label="Estimated boundary")
     # plt.text(225, 378, "Estimated\nboundary\npoints")
 
-    plt.legend(loc='center', fontsize=text_size, bbox_to_anchor=(0.72, 0.15))
+    plt.legend(loc='center', fontsize=text_size, bbox_to_anchor=(0.66, 0.12))
     # plt.legend(loc='center', fontsize=text_size, bbox_to_anchor=(0.5, -0.08))
     set_axis_limits(scan_pts)
     # plt.title("3. Extract track segments")
@@ -228,35 +244,6 @@ def make_pipeline(planner_name, test_id, i, map_name):
 
 
     plt.sca(ax4)
-    # ws = local_track[:, 2:] * 20
-    # lt = (np.matmul(rotation, local_track[:, :2].T).T + position - origin) / map_data.map_resolution
-    # lt_in = np.concatenate((lt, ws), axis=1)
-    # lt_lm = LocalMap(lt_in)
-
-    # map_data.plot_map_img_light_T()
-    # pts = lt_lm.track[:, :2]
-    # l1 = pts + lt_lm.nvecs * lt_lm.track[:, 2][:, None]
-    # l2 = pts - lt_lm.nvecs * lt_lm.track[:, 3][:, None]
-    
-    # good_grey = "#485460"
-    # for z in range(1, len(l1)):
-    #     n_xs = [l1[z, 0], l2[z, 0]]
-    #     n_ys = [l1[z, 1], l2[z, 1]]
-    #     if z == 1:
-    #         plt.plot(n_ys, n_xs, '-', color=minty_green, linewidth=2, label="Track segments")
-    #     else:
-    #         plt.plot(n_ys, n_xs, '-', color=minty_green, linewidth=2)
-   
-    # plt.plot(lt[1:, 1], lt[1:, 0], '-', color=chrome_yellow, label="Middle line", linewidth=2)
-    # add_car_picture()
-
-    # set_axis_limits(scan_pts)
-    # plt.legend(loc='center', fontsize=text_size, bbox_to_anchor=(0.5, -0.08))
-    # plt.title("4. Calculate trangent lines")
-
-
-
-    # plt.sca(ax5)
 
 
     ws = local_track[:, 2:] * 20
@@ -292,9 +279,11 @@ def make_pipeline(planner_name, test_id, i, map_name):
     add_circle(4)
 
     plt.tight_layout()
+    plt.rcParams['pdf.use14corefonts'] = True
 
     plt.savefig(img_path + f"MapExtractionPipeline_{i}.svg", bbox_inches='tight', pad_inches=0.01)
     plt.savefig(img_path + f"MapExtractionPipeline_{i}.pdf", bbox_inches='tight', pad_inches=0.01)
+    plt.savefig(img_path + f"MapExtractionPipeline_{i}.jpeg", bbox_inches='tight', pad_inches=0.01, dpi=300)
 
 
 
@@ -318,8 +307,9 @@ def rotate_bound(image, angle):
 
 map_name = "aut"
 # n = 197
-n = 501
-make_pipeline("LocalMapPlanner", "c1", n, map_name)
+n = 496
+# n = 501
+make_pipeline("LocalMapPP", "c1", n, map_name)
 # make_lidar_scan_img("LocalCenter_1", 91, map_name)
 # make_boundary_img("LocalCenter_1", 91, map_name)
 

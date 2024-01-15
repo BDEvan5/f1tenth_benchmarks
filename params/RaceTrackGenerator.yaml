@@ -4,8 +4,6 @@ raceline_step: 0.2
 max_lateral_acc: 8.5
 max_longitudinal_acc: 8.5
 mu: 0.5
-ax_max_machine: np.array([[0, 8.5],[8, 8.5]])
-ggv: np.array([[0, 8.5, 8.5], [8, 8.5, 8.5]])
 
 
 

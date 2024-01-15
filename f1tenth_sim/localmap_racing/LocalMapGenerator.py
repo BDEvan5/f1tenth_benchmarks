@@ -1,6 +1,8 @@
 import numpy as np
 import os
-from f1tenth_sim.localmap_racing.LocalMap import *
+import numpy as np 
+from scipy import interpolate, spatial, optimize
+import trajectory_planning_helpers as tph
 
 np.set_printoptions(precision=4)
 
@@ -10,8 +12,8 @@ FOV = 4.7
 BOUNDARY_SMOOTHING = 0.2
 MAX_TRACK_WIDTH = 2.5
 TRACK_SEPEARTION_DISTANCE = 0.4
-BOUNDARY_STEP_SIZE = 0.6
-
+BOUNDARY_STEP_SIZE = 0.4
+# FILTER_THRESHOLD = 2.4
 
 class LocalMapGenerator:
     def __init__(self, path, test_id, save_data) -> None:
@@ -20,7 +22,7 @@ class LocalMapGenerator:
 
         self.save_data = save_data
         if save_data:
-            self.local_map_data_path = path + f"RawData_{test_id}/LocalMapData_{test_id}/"
+            self.local_map_data_path = path + f"LocalMapData_{test_id}/"
             ensure_path_exists(self.local_map_data_path)
         self.counter = 0
         self.left_longer = None
@@ -33,10 +35,8 @@ class LocalMapGenerator:
         left_extension, right_extension = self.estimate_semi_visible_segments(left_line, right_line, left_boundary, right_boundary)
         local_track = self.regularise_track(left_boundary, right_boundary, left_extension, right_extension)
 
-        local_map = LocalMap(local_track)
-
         if self.save_data:
-            np.save(self.local_map_data_path + f"local_map_{self.counter}", local_map.track)
+            np.save(self.local_map_data_path + f"local_map_{self.counter}", local_track)
             np.save(self.local_map_data_path + f"line1_{self.counter}", left_line)
             np.save(self.local_map_data_path + f"line2_{self.counter}", right_line)
             boundaries = np.concatenate((left_boundary, right_boundary), axis=1)
@@ -48,9 +48,8 @@ class LocalMapGenerator:
                 np.save(self.local_map_data_path + f"boundExtension_{self.counter}", np.array([]))
 
         self.counter += 1
-        # print(f"Counter: {self.counter} Track length: {local_track.shape[0]}")
 
-        return local_map
+        return local_track
 
     def extract_track_boundaries(self, z):
         z = z[z[:, 0] > -2] # remove points behind the car 
@@ -68,9 +67,16 @@ class LocalMapGenerator:
         candidate_lines = [z[arr_inds[i]+2:arr_inds[i+1]+1] for i in range(len(arr_inds)-1)]
         # Remove any boundaries that are not realistic
         candidate_lines = [line for line in candidate_lines if not np.all(line[:, 0] < -0.8) or np.all(np.abs(line[:, 1]) > 2.5)]
+        candidate_lines = [line for line in candidate_lines if len(line) > 1]
 
-        left_line = resample_track_points(candidate_lines[0], BOUNDARY_STEP_SIZE, BOUNDARY_SMOOTHING)
-        right_line = resample_track_points(candidate_lines[-1], BOUNDARY_STEP_SIZE, BOUNDARY_SMOOTHING)
+        try:
+            left_line = resample_track_points(candidate_lines[0], BOUNDARY_STEP_SIZE, BOUNDARY_SMOOTHING)
+            right_line = resample_track_points(candidate_lines[-1], BOUNDARY_STEP_SIZE, BOUNDARY_SMOOTHING)
+        except Exception as e:
+            print("Exception in track boundary extraction")
+            print(e)
+            print(len(candidate_lines))
+            print(arr_inds)
         if left_line.shape[0] > right_line.shape[0]:
             self.left_longer = True
         else:
@@ -83,6 +89,15 @@ class LocalMapGenerator:
             left_boundary, right_boundary = calculate_boundary_segments(left_line, right_line)
         else:
             right_boundary, left_boundary = calculate_boundary_segments(right_line, left_line)
+
+        # if len(left_boundary) == 0 or len(right_boundary) == 0:
+        #     return left_boundary, right_boundary
+        # distances = np.linalg.norm(left_boundary - right_boundary, axis=1)
+        # i = -1
+        # while distances[i] > FILTER_THRESHOLD and i > -len(distances)+3:
+        #     i -= 1
+        # left_boundary = left_boundary[:i]
+        # right_boundary = right_boundary[:i]
 
         return left_boundary, right_boundary
 
@@ -133,13 +148,18 @@ def resample_track_points(points, seperation_distance=0.2, smoothing=0.2):
     return resampled_points
 
 def calculate_boundary_segments(long_line, short_line):
+    found_normal = False
     long_boundary, short_boundary = np.zeros_like(long_line), np.zeros_like(long_line)
     for i in range(long_line.shape[0]):
         distances = np.linalg.norm(short_line - long_line[i], axis=1)
 
         idx = np.argmin(distances)
-        if distances[idx] > MAX_TRACK_WIDTH: break 
-        
+        if distances[idx] > MAX_TRACK_WIDTH: 
+            if found_normal: 
+                break
+        else:
+            found_normal = True
+
         long_boundary[i] = long_line[i]
         short_boundary[i] = short_line[idx]
 

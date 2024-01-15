@@ -1,13 +1,14 @@
 
 
-constant_lookahead: 0.5
-variable_lookahead: 0.9
+constant_lookahead: 0.6
+# constant_lookahead: 0.6
+variable_lookahead: 0.7
 # constant_lookahead: 0.5
 # variable_lookahead: 0.1
 
 constant_speed: 3
 
-racetrack_set: "mu70"
+racetrack_set: "mu60"
 
 friction_limit: 1.2
-
+max_steer: 0.4

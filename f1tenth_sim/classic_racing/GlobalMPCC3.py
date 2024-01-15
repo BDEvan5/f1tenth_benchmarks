@@ -3,26 +3,25 @@ import matplotlib.pyplot as plt
 import casadi as ca
 from matplotlib.collections import LineCollection
 
-from f1tenth_sim.localmap_racing.LocalMapGenerator import LocalMapGenerator
 from f1tenth_sim.localmap_racing.LocalReference import LocalReference
 from f1tenth_sim.utils.BasePlanner import BasePlanner, ensure_path_exists
-from f1tenth_sim.localmap_racing.LocalMap import *
+# from f1tenth_sim.localmap_racing.LocalMap import *
+from f1tenth_sim.utils.track_utils import CentreLine, TrackLine
 
 
 NX = 4
 NU = 3
 
 
-class LocalMPCC(BasePlanner):
-    def __init__(self, test_id, save_data=False):
-        super().__init__("LocalMPCC", test_id)
+class GlobalMPCC3(BasePlanner):
+    def __init__(self, test_id, save_data=False, planner_name="MPCC3"):
+        super().__init__(planner_name, test_id, params_name="LocalMPCC")
         self.rp = None
         self.dt = self.planner_params.dt
         self.N = self.planner_params.N
         self.g, self.obj = None, None
         self.mpcc_data_path = self.data_root_path + f"MPCCData_{test_id}/"
         ensure_path_exists(self.mpcc_data_path)
-        self.local_map_generator = LocalMapGenerator(self.data_root_path, test_id, save_data)
 
         self.u0 = np.zeros((self.N, NU))
         self.X0 = np.zeros((self.N + 1, NX))
@@ -31,6 +30,16 @@ class LocalMPCC(BasePlanner):
 
         self.init_optimisation()
         self.init_constraints()
+
+    def set_map(self, map_name):
+        self.centre_line = CentreLine(map_name)
+        self.track_length = self.centre_line.s_path[-1]
+        # self.centre_interpolant, self.left_interpolant, self.right_interpolant = init_track_interpolants(self.centre_line, self.planner_params.exclusion_width)
+        self.rp = AdaptedReference(self.centre_line, self.planner_params.exclusion_width)
+
+        self.init_objective()
+        self.init_bounds()
+        self.init_solver()
     
     def init_optimisation(self):
         states = ca.MX.sym('states', NX) # [x, y, psi, s]
@@ -73,6 +82,7 @@ class LocalMPCC(BasePlanner):
 
     def init_bounds(self):
         self.g = []  # constraints vector
+        # self.g = ca.vertcat(self.g, self.X[:3, 0] - self.P[:3])  # initial condition constraints
         self.g = ca.vertcat(self.g, self.X[:, 0] - self.P[:NX])  # initial condition constraints
         for k in range(self.N):
             st = self.X[:, k]
@@ -100,22 +110,16 @@ class LocalMPCC(BasePlanner):
         self.solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts)
 
 
+
     def plan(self, obs):
         self.step_counter += 1
-        local_track = self.local_map_generator.generate_line_local_map(obs['scan'])
-        if len(local_track) <= 2:
-            return np.array([0, 1])
+        x0 = np.append(obs["pose"], self.centre_line.calculate_progress_m(obs["pose"][0:2]))
+        x0[2] = normalise_psi(x0[2])
 
-        self.local_map = LocalMap(local_track)
-        self.rp = LocalReference(self.local_map)
+        if self.warm_start:
+            self.construct_warm_start_soln(x0) 
 
-        x0 = np.zeros(3)
-        x0 = np.append(x0, self.rp.calculate_s(x0[0:2]))
         vehicle_speed = obs["vehicle_speed"]
-
-        self.init_objective()
-        self.init_bounds()
-        self.init_solver()
 
         p = self.generate_constraints_and_parameters(x0, vehicle_speed)
         states, controls, solved_status = self.solve(p)
@@ -165,6 +169,14 @@ class LocalMPCC(BasePlanner):
             #Adjust indicies.
             self.lbg[NX -1 + (NX + 3) * (k + 1), 0] = - self.planner_params.max_decceleration * self.dt
             self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = ca.inf # do not limit speeding up
+
+            # self.lbg[NX - 4 + (NX + 3) * (k + 1), 0] = min(left_bound, right_bound)
+            # self.ubg[NX - 4 + (NX + 3) * (k + 1), 0] = max(left_bound, right_bound)
+            # self.lbg[NX - 3 + (NX + 3) * (k + 1), 0] = - self.f_max
+            # self.ubg[NX - 3 + (NX + 3) * (k + 1) , 0] = self.f_max
+            # #Adjust indicies.
+            # self.lbg[NX -2 + (NX + 3) * (k + 1), 0] = - self.planner_params.max_decceleration * self.dt
+            # self.ubg[NX -2 + (NX + 3) * (k + 1) , 0] = ca.inf # do not limit speeding up
 
 
         pp[-1] = max(x0_speed, 1) # prevent constraint violation
@@ -290,3 +302,74 @@ def normalise_psi(psi):
     while psi < -np.pi:
         psi += 2*np.pi
     return psi
+
+
+
+class AdaptedReference:
+    def __init__(self, centre_line, w):
+        self.path = centre_line.path
+        self.el_lengths = centre_line.el_lengths 
+        self.s_track = centre_line.s_path
+        self.psi = centre_line.psi
+        self.nvecs = centre_line.nvecs
+        self.track_length = centre_line.s_path[-1]
+
+        self.center_lut_x, self.center_lut_y = None, None
+        self.left_lut_x, self.left_lut_y = None, None
+        self.right_lut_x, self.right_lut_y = None, None
+
+        self.center_lut_x, self.center_lut_y = self.get_interpolated_path_casadi('lut_center_x', 'lut_center_y', self.path, self.s_track)
+        self.angle_lut_t = self.get_interpolated_heading_casadi('lut_angle_t', self.psi, self.s_track)
+
+        left_path = self.path - self.nvecs * (centre_line.widths[:, 0][:, None]  - w)
+        right_path = self.path + self.nvecs * (centre_line.widths[:, 1][:, None] - w)
+        self.left_lut_x, self.left_lut_y = self.get_interpolated_path_casadi('lut_left_x', 'lut_left_y', left_path, self.s_track)
+        self.right_lut_x, self.right_lut_y = self.get_interpolated_path_casadi('lut_right_x', 'lut_right_y', right_path, self.s_track)
+
+    def get_interpolated_path_casadi(self, label_x, label_y, pts, arc_lengths_arr):
+        u = arc_lengths_arr
+        V_X = pts[:, 0]
+        V_Y = pts[:, 1]
+        lut_x = ca.interpolant(label_x, 'bspline', [u], V_X)
+        lut_y = ca.interpolant(label_y, 'bspline', [u], V_Y)
+        return lut_x, lut_y
+    
+    def get_interpolated_heading_casadi(self, label, pts, arc_lengths_arr):
+        u = arc_lengths_arr
+        V = pts
+        lut = ca.interpolant(label, 'bspline', [u], V)
+        return lut
+    
+    def calculate_s(self, point):
+        distances = np.linalg.norm(self.path - point, axis=1)
+        idx = np.argmin(distances)
+        x, h = self.interp_pts(idx, distances)
+        s = (self.s_track[idx] + x) 
+
+        return s
+
+    def interp_pts(self, idx, dists):
+        if idx == len(dists) -1: 
+            return dists[idx], 0
+        d_ss = self.s_track[idx+1] - self.s_track[idx]
+        d1, d2 = dists[idx], dists[idx+1]
+
+        if d1 < 0.01: # at the first point
+            x = 0   
+            h = 0
+        elif d2 < 0.01: # at the second point
+            x = dists[idx] # the distance to the previous point
+            h = 0 # there is no distance
+        else:     # if the point is somewhere along the line
+            s = (d_ss + d1 + d2)/2
+            Area_square = (s*(s-d1)*(s-d2)*(s-d_ss))
+            if Area_square < 0:  # negative due to floating point precision
+                h = 0
+                x = d_ss + d1
+            else:
+                Area = Area_square**0.5
+                h = Area * 2/d_ss
+                x = (d1**2 - h**2)**0.5
+
+        return x, h
+

@@ -5,14 +5,15 @@ import quadprog
 import time
 import os
 from numba import njit
+import trajectory_planning_helpers as tph
 
 def local_opt_min_curv(reftrack: np.ndarray,
-                 normvectors: np.ndarray,
+                #  normvectors: np.ndarray,
                  kappa_bound: float,
                  w_veh: float,
                  print_debug: bool = False,
-                 psi_s: float = None,
-                 psi_e: float = None,
+                #  psi_s: float = None,
+                #  psi_e: float = None,
                  fix_s: bool = False,
                  fix_e: bool = False) -> tuple:
     """
@@ -21,7 +22,7 @@ def local_opt_min_curv(reftrack: np.ndarray,
     Tim Stahl
     Alexander Wischnewski
     Levent Ögretmen
-    Edits: Benjamin Evans
+    Edits: Benjamin David Evans
 
     .. description::
     This function uses a QP solver to minimize the summed curvature of a path by moving the path points along their
@@ -79,6 +80,12 @@ def local_opt_min_curv(reftrack: np.ndarray,
     # ------------------------------------------------------------------------------------------------------------------
     # PREPARATIONS -----------------------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
+    el_lengths = np.linalg.norm(np.diff(reftrack[:, :2], axis=0), axis=1)
+    s_track = np.insert(np.cumsum(el_lengths), 0, 0)
+    psi, kappa = tph.calc_head_curv_num.calc_head_curv_num(reftrack, el_lengths, False)
+    normvectors = tph.calc_normal_vectors_ahead.calc_normal_vectors_ahead(psi)
+    psi_s = psi[0]
+    psi_e = psi[-1]
 
     no_points = reftrack.shape[0]
     no_splines = no_points -1
@@ -247,7 +254,7 @@ def local_opt_min_curv(reftrack: np.ndarray,
 
 
 
-    return alpha_mincurv
+    return alpha_mincurv, normvectors
 
 @njit(cache=True)
 def set_up_mtrxs(A_inv, no_points, no_splines):
@@ -374,27 +381,27 @@ def build_A(path_length):
     return M
 
 
+A_MTX_PATH = "Data/A_inv_mtxs/"
 def build_A_matrixes():
     start = 5
     end = 80
     print(f"A inverse mtxs not found. Building from {start} to {end}...")
 
-    path = f"logs/Data_A_inv/"
-    if not os.path.exists(path):
-        os.makedirs(path)
+    if not os.path.exists(A_MTX_PATH):
+        os.makedirs(A_MTX_PATH)
 
     for i in range(start, end+1):
         # print(f"{i} is being built")
         A = build_A(i)
 
         inv = np.linalg.inv(A)
-        np.save(path + f"A_inv_{i}.npy", inv)
+        np.save(A_MTX_PATH + f"A_inv_{i}.npy", inv)
 
     print(f"A inverse mtxs built from {start} to {end}")
 
 
 def load_A_inv(i):
-    path = f"logs/Data_A_inv/A_inv_{i}.npy"
+    path = A_MTX_PATH +  f"A_inv_{i}.npy"
     if not os.path.exists(path):
         build_A_matrixes()
     return np.load(path)
@@ -402,5 +409,4 @@ def load_A_inv(i):
 
 
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    pass
+    build_A_matrixes()

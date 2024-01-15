@@ -23,10 +23,13 @@ class GlobalPurePursuit(BasePlanner):
             self.racetrack = RaceTrack(map_name, self.planner_params.racetrack_set)
 
     def plan(self, obs):
+        self.step_counter += 1
         pose = obs["pose"]
         vehicle_speed = obs["vehicle_speed"]
 
         lookahead_distance = self.constant_lookahead + (vehicle_speed/self.vehicle_params.max_speed) * (self.variable_lookahead)
+        # if self.step_counter < 40:
+            # lookahead_distance += (100 - self.step_counter) * 1/40 * 2
         lookahead_point, i = self.get_lookahead_point(pose[:2], lookahead_distance)
 
         if vehicle_speed < 1:
@@ -34,7 +37,8 @@ class GlobalPurePursuit(BasePlanner):
 
         true_lookahead_distance = np.linalg.norm(lookahead_point[:2] - pose[:2])
         steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], true_lookahead_distance, self.vehicle_params.wheelbase)
-        steering_angle = np.clip(steering_angle, -self.vehicle_params.max_steer, self.vehicle_params.max_steer)
+        steering_angle = np.clip(steering_angle, -self.planner_params.max_steer, self.planner_params.max_steer)
+        # steering_angle = np.clip(steering_angle, -self.vehicle_params.max_steer, self.vehicle_params.max_steer)
             
         if self.use_centre_line:
             speed = self.planner_params.constant_speed

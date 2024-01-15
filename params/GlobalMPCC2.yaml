@@ -9,7 +9,7 @@ local_path_speed_min: 2
 local_path_speed_max: 10
 max_decceleration: 6
 max_acceleration: 8
-friction_mu: 0.7
+friction_mu: 0.6
 
 
 weight_progress: 0.001

@@ -62,7 +62,7 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
 
 if __name__ == '__main__':
     # render_local_maps("LocalMapPlanner", "r1")
-    render_local_maps("LocalMapPlanner", "r1", "mco")
+    render_local_maps("LocalMapPP", "r1", "mco")
 
 
 

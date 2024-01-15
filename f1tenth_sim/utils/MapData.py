@@ -26,6 +26,8 @@ class MapData:
 
         self.map_img = np.array(Image.open(self.path + map_img_name).transpose(Image.FLIP_TOP_BOTTOM))
         self.map_img = self.map_img.astype(np.float64)
+        if len(self.map_img.shape) > 2:
+            self.map_img = self.map_img[:, :, 0]
 
         self.map_img[self.map_img <= 128.] = 0.
         self.map_img[self.map_img > 128.] = 1.

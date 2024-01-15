@@ -1,0 +1,20 @@
+
+max_speed: 8
+mu: 0.6
+centre_lookahead_distance: 1.4
+constant_speed: 3
+
+constant_lookahead: 0.3
+variable_lookahead: 1.6
+
+kappa_bound: 0.8
+path_exclusion_width: 1.0
+
+
+max_lateral_acc: 8.5
+max_longitudinal_acc: 8.5
+
+
+
+
+

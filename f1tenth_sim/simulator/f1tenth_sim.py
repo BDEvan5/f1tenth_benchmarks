@@ -138,7 +138,7 @@ class F1TenthSimBase:
     
 
     def reset(self):
-        if self.params.use_random_starts:
+        if self.params.use_random_starts and self.lap_number > -1:
             self.starting_progress = np.random.random()
             start_pose = self.centre_line.calculate_pose(self.starting_progress)
         else:

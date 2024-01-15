@@ -49,7 +49,7 @@ class RaceTrackPlotter(RaceTrack):
         points = self.path.reshape(-1, 1, 2)
         segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
-        norm = plt.Normalize(2, 8)
+        norm = plt.Normalize(0, 8)
         lc = LineCollection(segments, cmap='jet', norm=norm)
         lc.set_array(self.speeds)
         lc.set_linewidth(5)
@@ -68,7 +68,7 @@ class RaceTrackPlotter(RaceTrack):
 
 if __name__ == '__main__':
     map_list = ['aut', 'esp', 'gbr', 'mco']
-    raceline_id = "mu50"
+    raceline_id = "mu60"
     for map_name in map_list:
         RaceTrackPlotter(map_name, raceline_id)
 
