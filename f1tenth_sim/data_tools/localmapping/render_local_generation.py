@@ -8,7 +8,7 @@ def ensure_path_exists(path):
         os.mkdir(path)
 
 def render_local_maps(planner_name, test_id, map_name="aut"):
-    root = f"Logs/{planner_name}/"
+    root = f"logs/{planner_name}/"
     localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
     logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
     scans = np.load(root + f"RawData_{test_id}/ScanLog_{map_name}_0.npy")

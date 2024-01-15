@@ -1,0 +1,3 @@
+[submodule "trajectory_planning_helpers"]
+	path = trajectory_planning_helpers
+	url = https://github.com/TUMFTM/trajectory_planning_helpers.git

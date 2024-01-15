@@ -1,8 +1,9 @@
 # Custom
-!Logs/.gitkeep
-Logs/
+!logs/.gitkeep
+logs/
 !Data/.gitkeep
 Data/
+# trajectory_planning_helpers
 
 
 

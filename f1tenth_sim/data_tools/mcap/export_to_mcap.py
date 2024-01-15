@@ -13,7 +13,7 @@ import base64
 vehicle_name = "MPCC"
 # map_name = "esp"
 map_name = "aut"
-file_name = f"Logs/{vehicle_name}/test_{map_name}.mcap"
+file_name = f"logs/{vehicle_name}/test_{map_name}.mcap"
 schema_path = "f1tenth_sim/data_tools/mcap/schemas/"
 
 
@@ -106,9 +106,9 @@ def load_agent_test_data(file_name):
     data = np.load(file_name)
     return data[:, :7], data[:, 7:]
 
-states, actions = load_agent_test_data(f"Logs/{vehicle_name}/RawData/SimLog_{map_name}_0.npy")
+states, actions = load_agent_test_data(f"logs/{vehicle_name}/RawData/SimLog_{map_name}_0.npy")
 try:
-    scans = np.load(f"Logs/{vehicle_name}/ScanLog_{map_name}_0.npy")
+    scans = np.load(f"logs/{vehicle_name}/ScanLog_{map_name}_0.npy")
 except:
     scans = None
 map_data = MapData(map_name)

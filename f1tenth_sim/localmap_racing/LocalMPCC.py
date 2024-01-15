@@ -42,7 +42,7 @@ NU = 3
 class LocalMPCC:
     def __init__(self, test_id, save_data=False):
         self.name = "LocalMPCC"
-        self.path = f"Logs/{self.name}/"
+        self.path = f"logs/{self.name}/"
         ensure_path_exists(self.path)
         ensure_path_exists(self.path + f"RawData_{test_id}/")
         self.mpcc_data_path = self.path + f"RawData_{test_id}/MPCCData_{test_id}/"

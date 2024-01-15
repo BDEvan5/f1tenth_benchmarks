@@ -164,7 +164,7 @@ class TrajectoryPlotter:
 def plot_raceline_tracking(vehicle_name, test_id):
     TestData = TrajectoryPlotter()
 
-    TestData.process_folder(f"Logs/{vehicle_name}/", test_id)
+    TestData.process_folder(f"logs/{vehicle_name}/", test_id)
 
 
 

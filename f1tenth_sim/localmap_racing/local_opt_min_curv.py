@@ -379,7 +379,7 @@ def build_A_matrixes():
     end = 80
     print(f"A inverse mtxs not found. Building from {start} to {end}...")
 
-    path = f"Logs/Data_A_inv/"
+    path = f"logs/Data_A_inv/"
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -394,7 +394,7 @@ def build_A_matrixes():
 
 
 def load_A_inv(i):
-    path = f"Logs/Data_A_inv/A_inv_{i}.npy"
+    path = f"logs/Data_A_inv/A_inv_{i}.npy"
     if not os.path.exists(path):
         build_A_matrixes()
     return np.load(path)

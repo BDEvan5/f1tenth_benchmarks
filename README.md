@@ -29,6 +29,27 @@ Three different methods for mapless racing are presented:
 
 ## Usage
 
+**Installation**
+
+It is recommended that you use a virtual environment to manage dependencies. A virtual environment can be created and sourced with the following commands:
+```bash
+python3.9 -m venv venv
+source venv/bin/activate
+```
+
+The requirements and package can then be installed using,
+```bash
+pip install -r requirements.txt
+pip install -e .
+```
+
+The [trajectory_planning_helpers](https://github.com/TUMFTM/trajectory_planning_helpers.git) library, must be installed independantly through the following commands, 
+```
+git submodule update
+cd trajectory_planning_helpers
+pip install -e .
+```
+
 **Test scripts:**
 There are several key scripts for running the tests:
 - `classical_racing/GenerateOptimalTrajectory.py`: will generate the racelines in the `raceliones/` directory

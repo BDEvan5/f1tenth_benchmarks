@@ -153,7 +153,7 @@ def calculate_cross_track(track_line, positions):
 
 
 def calculate_tracking_accuracy(planner_name, test_id, centerline=False):
-    agent_path = f"Logs/{planner_name}/"
+    agent_path = f"logs/{planner_name}/"
     print(f"Planner name: {planner_name}")
     old_df = pd.read_csv(agent_path + f"Results_{planner_name}.csv")
 
@@ -193,7 +193,7 @@ def plot_trajectory_analysis(vehicle_name, test_id):
     calculate_tracking_accuracy(vehicle_name, test_id, centerline=False)
 
     TestData = TrajectoryPlotter()
-    TestData.process_folder(f"Logs/{vehicle_name}/", test_id)
+    TestData.process_folder(f"logs/{vehicle_name}/", test_id)
 
 
 

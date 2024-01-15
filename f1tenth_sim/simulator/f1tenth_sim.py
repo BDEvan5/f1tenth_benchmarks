@@ -18,12 +18,12 @@ def ensure_path_exists(folder):
 
 class F1TenthSimBase:
     def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False):
-        with open(f"f1tenth_sim/params/simulator_params.yaml", 'r') as file:
+        with open(f"params/simulator_params.yaml", 'r') as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
         self.params = Namespace(**params)
         self.planner_name = planner_name
         self.map_name = map_name
-        self.path = f"Logs/{planner_name}/"
+        self.path = f"logs/{planner_name}/"
         self.test_id = test_id
         self.training = training
 
@@ -64,7 +64,7 @@ class F1TenthSimBase:
             df = df[df.file_name != "~"] # this removes internatl file calls.
             df = df[~df['file_name'].str.startswith('<')]
             df = df.sort_values(by=['cumtime'], ascending=False)
-            df.to_csv(f"Logs/{self.planner_name}/RawData_{self.test_id}/Profile_{self.map_name}_{self.test_id}.csv")
+            df.to_csv(f"logs/{self.planner_name}/RawData_{self.test_id}/Profile_{self.map_name}_{self.test_id}.csv")
         except:
             return
 

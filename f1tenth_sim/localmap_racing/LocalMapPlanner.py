@@ -24,7 +24,7 @@ MAX_STEER = 0.4
 class LocalMapPlanner:
     def __init__(self, test_id, save_data=False, raceline=True):
         self.name = "LocalMapPlanner"
-        self.path = f"Logs/{self.name}/"
+        self.path = f"logs/{self.name}/"
         ensure_path_exists(self.path)
         ensure_path_exists(self.path + f"RawData_{test_id}/")
         self.counter = 0

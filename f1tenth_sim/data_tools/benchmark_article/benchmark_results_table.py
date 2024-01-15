@@ -6,7 +6,7 @@ import os
 
 
 def build_main_df():
-    summary_df = pd.read_csv("Logs/Summary.csv")
+    summary_df = pd.read_csv("logs/Summary.csv")
 
     planners = ['PurePursuit', "MPCC", "FollowTheGap"]
     test_ids = ["mu70", "mu70", "v1"]

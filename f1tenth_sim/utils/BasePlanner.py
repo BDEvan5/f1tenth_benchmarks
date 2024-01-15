@@ -15,8 +15,8 @@ class BasePlanner:
         else:
             self.planner_params = load_parameter_file(params_name)
         if init_folder:
-            self.data_root_path = f"Logs/{planner_name}/RawData_{test_id}/"
-            ensure_path_exists(f"Logs/{planner_name}/")
+            self.data_root_path = f"logs/{planner_name}/RawData_{test_id}/"
+            ensure_path_exists(f"logs/{planner_name}/")
             ensure_path_exists(self.data_root_path)
             save_params(self.planner_params, self.data_root_path)
         self.vehicle_params = load_parameter_file("vehicle_params")
@@ -43,7 +43,7 @@ def ensure_path_exists(folder):
 
 
 def load_parameter_file(planner_name):
-    file_name = f"f1tenth_sim/params/{planner_name}.yaml"
+    file_name = f"params/{planner_name}.yaml"
     with open(file_name, 'r') as file:
         params = yaml.load(file, Loader=yaml.FullLoader)
     return Namespace(**params)
