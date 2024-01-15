@@ -122,7 +122,7 @@ class Track:
 def generate_racelines():
     params = load_parameter_file("RaceTrackGenerator")
     # params.mu = 0.5
-    params.mu = 0.65
+    params.mu = 0.6
     # raceline_id = f"_drl_training"
     raceline_id = f"mu{int(params.mu*100)}"
     map_list = ['aut', 'esp', 'gbr', 'mco']
