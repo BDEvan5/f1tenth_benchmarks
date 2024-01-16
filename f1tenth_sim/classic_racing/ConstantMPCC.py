@@ -199,5 +199,7 @@ class ConstantMPCC(BasePlanner):
                     psi_next -= np.pi * 2
             self.X0[k, :] = np.array([x_next.full()[0, 0], y_next.full()[0, 0], psi_next, s_next])
 
+        # print(self.X0)
+
 
 

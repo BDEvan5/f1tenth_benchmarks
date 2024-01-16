@@ -15,14 +15,16 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
     Logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
     mpcc_img_path = root + f"Images_{test_id}/LocalMPCC_{test_id}/"
     ensure_path_exists(mpcc_img_path)
-    # in the future, I could load the scans from here and not hae to save them seperately....
 
-    # for i in range(0, 60):
+    filename = 'maps/' + map_name + "_centerline.csv"
+    track = np.loadtxt(filename, delimiter=',', skiprows=1)
+
+    for i in range(1, 10):
     # for i in range(20, 60):
     # for i in range(0, 100):
     # for i in range(len(Logs)-100, len(Logs)-50):
     # for i in range(len(Logs)-50, len(Logs)):
-    for i in range(1, len(Logs)):
+    # for i in range(1, len(Logs)):
         states = np.load(mpcc_data_path + f"States_{i}.npy")
         controls = np.load(mpcc_data_path + f"Controls_{i}.npy")
 
@@ -36,12 +38,12 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
         a4 = plt.subplot2grid((4, 2), (2, 1))
         a5 = plt.subplot2grid((4, 2), (3, 1))
 
-        el_lengths = np.linalg.norm(np.diff(local_track[:, :2], axis=0), axis=1)
+        el_lengths = np.linalg.norm(np.diff(track[:, :2], axis=0), axis=1)
         local_ss = np.insert(np.cumsum(el_lengths), 0, 0)
-        psi, kappa = tph.calc_head_curv_num.calc_head_curv_num(local_track, el_lengths, False)
+        psi, kappa = tph.calc_head_curv_num.calc_head_curv_num(track, el_lengths, False)
         nvecs = tph.calc_normal_vectors_ahead.calc_normal_vectors_ahead(psi)
-        xs = np.interp(states[:, 3], local_ss, local_track[:, 0])
-        ys = np.interp(states[:, 3], local_ss, local_track[:, 1])
+        xs = np.interp(states[:, 3], local_ss, track[:, 0])
+        ys = np.interp(states[:, 3], local_ss, track[:, 1])
         a1.plot(xs, ys, 'o', color='orange', markersize=10)
 
         for z in range(len(states)):
@@ -49,9 +51,9 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
             y_line = [states[z, 1], ys[z]]
             a1.plot(x_line, y_line, '--', color='gray', linewidth=1)
 
-        a1.plot(local_track[:, 0], local_track[:, 1], '--', linewidth=2, color='black')
-        l1 = local_track[:, :2] + nvecs * local_track[:, 2][:, None]
-        l2 = local_track[:, :2] - nvecs * local_track[:, 3][:, None]
+        a1.plot(track[:, 0], track[:, 1], '--', linewidth=2, color='black')
+        l1 = track[:, :2] + nvecs * track[:, 2][:, None]
+        l2 = track[:, :2] - nvecs * track[:, 3][:, None]
         a1.plot(l1[:, 0], l1[:, 1], color='green')
         a1.plot(l2[:, 0], l2[:, 1], color='green')
 
@@ -59,12 +61,14 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
         a1.set_title(f"Action: ({Logs[i+1, 7]:.3f}, {Logs[i+1, 8]:.1f})")
         a1.axis('off')
 
+        a1.set_xlim([np.min(states[:, 0]) - 2, np.max(states[:, 0]) + 2])
+        a1.set_ylim([np.min(states[:, 1]) - 2, np.max(states[:, 1]) + 2])
 
         t_angle = np.interp(states[:, 3], local_ss, psi)
         lag = np.sum(-np.cos(t_angle) * (states[:, 0] - xs) - np.sin(t_angle) * (states[:, 1] - ys)) * 10
         contour = np.sum(np.sin(t_angle) * (states[:, 0] - xs) - np.cos(t_angle) * (states[:, 1] - ys)) * 200
         steer = np.sum(controls[:, 0] **2) * 10
-        progress = -np.sum(controls[:, 2]) * 0.1
+        progress = -np.sum(controls[:, 1]) * 0.1
         base = -5
         # a1.text(3, base, f"Lag o: {lag:.2f}")
         # a1.text(3,  base - 0.5, f"Contour o: {contour:.2f}")
@@ -92,10 +96,11 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
 
 
         a2.plot(controls[:, 1])
-        a2.plot(controls[:, 2])
+        print(controls[:, 1])
+        # a2.plot(controls[:, 2])
         a2.set_ylabel("Speed action")
         a2.grid(True)
-        a2.set_ylim(2, 9.5)
+        a2.set_ylim(1.5, 2.5)
 
         a3.plot(controls[:, 0])
         a3.set_ylabel("Steering action")
