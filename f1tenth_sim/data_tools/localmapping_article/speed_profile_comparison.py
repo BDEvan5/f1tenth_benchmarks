@@ -10,9 +10,9 @@ def plot_speed_profiles(planner1, planner2, test_id, map_name, test_lap, name=""
     save_path = f"Data/LocalMapRacing/"
     
     root = f"Logs/{planner1}/"
-    logs1 = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_{test_lap}.npy")
+    Logs1 = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_{test_lap}.npy")
     root = f"Logs/{planner2}/"
-    logs2 = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_{test_lap}.npy")
+    Logs2 = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_{test_lap}.npy")
 
 
     plt.figure(figsize=(6, 3))
@@ -22,8 +22,8 @@ def plot_speed_profiles(planner1, planner2, test_id, map_name, test_lap, name=""
     ax1 = plt.subplot(2, 1, 1)
     # ax2 = plt.subplot(2, 1, 2)
 
-    ax1.plot(logs1[:, 9]*100, logs1[:, 3], color=sunset_orange, linewidth=3, label="Global")
-    ax1.plot(logs2[:, 9]*100, logs2[:, 3], color=periwinkle, linewidth=3, label="Local")
+    ax1.plot(Logs1[:, 9]*100, Logs1[:, 3], color=sunset_orange, linewidth=3, label="Global")
+    ax1.plot(Logs2[:, 9]*100, Logs2[:, 3], color=periwinkle, linewidth=3, label="Local")
 
     ax1.grid(True)
     ax1.legend(ncol=2, fontsize=9)

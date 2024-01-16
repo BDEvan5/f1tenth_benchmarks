@@ -6,7 +6,7 @@ import os
 
 
 def build_main_df():
-    folders = glob.glob("logs/*")
+    folders = glob.glob("Logs/*")
     full_df = []
     summary_df = []
     for folder in folders:
@@ -27,11 +27,11 @@ def build_main_df():
 
     full_df = pd.concat(full_df)
     full_df = full_df.sort_values(by=["Vehicle", "TestMap"])
-    full_df.to_csv("logs/Full.csv", index=False, float_format='%.4f')
+    full_df.to_csv("Logs/Full.csv", index=False, float_format='%.4f')
     summary_df = pd.DataFrame(summary_df)
     summary_df['VehicleID'] = summary_df['Vehicle'] + "_" + summary_df['TestID']
     summary_df = summary_df.sort_values(by=["Vehicle", "MapName"])
-    summary_df.to_csv("logs/Summary.csv", index=False, float_format='%.4f')
+    summary_df.to_csv("Logs/Summary.csv", index=False, float_format='%.4f')
 
 
 build_main_df()

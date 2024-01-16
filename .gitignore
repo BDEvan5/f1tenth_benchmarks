@@ -1,6 +1,6 @@
 # Custom
-!logs/.gitkeep
-logs/
+!Logs/.gitkeep
+Logs/
 !Data/.gitkeep
 Data/
 # trajectory_planning_helpers
@@ -42,7 +42,7 @@ MANIFEST
 *.manifest
 *.spec
 
-# Installer logs
+# Installer Logs
 pip-log.txt
 pip-delete-this-directory.txt
 

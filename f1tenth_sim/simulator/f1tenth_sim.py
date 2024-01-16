@@ -23,7 +23,7 @@ class F1TenthSimBase:
         self.params = Namespace(**params)
         self.planner_name = planner_name
         self.map_name = map_name
-        self.path = f"logs/{planner_name}/"
+        self.path = f"Logs/{planner_name}/"
         self.test_id = test_id
         self.training = training
 
@@ -64,7 +64,7 @@ class F1TenthSimBase:
             df = df[df.file_name != "~"] # this removes internatl file calls.
             df = df[~df['file_name'].str.startswith('<')]
             df = df.sort_values(by=['cumtime'], ascending=False)
-            df.to_csv(f"logs/{self.planner_name}/RawData_{self.test_id}/Profile_{self.map_name}_{self.test_id}.csv")
+            df.to_csv(f"Logs/{self.planner_name}/RawData_{self.test_id}/Profile_{self.map_name}_{self.test_id}.csv")
         except:
             return
 

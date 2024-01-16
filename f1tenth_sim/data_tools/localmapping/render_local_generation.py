@@ -9,13 +9,13 @@ def ensure_path_exists(path):
         os.mkdir(path)
 
 def render_local_maps(planner_name, test_id, map_name="aut"):
-    root = f"logs/{planner_name}/"
+    root = f"Logs/{planner_name}/"
     localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
     try:
-        logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
+        Logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
         scans = np.load(root + f"RawData_{test_id}/ScanLog_{map_name}_0.npy")
     except:
-        logs, scans = None, None
+        Logs, scans = None, None
     ensure_path_exists(root + f"Images_{test_id}")
     save_path = root + f"Images_{test_id}/LocalMapGeneration_{test_id}/"
     ensure_path_exists(save_path)
@@ -30,16 +30,16 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     start = 410
     # start = 300
     # for i in range(start, start+n):
-    # for i in range(len(logs)-50, len(logs)):
+    # for i in range(len(Logs)-50, len(Logs)):
     # for i in range(490, 510):
     # for i in range(250,  350):
     # for i in range(200, 300):
     # for i in range(100, 200):
-    for i in range(len(logs)-1):
+    for i in range(len(Logs)-1):
         # if scans:
         scan_xs, scan_ys = scans[i+1] * np.array([coses, sines])
-        position = logs[i+1, :2]
-        orientation = logs[i+1, 4]
+        position = Logs[i+1, :2]
+        orientation = Logs[i+1, 4]
         
         if i % 5 != 0:
             continue

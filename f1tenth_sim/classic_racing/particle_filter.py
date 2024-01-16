@@ -13,7 +13,7 @@ class ParticleFilter:
         self.params = load_parameter_file("particle_filter_params")
         self.planner_name = planner_name
         self.test_id = test_id
-        self.data_path = f"logs/{planner_name}/RawData_{test_id}/"
+        self.data_path = f"Logs/{planner_name}/RawData_{test_id}/"
         self.estimates = None
         self.scan_simulator = None
         self.Q = np.diag(self.params.motion_q_stds) **2 

@@ -13,7 +13,7 @@ def ensure_path_exists(path):
 def render_local_maps(planner_name, test_id, map_name="aut"):
     root = f"Logs/{planner_name}/"
     mpcc_data_path = root + f"RawData_{test_id}/mpcc_data/"
-    logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
+    Logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
     ensure_path_exists(root + f"Images_{test_id}/")
     mpcc_img_path = root + f"Images_{test_id}/mpcc_{test_id}/"
     ensure_path_exists(mpcc_img_path)
@@ -23,9 +23,9 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     for i in range(475, 485):
     # for i in range(35, 45):
     # for i in range(0, 100):
-    # for i in range(len(logs)-100, len(logs)-50):
-    # for i in range(len(logs)-50, len(logs)):
-    # for i in range(len(logs)):
+    # for i in range(len(Logs)-100, len(Logs)-50):
+    # for i in range(len(Logs)-50, len(Logs)):
+    # for i in range(len(Logs)):
         states = np.load(mpcc_data_path + f"States_{i}.npy")
         controls = np.load(mpcc_data_path + f"Controls_{i}.npy")
 
@@ -53,8 +53,8 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         a1.plot(l2[:, 0], l2[:, 1], color='green')
 
         l = 0.6
-        a1.arrow(logs[i, 0], logs[i, 1], np.cos(logs[i, 4])*l, np.sin(logs[i, 4])*l, color="#8854d0", zorder=2, width=0.3, head_width=0.45, head_length=0.45)
-        # a1.plot(logs[i, 0], logs[i, 1], '*', markersize=10, color='red')
+        a1.arrow(Logs[i, 0], Logs[i, 1], np.cos(Logs[i, 4])*l, np.sin(Logs[i, 4])*l, color="#8854d0", zorder=2, width=0.3, head_width=0.45, head_length=0.45)
+        # a1.plot(Logs[i, 0], Logs[i, 1], '*', markersize=10, color='red')
         a1.axis('off')
 
         b = 1.25

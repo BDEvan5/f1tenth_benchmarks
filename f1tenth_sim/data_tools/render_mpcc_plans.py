@@ -9,10 +9,9 @@ def ensure_path_exists(path):
     if not os.path.exists(path): 
         os.mkdir(path)
 
-def render_local_maps(planner_name, test_id, map_name="aut"):
+def render_mpcc_plans(planner_name, test_id, map_name="aut"):
     root = f"Logs/{planner_name}/"
     mpcc_data_path = root + f"RawData_{test_id}/MPCCData_{test_id}/"
-    localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
     Logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
     mpcc_img_path = root + f"Images_{test_id}/LocalMPCC_{test_id}/"
     ensure_path_exists(mpcc_img_path)
@@ -24,7 +23,6 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     # for i in range(len(Logs)-100, len(Logs)-50):
     # for i in range(len(Logs)-50, len(Logs)):
     for i in range(1, len(Logs)):
-        local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
         states = np.load(mpcc_data_path + f"States_{i}.npy")
         controls = np.load(mpcc_data_path + f"Controls_{i}.npy")
 
@@ -126,7 +124,7 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
 
 if __name__ == '__main__':
     # render_local_maps("LocalMapPlanner", "r1")
-    render_local_maps("LocalMPCC", "mu60", "aut")
+    render_mpcc_plans("ConstantMPCC", "mu70", "aut")
     # render_local_maps("LocalMPCC2", "r1", "aut")
     # render_local_maps("FullStackMPCC3", "m3u70", "aut")
 

@@ -4,7 +4,7 @@ import pandas as pd
 from f1tenth_sim.data_tools.plotting_utils import *
 
 def make_error_particle_plot():
-    results = pd.read_csv(f"logs/PerceptionTesting/Results_PerceptionTesting.csv")
+    results = pd.read_csv(f"Logs/PerceptionTesting/Results_PerceptionTesting.csv")
     results = results.sort_values(by="TestID")
     errors = results["MeanError"].values
     particles = results["TestID"].values
@@ -17,18 +17,18 @@ def make_error_particle_plot():
     plt.ylabel("Mean error (cm)")
 
     plt.grid(True)
-    plt.savefig(f"logs/BenchmarkArticle/PerceptionTesting_particle_errors.svg", pad_inches=0, bbox_inches='tight')
-    plt.savefig(f"logs/BenchmarkArticle/PerceptionTesting_particle_errors.pdf", pad_inches=0, bbox_inches='tight')
+    plt.savefig(f"Logs/BenchmarkArticle/PerceptionTesting_particle_errors.svg", pad_inches=0, bbox_inches='tight')
+    plt.savefig(f"Logs/BenchmarkArticle/PerceptionTesting_particle_errors.pdf", pad_inches=0, bbox_inches='tight')
 
 def make_time_particle_plot():
-    results = pd.read_csv(f"logs/PerceptionTesting/Results_PerceptionTesting.csv")
+    results = pd.read_csv(f"Logs/PerceptionTesting/Results_PerceptionTesting.csv")
     results = results.sort_values(by="TestID")
     particles = results["TestID"].values
     map_name =  "aut"
 
     times = []
     for test_id in particles:
-        computation_df = pd.read_csv(f"logs/PerceptionTesting/RawData_{test_id}/Profile_{map_name}_{test_id}.csv")
+        computation_df = pd.read_csv(f"Logs/PerceptionTesting/RawData_{test_id}/Profile_{map_name}_{test_id}.csv")
         time = computation_df.loc[computation_df.func == 'localise', 'cumtime'].values[0]
         times.append(time)
 

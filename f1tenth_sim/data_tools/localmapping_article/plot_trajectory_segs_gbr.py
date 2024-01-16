@@ -12,10 +12,10 @@ def make_trajectory_imgs(planner_name, test_id, map_name, test_lap, name="", cba
     ensure_path_exists(save_path)
     
     map_data = MapData(map_name)
-    logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_{test_lap}.npy")
+    Logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_{test_lap}.npy")
 
-    positions = logs[:, :2]
-    speeds = logs[:, 3]
+    positions = Logs[:, :2]
+    speeds = Logs[:, 3]
 
     plt.figure()
     plt.clf()

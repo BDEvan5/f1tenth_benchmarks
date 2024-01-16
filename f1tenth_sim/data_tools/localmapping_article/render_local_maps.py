@@ -51,9 +51,9 @@ def interpolate_2d_track_n(track, n_points, s=0):
     return track
 
 def render_local_maps(planner_name, test_id, map_name="aut"):
-    root = f"logs/{planner_name}/"
+    root = f"Logs/{planner_name}/"
     localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
-    logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
+    Logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
     scans = np.load(root + f"RawData_{test_id}/ScanLog_{map_name}_0.npy")
     ensure_path_exists(root + f"Images_{test_id}")
     save_path = root + f"Images_{test_id}/LocalMapImgs_{test_id}/"
@@ -67,7 +67,7 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     start = 690
     # start = 580
     n = 10
-    # for i in range(len(logs)):
+    # for i in range(len(Logs)):
     for i in range(start, start + n):
         local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
 
@@ -89,8 +89,8 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         #     plt.plot(boundary_extension[:, 0], boundary_extension[:, 1], '-', color=fresh_t)
         #     plt.plot(boundary_extension[:, 2], boundary_extension[:, 3], '-', color=fresh_t)
 
-        position = logs[i+1, :2]
-        orientation = logs[i+1, 4]
+        position = Logs[i+1, :2]
+        orientation = Logs[i+1, 4]
 
 
         # plt.plot(xs, ys, '-', color='orange', linewidth=3)

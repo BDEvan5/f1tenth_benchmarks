@@ -83,4 +83,25 @@ sudo docker exec -it f1tenth_sim-sim-1 /bin/bash
 - You can now run commands in the interactive shell.
 
 
+# Detailed Usage
+
+## Classic Racing
+
+The classic racing algorithms use a model of the vehicle to calculate control comands.
+
+**MPCC:**
+The MPCC algorithm requires only the track centre line to operate.
+A constant speed implementation is included to aid in understanding how the optimisation routine works.
+
+**Pure Pursuit:**
+The two-stage planner uses a trajectory optimisation algorithm to generate a raceline and the pure pursuit algorithm to track the raceline.
+A raceline must be generated using the `RaceTrackGenerator.py` file before the planner can be used.
+
+## Mapless Racing
+
+The follow-the-gap is 
+
+
+
+
 

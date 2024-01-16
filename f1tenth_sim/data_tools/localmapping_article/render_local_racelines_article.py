@@ -22,7 +22,7 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     root = f"Logs/{planner_name}/"
     raceline_data_path = root + f"RawData_{test_id}/RacingLineData_{test_id}/"
     localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
-    logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
+    Logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
     ensure_path_exists(root + f"Images_{test_id}/")
     data_img_path = f"Data/LocalMapRacing/LocalRacelines/" 
     raceline_img_path = root + f"Images_{test_id}/" + f"LocalRaceline_{test_id}/"
@@ -32,9 +32,9 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     map_data = MapData(map_name)
     
     # for i in range(0, 100):
-    # for i in range(len(logs)-50, len(logs)):
+    # for i in range(len(Logs)-50, len(Logs)):
     for i in [345, 20, 457, 30]:
-    # for i in range(len(logs)):
+    # for i in range(len(Logs)):
         local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
         raceline = np.load(raceline_data_path + f"LocalRaceline_{i+1}.npy")
 
@@ -42,8 +42,8 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         plt.clf()
         map_data.plot_map_img_light()
 
-        position = logs[i+1, :2]
-        orientation = logs[i+1, 4]
+        position = Logs[i+1, :2]
+        orientation = Logs[i+1, 4]
 
 
         pts = reoreintate_pts(local_track[:, :2], position, orientation)

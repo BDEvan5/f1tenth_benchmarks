@@ -19,8 +19,8 @@ def true_moving_average(data, period):
 
 def plot_drl_training(planner_name, test_id):
     #TODO; this plotting must be changed take the moving average to be per steps, not per episode as per current.
-    root_path = f"logs/{planner_name}/RawData_{test_id}/"
-    save_path = f"logs/{planner_name}/Images_{test_id}/"
+    root_path = f"Logs/{planner_name}/RawData_{test_id}/"
+    save_path = f"Logs/{planner_name}/Images_{test_id}/"
     ensure_path_exists(save_path)
 
     fig = plt.figure(figsize=(10, 4))

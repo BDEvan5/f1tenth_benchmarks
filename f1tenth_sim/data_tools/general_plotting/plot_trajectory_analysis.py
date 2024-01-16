@@ -48,8 +48,8 @@ class TrajectoryPlotter:
         self.vehicle_name = folder.split("/")[-2]
         print(f"Vehicle name: {self.vehicle_name}")
         
-        testing_logs = glob.glob(f"{self.load_folder}/SimLog*.npy")
-        for test_log in testing_logs:
+        testing_Logs = glob.glob(f"{self.load_folder}/SimLog*.npy")
+        for test_log in testing_Logs:
             test_folder_name = test_log.split("/")[-1]
             self.test_log_key = test_folder_name.split(".")[0].split("_")[1:]
             self.test_log_key = "_".join(self.test_log_key)
@@ -142,7 +142,7 @@ class TrajectoryPlotter:
 def plot_trajectory_analysis(vehicle_name, test_id):
 
     TestData = TrajectoryPlotter()
-    TestData.process_folder(f"logs/{vehicle_name}/", test_id)
+    TestData.process_folder(f"Logs/{vehicle_name}/", test_id)
 
 
 

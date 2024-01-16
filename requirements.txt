@@ -6,6 +6,6 @@ pyyaml==6.0.1
 casadi
 pandas
 opencv-python
-
+torch
 
 

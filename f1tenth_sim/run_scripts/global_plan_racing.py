@@ -1,5 +1,6 @@
 from f1tenth_sim.classic_racing.GlobalPurePursuit import GlobalPurePursuit
 from f1tenth_sim.classic_racing.GlobalMPCC2 import GlobalMPCC2
+from f1tenth_sim.classic_racing.ConstantMPCC import ConstantMPCC
 # from f1tenth_sim.classic_racing.GlobalMPCC import GlobalMPCC
 
 from f1tenth_sim.data_tools.general_plotting.plot_trajectory_analysis import plot_trajectory_analysis
@@ -23,9 +24,10 @@ def test_pure_pursuit():
 def test_mpcc():
     test_id = "mu70"
     map_name = "aut"
-    planner = GlobalMPCC2(test_id, True, planner_name="GlobalPlanMPCC2")
-    # test_planning_single_map(planner, map_name, test_id)
-    test_planning_all_maps(planner, test_id)
+    planner = ConstantMPCC(test_id, True, planner_name="ConstantMPCC")
+    # planner = GlobalMPCC2(test_id, True, planner_name="GlobalPlanMPCC2")
+    test_planning_single_map(planner, map_name, test_id)
+    # test_planning_all_maps(planner, test_id)
 
 
     plot_trajectory_analysis(planner.name, test_id)
@@ -34,8 +36,8 @@ def test_mpcc():
 
 if __name__ == "__main__":
 
-    test_pure_pursuit()
-    # test_mpcc()
+    # test_pure_pursuit()
+    test_mpcc()
 
 
 

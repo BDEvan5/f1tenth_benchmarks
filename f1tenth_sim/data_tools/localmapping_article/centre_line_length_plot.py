@@ -15,14 +15,14 @@ def load_data(planner_name, test_id, map_name="aut"):
     root = f"Logs/{planner_name}/"
     localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
     try:
-        logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
+        Logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
     except:
-        logs, scans = None, None
+        Logs, scans = None, None
     save_path = root + f"LocalMapGeneration_{test_id}/"
     ensure_path_exists(save_path)
 
     lengths = []
-    for i in range(len(logs)):
+    for i in range(len(Logs)):
         local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
         el_lengths = np.linalg.norm(np.diff(local_track[:, :2], axis=0), axis=1)
         lengths.append(np.sum(el_lengths))
@@ -33,15 +33,15 @@ def load_boundary_data(planner_name, test_id, map_name="aut"):
     root = f"Logs/{planner_name}/"
     localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
     try:
-        logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
+        Logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
     except:
-        logs, scans = None, None
+        Logs, scans = None, None
     save_path = root + f"LocalMapGeneration_{test_id}/"
     ensure_path_exists(save_path)
 
     calculated_lengths = []
     projected_lengths = []
-    for i in range(len(logs)):
+    for i in range(len(Logs)):
 
         boundaries = np.load(localmap_data_path + f"boundaries_{i}.npy")
         boundary_extension= np.load(localmap_data_path + f"boundExtension_{i}.npy") 
@@ -56,7 +56,7 @@ def load_boundary_data(planner_name, test_id, map_name="aut"):
         else:
             projected_lengths.append(0)
 
-    return np.array(calculated_lengths), np.array(projected_lengths), logs[:, -1]
+    return np.array(calculated_lengths), np.array(projected_lengths), Logs[:, -1]
 
 
 def make_violin_plot(test_id):

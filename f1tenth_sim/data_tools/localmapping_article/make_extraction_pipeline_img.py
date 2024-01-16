@@ -19,7 +19,7 @@ text_size2 = 14
 
 
 def make_pipeline(planner_name, test_id, i, map_name):
-    root = f"logs/{planner_name}/"
+    root = f"Logs/{planner_name}/"
     localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
     history = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
     scans = np.load(root + f"RawData_{test_id}/ScanLog_{map_name}_0.npy")
