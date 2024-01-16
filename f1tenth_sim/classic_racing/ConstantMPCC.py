@@ -5,10 +5,7 @@ import casadi as ca
 from f1tenth_sim.classic_racing.ReferencePath import ReferencePath
 from f1tenth_sim.classic_racing.mpcc_utils import *
 from f1tenth_sim.utils.BasePlanner import BasePlanner
-
-
-VERBOSE = False
-# VERBOSE = True
+from f1tenth_sim.utils.track_utils import CentreLine, TrackLine
 
 
 NX = 4
@@ -23,7 +20,12 @@ class ConstantMPCC(BasePlanner):
             self.create_clean_path(self.mpcc_data_path)
 
         self.N = self.planner_params.N
-        self.rp = None
+        self.centre_line = None
+        self.track_length = None
+        self.centre_interpolant = None
+        self.left_interpolant = None
+        self.right_interpolant = None
+
         self.u0 = np.zeros((self.N, NU))
         self.X0 = np.zeros((self.N + 1, NX))
         self.warm_start = True # warm start every time
@@ -31,7 +33,9 @@ class ConstantMPCC(BasePlanner):
         self.init_optimisation()
     
     def set_map(self, map_name):
-        self.rp = ReferencePath(map_name, 0.25)
+        self.centre_line = CentreLine(map_name)
+        self.track_length = self.centre_line.s_path[-1]
+        self.centre_interpolant, self.left_interpolant, self.right_interpolant = init_track_interpolants(self.centre_line, self.planner_params.exclusion_width)
 
         self.init_constraints()
         self.init_bounds()
@@ -56,9 +60,9 @@ class ConstantMPCC(BasePlanner):
         self.lbx = np.zeros((NX + (NX + NU) * self.N, 1))
         self.ubx = np.zeros((NX + (NX + NU) * self.N, 1))
                 
-        x_min, y_min = np.min(self.rp.path, axis=0) - 2
-        x_max, y_max = np.max(self.rp.path, axis=0) + 2
-        s_max = self.rp.s_track[-1] *1.5
+        x_min, y_min = np.min(self.centre_line.path, axis=0) - 2
+        x_max, y_max = np.max(self.centre_line.path, axis=0) + 2
+        s_max = self.centre_line.s_path[-1] *1.5
         lbx = np.array([[x_min, y_min, self.planner_params.psi_min, 0]])
         ubx = np.array([[x_max, y_max, self.planner_params.psi_max, s_max]])
         for k in range(self.N + 1):
@@ -86,8 +90,8 @@ class ConstantMPCC(BasePlanner):
         self.obj = 0  # Objective function
         for k in range(self.N):
             st_next = self.X[:, k + 1]
-            t_angle = self.rp.angle_lut_t(st_next[3])
-            ref_x, ref_y = self.rp.center_lut_x(st_next[3]), self.rp.center_lut_y(st_next[3])
+            t_angle = self.centre_interpolant.lut_angle(st_next[3])
+            ref_x, ref_y = self.centre_interpolant.lut_x(st_next[3]), self.centre_interpolant.lut_y(st_next[3])
             countour_error = ca.sin(t_angle) * (st_next[0] - ref_x) - ca.cos(t_angle) * (st_next[1] - ref_y)
             lag_error = -ca.cos(t_angle) * (st_next[0] - ref_x) - ca.sin(t_angle) * (st_next[1] - ref_y)
 
@@ -122,7 +126,8 @@ class ConstantMPCC(BasePlanner):
     def build_initial_state(self, obs):
         x0 = obs["pose"]
         x0[2] = normalise_psi(x0[2]) 
-        x0 = np.append(x0, self.rp.calculate_s(x0[0:2]))
+        x0 = np.append(x0, self.centre_line.calculate_progress_m(x0[0:2]))
+        # x0 = np.append(x0, self.centre_line.calculate_progress_m(x0[0:2]))
 
         return x0
 
@@ -132,10 +137,10 @@ class ConstantMPCC(BasePlanner):
 
         for k in range(self.N):  # set the reference controls and path boundary conditions to track
             s_progress = self.X0[k, 3]
-            right_x = self.rp.right_lut_x(s_progress).full()[0, 0]
-            right_y = self.rp.right_lut_y(s_progress).full()[0, 0]
-            left_x = self.rp.left_lut_x(s_progress).full()[0, 0]
-            left_y = self.rp.left_lut_y(s_progress).full()[0, 0]
+            right_x = self.right_interpolant.lut_x(s_progress).full()[0, 0]
+            right_y = self.right_interpolant.lut_y(s_progress).full()[0, 0]
+            left_x = self.left_interpolant.lut_x(s_progress).full()[0, 0]
+            left_y = self.left_interpolant.lut_y(s_progress).full()[0, 0]
 
             delta_x = right_x - left_x
             delta_y = right_y - left_y
@@ -146,10 +151,10 @@ class ConstantMPCC(BasePlanner):
     def set_up_constraints(self):
         for k in range(self.N):  # set the reference controls and path boundary conditions to track
             s_progress = self.X0[k, 3]
-            right_x = self.rp.right_lut_x(s_progress).full()[0, 0]
-            right_y = self.rp.right_lut_y(s_progress).full()[0, 0]
-            left_x = self.rp.left_lut_x(s_progress).full()[0, 0]
-            left_y = self.rp.left_lut_y(s_progress).full()[0, 0]
+            right_x = self.right_interpolant.lut_x(s_progress).full()[0, 0]
+            right_y = self.right_interpolant.lut_y(s_progress).full()[0, 0]
+            left_x = self.left_interpolant.lut_x(s_progress).full()[0, 0]
+            left_y = self.left_interpolant.lut_y(s_progress).full()[0, 0]
 
             delta_x = right_x - left_x
             delta_y = right_y - left_y
@@ -171,6 +176,7 @@ class ConstantMPCC(BasePlanner):
         self.X0 = ca.reshape(sol['x'][0:NX * (self.N + 1)], NX, self.N + 1).T
         controls = ca.reshape(sol['x'][NX * (self.N + 1):], NU, self.N).T
         states = self.X0# [:, 0:NX].T
+        print(states)
 
         if self.solver.stats()['return_status'] != 'Solve_Succeeded':
             print("Solve failed!!!!!")
@@ -186,8 +192,8 @@ class ConstantMPCC(BasePlanner):
         for k in range(1, self.N + 1):
             s_next = self.X0[k - 1, 3] + self.planner_params.p_initial * self.planner_params.dt
 
-            psi_next = self.rp.angle_lut_t(s_next).full()[0, 0]
-            x_next, y_next = self.rp.center_lut_x(s_next), self.rp.center_lut_y(s_next)
+            psi_next = self.centre_interpolant.lut_angle(s_next).full()[0, 0]
+            x_next, y_next = self.centre_interpolant.lut_x(s_next), self.centre_interpolant.lut_y(s_next)
 
             # adjusts the centerline angle to be continuous
             psi_diff = self.X0[k-1, 2] - psi_next
@@ -199,7 +205,33 @@ class ConstantMPCC(BasePlanner):
                     psi_next -= np.pi * 2
             self.X0[k, :] = np.array([x_next.full()[0, 0], y_next.full()[0, 0], psi_next, s_next])
 
-        # print(self.X0)
+        print(self.X0)
 
+
+def init_track_interpolants(centre_line, exclusion_width):
+    widths = np.row_stack((centre_line.widths, centre_line.widths[1:int(centre_line.widths.shape[0] / 2), :]))
+    path = np.row_stack((centre_line.path, centre_line.path[1:int(centre_line.path.shape[0] / 2), :]))
+    extended_track = TrackLine(path)
+    extended_track.init_path()
+    extended_track.init_track()
+
+    centre_interpolant = LineInterpolant(extended_track.path, extended_track.s_path, extended_track.psi)
+
+    left_path = extended_track.path - extended_track.nvecs * np.clip((widths[:, 0][:, None]  - exclusion_width), 0, np.inf)
+    left_interpolant = LineInterpolant(left_path, extended_track.s_path)
+    right_path = extended_track.path + extended_track.nvecs * np.clip((widths[:, 1][:, None] - exclusion_width), 0, np.inf)
+    right_interpolant = LineInterpolant(right_path, extended_track.s_path)
+
+    return centre_interpolant, left_interpolant, right_interpolant
+
+class LineInterpolant:
+    def __init__(self, path, s_path, angles=None):
+        self.lut_x = ca.interpolant('lut_x', 'bspline', [s_path], path[:, 0])
+        self.lut_y = ca.interpolant('lut_y', 'bspline', [s_path], path[:, 1])
+        if angles is not None:
+            self.lut_angle = ca.interpolant('lut_angle', 'bspline', [s_path], angles)
+
+    def get_point(self, s):
+        return np.array([self.lut_x(s).full()[0, 0], self.lut_y(s).full()[0, 0]])
 
 

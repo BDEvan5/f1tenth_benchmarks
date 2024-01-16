@@ -19,11 +19,11 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
     filename = 'maps/' + map_name + "_centerline.csv"
     track = np.loadtxt(filename, delimiter=',', skiprows=1)
 
-    for i in range(1, 10):
+    # for i in range(1, 10):
     # for i in range(20, 60):
     # for i in range(0, 100):
     # for i in range(len(Logs)-100, len(Logs)-50):
-    # for i in range(len(Logs)-50, len(Logs)):
+    for i in range(len(Logs)-50, len(Logs)):
     # for i in range(1, len(Logs)):
         states = np.load(mpcc_data_path + f"States_{i}.npy")
         controls = np.load(mpcc_data_path + f"Controls_{i}.npy")
@@ -78,7 +78,7 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
         ae.bar(np.arange(4), [lag, contour, steer, progress])
         ae.set_xticks(np.arange(4))
         ae.set_xticklabels(["Lag", "Contour", "Steer", "Progress"])
-        ae.set_ylim([-8, 8])
+        # ae.set_ylim([-8, 8])
         ae.grid(True)
 
         vs = controls[:, 1]
@@ -96,7 +96,6 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
 
 
         a2.plot(controls[:, 1])
-        print(controls[:, 1])
         # a2.plot(controls[:, 2])
         a2.set_ylabel("Speed action")
         a2.grid(True)
