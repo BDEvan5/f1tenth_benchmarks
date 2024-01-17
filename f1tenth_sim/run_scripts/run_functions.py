@@ -5,7 +5,7 @@ from f1tenth_sim.data_tools.general_plotting.plot_trajectory_analysis import plo
 from f1tenth_sim.data_tools.general_plotting.plot_raceline_tracking import plot_raceline_tracking
 
 
-NUMBER_OF_LAPS = 1
+NUMBER_OF_LAPS = 5
 
 def simulate_laps(sim, planner, n_laps):
     for lap in range(n_laps):
@@ -37,8 +37,8 @@ def simulate_training_steps(planner, train_map, test_id):
             observation, done, init_pose = sim.reset()
 
 
-# map_list = ["aut", "esp", "gbr", "mco"]
-map_list = ["aut", "esp", "gbr"]
+map_list = ["aut", "esp", "gbr", "mco"]
+# map_list = ["aut", "esp", "gbr"]
 
 def test_planning_all_maps(planner, test_id):
     # map_list = ["esp", "gbr", "mco"]
