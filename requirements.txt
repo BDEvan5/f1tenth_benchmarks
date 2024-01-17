@@ -7,5 +7,6 @@ casadi
 pandas
 opencv-python
 torch
+seaborn
 
 
