@@ -52,7 +52,8 @@ def plot_drl_training(planner_name, test_id):
 
 
 if __name__ == "__main__":
-    plot_drl_training(f"EndToEnd", "TestSAC")
+    # plot_drl_training(f"EndToEnd", "TestSAC")
+    plot_drl_training(f"EndToEnd", "TD3v5")
     # plot_drl_training(f"SAC_endToEnd_{n}")
 
 
