@@ -10,4 +10,4 @@ range_finder_scale: 10
 n_scans: 2
 
 reward_tal_constant: 0.2
-reward_tal_inv_scales: [0.8, 2]
+reward_tal_inv_scales: [0.8, 4]

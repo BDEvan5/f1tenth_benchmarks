@@ -33,7 +33,7 @@ def test_drl_agent():
 def train_and_test_agents():
     seed_randomness(11)
     train_map = "mco"
-    test_id = "TD3v1"
+    test_id = "TD3v5"
 
     training_agent = TrainEndToEndAgent(train_map, test_id)
     simulate_training_steps(training_agent, train_map, test_id)

@@ -36,7 +36,8 @@ class GlobalPurePursuit(BasePlanner):
             return np.array([0.0, 4])
 
         true_lookahead_distance = np.linalg.norm(lookahead_point[:2] - pose[:2])
-        steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], true_lookahead_distance, self.vehicle_params.wheelbase)
+        # steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], true_lookahead_distance, self.vehicle_params.wheelbase)
+        steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], 1.5, self.vehicle_params.wheelbase)
         steering_angle = np.clip(steering_angle, -self.planner_params.max_steer, self.planner_params.max_steer)
         # steering_angle = np.clip(steering_angle, -self.vehicle_params.max_steer, self.vehicle_params.max_steer)
             
