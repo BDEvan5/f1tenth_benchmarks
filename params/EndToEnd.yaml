@@ -11,3 +11,6 @@ n_scans: 2
 
 reward_tal_constant: 0.2
 reward_tal_inv_scales: [0.8, 4]
+
+
+progress_constant: 10

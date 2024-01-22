@@ -205,7 +205,8 @@ def calculate_tracking_accuracy(planner_name, test_id, centerline=False, racelin
         old_df.at[df_idx, "MeanCT"] = np.mean(cross_track)
         old_df.at[df_idx, "MaxCT"] = np.max(cross_track)
 
-        raceline_speeds = np.interp(progresses, std_track.s_track, std_track.speeds)
+        old_ss = std_track.s_track / std_track.s_track[-1] 
+        raceline_speeds = np.interp(progresses, old_ss, std_track.speeds)
         speed_diffs = raceline_speeds - states[:, 3]
 
         save_data = np.column_stack((progresses, cross_track, points, speed_diffs))

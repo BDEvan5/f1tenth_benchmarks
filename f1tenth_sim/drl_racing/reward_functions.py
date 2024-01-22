@@ -28,4 +28,27 @@ class TrajectoryAidedLearningReward:
         return reward
 
 
+class ProgressReward:
+    def __init__(self, params):
+        pass
+        self.previous_progress = 0
+
+        self.beta_c = params.progress_constant
+        
+    def __call__(self, observation, prev_obs, action):
+        if self.previous_progress == 0: return 0
+
+        if observation['lap_complete']:
+            self.previous_progress = 0
+            return 1  # complete
+        if observation['collision']:
+            self.previous_progress = 0
+            return -1 # crash
+        
+        progress_diff = observation['progress'] - self.previous_progress
+        reward = self.beta_c * progress_diff
+
+        return reward
+
+
 
