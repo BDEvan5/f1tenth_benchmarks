@@ -6,7 +6,6 @@ from matplotlib.collections import LineCollection
 
 class MapData:
     def __init__(self, map_name):
-        self.path = "maps/"
         self.map_name = map_name
 
         self.map_resolution = None
@@ -15,7 +14,12 @@ class MapData:
         self.map_height = None
         self.map_width = None
 
-        self.load_map_img()
+        try:
+            self.path = "maps/"
+            self.load_map_img()
+        except:
+            self.path = "../maps/"
+            self.load_map_img()
 
     def load_map_img(self):
         with open(self.path + self.map_name + ".yaml", 'r') as file:

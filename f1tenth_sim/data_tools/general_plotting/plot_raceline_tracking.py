@@ -175,7 +175,7 @@ def calculate_cross_track(track_line, positions):
     return s_points, cross_track_errors, closest_pts
 
 
-def calculate_tracking_accuracy(planner_name, test_id, centerline=False):
+def calculate_tracking_accuracy(planner_name, test_id, centerline=False, raceline="mu70"):
     agent_path = f"Logs/{planner_name}/"
     print(f"Planner name: {planner_name}")
     old_df = pd.read_csv(agent_path + f"Results_{planner_name}.csv")
@@ -193,7 +193,7 @@ def calculate_tracking_accuracy(planner_name, test_id, centerline=False):
 
         testing_map = test_folder_name.split("_")[1]
         if not centerline:
-            std_track = RaceTrack(testing_map, test_id)
+            std_track = RaceTrack(testing_map, raceline)
             std_track.init_track()
         else:
             std_track = CentreLine(testing_map)
@@ -205,21 +205,26 @@ def calculate_tracking_accuracy(planner_name, test_id, centerline=False):
         old_df.at[df_idx, "MeanCT"] = np.mean(cross_track)
         old_df.at[df_idx, "MaxCT"] = np.max(cross_track)
 
-        save_data = np.column_stack((progresses, cross_track, points))
+        raceline_speeds = np.interp(progresses, std_track.s_track, std_track.speeds)
+        speed_diffs = raceline_speeds - states[:, 3]
+
+        save_data = np.column_stack((progresses, cross_track, points, speed_diffs))
         np.save(file_name, save_data)
 
     old_df = old_df.sort_values(by=["TestMap", "Lap"])
     old_df.to_csv(f"{agent_path}Results_{planner_name}.csv", index=False, float_format='%.4f')
 
 
-def plot_raceline_tracking(vehicle_name, test_id):
-    calculate_tracking_accuracy(vehicle_name, test_id, centerline=False)
-    TestData = TrajectoryPlotter()
+def plot_raceline_tracking(vehicle_name, test_id, raceline="mu70"):
+    calculate_tracking_accuracy(vehicle_name, test_id, centerline=False, raceline=raceline)
 
-    TestData.process_folder(f"Logs/{vehicle_name}/", test_id)
+    # TestData = TrajectoryPlotter()
+    # TestData.process_folder(f"Logs/{vehicle_name}/", test_id)
 
 
 
 if __name__ == '__main__':
-    # plot_raceline_tracking("GlobalPlanPP", "mu70")
-    plot_raceline_tracking("FullStackPP", "mu60")
+    plot_raceline_tracking("GlobalPlanPP", "mu70", raceline="mu70")
+    # plot_raceline_tracking("FullStackPP", "mu70")
+    plot_raceline_tracking("FollowTheGap", "Std", raceline="mu70")
+    plot_raceline_tracking("EndToEnd", "TD3v6", raceline="mu70")

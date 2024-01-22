@@ -1,8 +1,8 @@
 
-# algorithm: "SAC"
-algorithm: "TD3"
+algorithm: "SAC"
+# algorithm: "TD3"
 
-training_steps: 30000
+training_steps: 60000
 
 max_speed: 8
 number_of_beams: 20
