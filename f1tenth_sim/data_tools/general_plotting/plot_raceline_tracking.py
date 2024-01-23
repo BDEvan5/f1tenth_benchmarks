@@ -209,7 +209,7 @@ def calculate_tracking_accuracy(planner_name, test_id, centerline=False, racelin
         raceline_speeds = np.interp(progresses, old_ss, std_track.speeds)
         speed_diffs = raceline_speeds - states[:, 3]
 
-        save_data = np.column_stack((progresses, cross_track, points, speed_diffs))
+        save_data = np.column_stack((progresses, cross_track, points, speed_diffs, raceline_speeds))
         np.save(file_name, save_data)
 
     old_df = old_df.sort_values(by=["TestMap", "Lap"])
