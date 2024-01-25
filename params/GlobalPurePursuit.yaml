@@ -1,10 +1,10 @@
 
+# use these for TAL reward
+# constant_lookahead: 0.8
+# variable_lookahead: 0.6
 
-constant_lookahead: 0.8
-variable_lookahead: 0.6
-
-# constant_lookahead: 0.6
-# variable_lookahead: 0.7
+constant_lookahead: 0.6
+variable_lookahead: 0.7
 
 
 

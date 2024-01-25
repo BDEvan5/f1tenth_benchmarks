@@ -222,10 +222,21 @@ def plot_raceline_tracking(vehicle_name, test_id, raceline="mu70"):
     # TestData = TrajectoryPlotter()
     # TestData.process_folder(f"Logs/{vehicle_name}/", test_id)
 
-
-
-if __name__ == '__main__':
+def std_results():
     plot_raceline_tracking("GlobalPlanPP", "mu70", raceline="mu70")
     # plot_raceline_tracking("FullStackPP", "mu70")
     plot_raceline_tracking("FollowTheGap", "Std", raceline="mu70")
     plot_raceline_tracking("EndToEnd", "TD3v6", raceline="mu70")
+
+def frequency_results():
+    friction_vals = np.linspace(0.55, 1, 10)
+    simulator_timestep_list = [4, 6, 8]
+    # simulator_timestep_list = [1, 2, 5, 10, 12]
+    for simulator_timesteps in simulator_timestep_list:
+        for friction in friction_vals:
+            test_id = f"mu{int(friction*100)}_steps{simulator_timesteps}"
+            plot_raceline_tracking("GlobalPlanPP", test_id, raceline=f"mu{int(friction*100)}")
+
+
+if __name__ == '__main__':
+    frequency_results()

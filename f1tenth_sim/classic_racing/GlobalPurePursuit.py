@@ -6,10 +6,10 @@ from f1tenth_sim.utils.BasePlanner import BasePlanner
 
 
 class GlobalPurePursuit(BasePlanner):
-    def __init__(self, test_id, use_centre_line=False, planner_name="GlobalPurePursuit", init_folder=True):
+    def __init__(self, test_id, use_centre_line=False, planner_name="GlobalPurePursuit", init_folder=True, extra_params={}):
         if use_centre_line:
             test_id = test_id + "_centre"
-        super().__init__(planner_name, test_id, params_name="GlobalPurePursuit", init_folder=init_folder)
+        super().__init__(planner_name, test_id, params_name="GlobalPurePursuit", init_folder=init_folder, extra_params=extra_params)
         self.racetrack = None
         self.use_centre_line = use_centre_line
 
@@ -36,8 +36,10 @@ class GlobalPurePursuit(BasePlanner):
             return np.array([0.0, 4])
 
         true_lookahead_distance = np.linalg.norm(lookahead_point[:2] - pose[:2])
-        # steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], true_lookahead_distance, self.vehicle_params.wheelbase)
-        steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], 1.5, self.vehicle_params.wheelbase)
+        steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], true_lookahead_distance, self.vehicle_params.wheelbase)
+        drl_training = False
+        if drl_training:
+            steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], 1.5, self.vehicle_params.wheelbase)
         steering_angle = np.clip(steering_angle, -self.planner_params.max_steer, self.planner_params.max_steer)
         # steering_angle = np.clip(steering_angle, -self.vehicle_params.max_steer, self.vehicle_params.max_steer)
             
