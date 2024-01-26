@@ -1,0 +1,24 @@
+position_min: -100
+position_max: 100
+heading_max: 20
+delta_max: 0.4
+local_path_max_length: 300
+max_speed: 8
+min_speed: 2
+local_path_speed_min: 2
+local_path_speed_max: 12
+wheelbase: 0.33
+friction_mu: 0.6
+vehicle_mass: 3.71
+max_decceleration: 8.5
+
+weight_progress: 0.001
+weight_lag: 10
+weight_contour: 20
+weight_steer: 100
+
+p_initial: 5
+N: 20
+dt: 0.04
+
+exclusion_width: 0.35

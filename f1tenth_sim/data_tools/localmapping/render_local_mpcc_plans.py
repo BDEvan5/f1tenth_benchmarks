@@ -10,20 +10,20 @@ def ensure_path_exists(path):
         os.mkdir(path)
 
 def render_local_maps(planner_name, test_id, map_name="aut"):
-    root = f"logs/{planner_name}/"
+    root = f"Logs/{planner_name}/"
     mpcc_data_path = root + f"RawData_{test_id}/MPCCData_{test_id}/"
     localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
-    logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
+    Logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
     mpcc_img_path = root + f"Images_{test_id}/LocalMPCC_{test_id}/"
     ensure_path_exists(mpcc_img_path)
     # in the future, I could load the scans from here and not hae to save them seperately....
 
-    for i in range(0, 60):
+    # for i in range(0, 60):
     # for i in range(20, 60):
     # for i in range(0, 100):
-    # for i in range(len(logs)-100, len(logs)-50):
-    # for i in range(len(logs)-50, len(logs)):
-    # for i in range(len(logs)):
+    # for i in range(len(Logs)-100, len(Logs)-50):
+    # for i in range(len(Logs)-50, len(Logs)):
+    for i in range(1, len(Logs)):
         local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
         states = np.load(mpcc_data_path + f"States_{i}.npy")
         controls = np.load(mpcc_data_path + f"Controls_{i}.npy")
@@ -58,7 +58,7 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         a1.plot(l2[:, 0], l2[:, 1], color='green')
 
         a1.plot(0, 0, '*', markersize=10, color='red')
-        a1.set_title(f"Action: ({logs[i+1, 7]:.3f}, {logs[i+1, 8]:.1f})")
+        a1.set_title(f"Action: ({Logs[i+1, 7]:.3f}, {Logs[i+1, 8]:.1f})")
         a1.axis('off')
 
 
@@ -112,7 +112,7 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         a4.grid(True)
 
         dv = np.diff(controls[:, 1])
-        dv = np.insert(dv, 0, controls[0, 1]- logs[i+1, 3])
+        dv = np.insert(dv, 0, controls[0, 1]- Logs[i+1, 3])
         a5.plot(dv, '-o', color='red')
         a5.set_ylabel('Acceleration')
         a5.grid(True)
@@ -126,7 +126,9 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
 
 if __name__ == '__main__':
     # render_local_maps("LocalMapPlanner", "r1")
-    render_local_maps("LocalMPCC2", "r1", "aut")
+    render_local_maps("LocalMPCC", "mu60", "aut")
+    # render_local_maps("LocalMPCC2", "r1", "aut")
+    # render_local_maps("FullStackMPCC3", "m3u70", "aut")
 
 
 

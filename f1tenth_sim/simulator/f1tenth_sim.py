@@ -17,15 +17,18 @@ def ensure_path_exists(folder):
         os.makedirs(folder)
 
 class F1TenthSimBase:
-    def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False):
+    def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False, extra_params={}):
         with open(f"params/simulator_params.yaml", 'r') as file:
             params = yaml.load(file, Loader=yaml.FullLoader)
+        for param in extra_params.keys():
+            params[param] = extra_params[param]
         self.params = Namespace(**params)
         self.planner_name = planner_name
         self.map_name = map_name
-        self.path = f"logs/{planner_name}/"
+        self.path = f"Logs/{planner_name}/"
         self.test_id = test_id
         self.training = training
+
 
         self.scan_simulator = ScanSimulator2D(self.params.num_beams, self.params.fov, map_name, self.params.random_seed)
         self.dynamics_simulator = DynamicsSimulator(self.params)
@@ -64,7 +67,7 @@ class F1TenthSimBase:
             df = df[df.file_name != "~"] # this removes internatl file calls.
             df = df[~df['file_name'].str.startswith('<')]
             df = df.sort_values(by=['cumtime'], ascending=False)
-            df.to_csv(f"logs/{self.planner_name}/RawData_{self.test_id}/Profile_{self.map_name}_{self.test_id}.csv")
+            df.to_csv(f"Logs/{self.planner_name}/RawData_{self.test_id}/Profile_{self.map_name}_{self.test_id}.csv")
         except:
             return
 
@@ -138,7 +141,7 @@ class F1TenthSimBase:
     
 
     def reset(self):
-        if self.params.use_random_starts:
+        if self.params.use_random_starts and self.lap_number > -1:
             self.starting_progress = np.random.random()
             start_pose = self.centre_line.calculate_pose(self.starting_progress)
         else:
@@ -183,7 +186,7 @@ class F1TenthSimBase:
 
 
 class F1TenthSim(F1TenthSimBase):
-    def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False):
+    def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False, extra_params={}):
         super().__init__(map_name, planner_name, test_id, save_detail_history, training)
         init_pose = np.append(self.current_state[0:2], self.current_state[4])
         self.scan = self.scan_simulator.scan(init_pose)
@@ -198,8 +201,8 @@ class F1TenthSim(F1TenthSimBase):
         return observation
 
 class F1TenthSim_TrueLocation(F1TenthSimBase):
-    def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False):
-        super().__init__(map_name, planner_name, test_id, save_detail_history, training)
+    def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False, extra_params={}):
+        super().__init__(map_name, planner_name, test_id, save_detail_history, training, extra_params=extra_params)
         init_pose = np.append(self.current_state[0:2], self.current_state[4])
         self.scan = self.scan_simulator.scan(init_pose)
     

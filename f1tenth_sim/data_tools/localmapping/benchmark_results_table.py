@@ -6,7 +6,7 @@ import os
 
 
 def build_main_df():
-    summary_df = pd.read_csv("logs/Summary.csv")
+    summary_df = pd.read_csv("Logs/Summary.csv")
 
     planners = ['PurePursuit', "MPCC", "FollowTheGap"]
     test_ids = ["mu70", "mu70", "v1"]
@@ -20,6 +20,6 @@ def build_main_df():
     times_df.columns = times_df.columns.str.upper()
     print(times_df)
 
-    times_df.to_latex(f"logs/BenchmarkArticle/Laptimes.tex", float_format="%.2f")
+    times_df.to_latex(f"Logs/BenchmarkArticle/Laptimes.tex", float_format="%.2f")
 
 build_main_df()

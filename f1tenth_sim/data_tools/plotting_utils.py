@@ -23,6 +23,7 @@ megaman = "#4bcffa"
 yerieal_yellow = "#ffdd59"
 fresh_turquoise = "#34e7e4"
 lighter_purple = "#a55eea"
+good_grey = "#485460"
 
 def std_img_saving(name):
 

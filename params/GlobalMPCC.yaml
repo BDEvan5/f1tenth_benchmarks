@@ -6,21 +6,37 @@ max_speed: 8
 min_speed: 2
 max_steer: 0.4
 local_path_speed_min: 2
-local_path_speed_max: 10
-max_decceleration: 6
-max_acceleration: 8
-friction_mu: 0.7
+local_path_speed_max: 12
+max_decceleration: 8.5
+max_acceleration: 8.5
+friction_mu: 0.6
 
+psi_min: -10
+psi_max: 10
+p_min: 0
+p_max: 4
 
-weight_progress: 0.001
-weight_lag: 10
-weight_contour: 20
-weight_steer: 100
+# weight_progress: 0.001
+# weight_lag: 500
+# weight_contour: 10
+# weight_steer: 100
 
-dt: 0.04
-N: 20
-p_initial: 5
+# weight_progress: 0.001
+# weight_lag: 10
+# weight_contour: 20
+# weight_steer: 100
 
-exclusion_width: 0.4
+weight_progress: 0.1
+weight_lag: 1
+weight_contour: 10
+weight_steer: 1
+
+dt: 0.1
+N: 10
+p_initial: 2
+
+exclusion_width: 0.35
+
+vehicle_speed: 2 # used for constant MPCC only
 
 

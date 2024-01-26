@@ -5,14 +5,14 @@ import os
 import pandas as pd
 
 def plot_pf_errors(vehicle_name="PerceptionTesting", test_id="100"):
-    results = pd.read_csv(f"logs/{vehicle_name}/Results_{vehicle_name}.csv")
+    results = pd.read_csv(f"Logs/{vehicle_name}/Results_{vehicle_name}.csv")
     ind = results.loc[results["TestID"] == int(test_id)].index[0]
     map_name = results.loc[ind, "TestMap"]
 
-    pf_estimates = np.load(f"logs/{vehicle_name}/RawData_{test_id}/pf_estimates_{test_id}.npy")
-    history = np.load(f"logs/{vehicle_name}/RawData_{test_id}/SimLog_{map_name}_0.npy")
-    save_path = f"logs/{vehicle_name}/Images/"
-    save_path_pdf = f"logs/{vehicle_name}/Images_pdf/"
+    pf_estimates = np.load(f"Logs/{vehicle_name}/RawData_{test_id}/pf_estimates_{test_id}.npy")
+    history = np.load(f"Logs/{vehicle_name}/RawData_{test_id}/SimLog_{map_name}_0.npy")
+    save_path = f"Logs/{vehicle_name}/Images/"
+    save_path_pdf = f"Logs/{vehicle_name}/Images_pdf/"
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     if not os.path.exists(save_path_pdf):
@@ -24,7 +24,7 @@ def plot_pf_errors(vehicle_name="PerceptionTesting", test_id="100"):
 
     results.at[ind, "MeanError"] = np.mean(errors)
 
-    results.to_csv(f"logs/{vehicle_name}/Results_{vehicle_name}.csv", index=False)
+    results.to_csv(f"Logs/{vehicle_name}/Results_{vehicle_name}.csv", index=False)
 
     plt.figure(1, figsize=(5, 2))
     plt.plot(errors, color=periwinkle)

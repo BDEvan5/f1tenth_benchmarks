@@ -15,6 +15,9 @@ from f1tenth_sim.data_tools.plotting_utils import *
 from matplotlib.ticker import MultipleLocator
 import trajectory_planning_helpers as tph
 
+from scipy.interpolate import splev, splprep
+import pandas as pd
+from f1tenth_sim.utils.track_utils import RaceTrack, CentreLine
 SAVE_PDF = False
 # SAVE_PDF = True
 
@@ -50,8 +53,9 @@ class TrajectoryPlotter:
         self.vehicle_name = folder.split("/")[-2]
         print(f"Vehicle name: {self.vehicle_name}")
         
-        testing_logs = glob.glob(f"{self.load_folder}*.npy")
-        for test_log in testing_logs:
+        testing_Logs = glob.glob(f"{self.load_folder}Sim*.npy")
+        # testing_Logs = glob.glob(f"{agent_path}RawData_{test_id}/Sim*.npy")
+        for test_log in testing_Logs:
             test_folder_name = test_log.split("/")[-1]
             self.test_log_key = test_folder_name.split(".")[0].split("_")[1:]
             self.test_log_key = "_".join(self.test_log_key)
@@ -160,13 +164,79 @@ class TrajectoryPlotter:
         plt.savefig(f"{self.save_folder}TrackingHist_{self.test_log_key}.svg", bbox_inches='tight', pad_inches=0)
 
         
+def calculate_cross_track(track_line, positions):
+    s_points = np.zeros(len(positions))
+    for i in range(len(positions)):
+        s_points[i] = track_line.calculate_progress_percent(positions[i])
 
-def plot_raceline_tracking(vehicle_name, test_id):
-    TestData = TrajectoryPlotter()
+    closest_pts = np.array(splev(s_points, track_line.tck, ext=3)).T
+    cross_track_errors = np.linalg.norm(positions - closest_pts, axis=1)
 
-    TestData.process_folder(f"logs/{vehicle_name}/", test_id)
+    return s_points, cross_track_errors, closest_pts
 
+
+def calculate_tracking_accuracy(planner_name, test_id, centerline=False, raceline="mu70"):
+    agent_path = f"Logs/{planner_name}/"
+    print(f"Planner name: {planner_name}")
+    old_df = pd.read_csv(agent_path + f"Results_{planner_name}.csv")
+
+    testing_Logs = glob.glob(f"{agent_path}RawData_{test_id}/Sim*.npy")
+    if len(testing_Logs) == 0: raise ValueError("No Logs found")
+    for test_log in testing_Logs:
+        test_folder_name = test_log.split("/")[-1]
+        test_log_key = "_".join(test_folder_name.split(".")[0].split("_")[1:])
+        file_name = f"{agent_path}RawData_{test_id}/TrackingAccuracy_{test_log_key}.npy"
+        lap_num = int(test_folder_name.split("_")[-1].split(".")[0])
+        # if os.path.exists(file_name): continue
+
+        print(f"Analysing log: {test_folder_name} ")
+
+        testing_map = test_folder_name.split("_")[1]
+        if not centerline:
+            std_track = RaceTrack(testing_map, raceline)
+            std_track.init_track()
+        else:
+            std_track = CentreLine(testing_map)
+
+        states = np.load(test_log)[:, :7]
+        progresses, cross_track, points = calculate_cross_track(std_track, states[:, 0:2]) 
+
+        df_idx = old_df.loc[(old_df["Lap"] == lap_num) & (old_df["TestMap"] == testing_map)].index[0]
+        old_df.at[df_idx, "MeanCT"] = np.mean(cross_track)
+        old_df.at[df_idx, "MaxCT"] = np.max(cross_track)
+
+        old_ss = std_track.s_track / std_track.s_track[-1] 
+        raceline_speeds = np.interp(progresses, old_ss, std_track.speeds)
+        speed_diffs = raceline_speeds - states[:, 3]
+
+        save_data = np.column_stack((progresses, cross_track, points, speed_diffs, raceline_speeds))
+        np.save(file_name, save_data)
+
+    old_df = old_df.sort_values(by=["TestMap", "Lap"])
+    old_df.to_csv(f"{agent_path}Results_{planner_name}.csv", index=False, float_format='%.4f')
+
+
+def plot_raceline_tracking(vehicle_name, test_id, raceline="mu70"):
+    calculate_tracking_accuracy(vehicle_name, test_id, centerline=False, raceline=raceline)
+
+    # TestData = TrajectoryPlotter()
+    # TestData.process_folder(f"Logs/{vehicle_name}/", test_id)
+
+def std_results():
+    plot_raceline_tracking("GlobalPlanPP", "mu70", raceline="mu70")
+    # plot_raceline_tracking("FullStackPP", "mu70")
+    plot_raceline_tracking("FollowTheGap", "Std", raceline="mu70")
+    plot_raceline_tracking("EndToEnd", "TD3v6", raceline="mu70")
+
+def frequency_results():
+    friction_vals = np.linspace(0.55, 1, 10)
+    simulator_timestep_list = [4, 6, 8]
+    # simulator_timestep_list = [1, 2, 5, 10, 12]
+    for simulator_timesteps in simulator_timestep_list:
+        for friction in friction_vals:
+            test_id = f"mu{int(friction*100)}_steps{simulator_timesteps}"
+            plot_raceline_tracking("GlobalPlanPP", test_id, raceline=f"mu{int(friction*100)}")
 
 
 if __name__ == '__main__':
-    plot_raceline_tracking("GlobalPlanPP", "mu70")
+    frequency_results()

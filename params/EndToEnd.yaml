@@ -2,6 +2,7 @@
 algorithm: "SAC"
 # algorithm: "TD3"
 
+# training_steps: 30000
 training_steps: 60000
 
 max_speed: 8
@@ -10,4 +11,7 @@ range_finder_scale: 10
 n_scans: 2
 
 reward_tal_constant: 0.2
-reward_tal_inv_scales: [0.8, 2]
+reward_tal_inv_scales: [0.8, 4]
+
+
+progress_constant: 10

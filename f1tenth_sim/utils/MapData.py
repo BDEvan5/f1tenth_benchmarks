@@ -6,7 +6,6 @@ from matplotlib.collections import LineCollection
 
 class MapData:
     def __init__(self, map_name):
-        self.path = "maps/"
         self.map_name = map_name
 
         self.map_resolution = None
@@ -15,7 +14,12 @@ class MapData:
         self.map_height = None
         self.map_width = None
 
-        self.load_map_img()
+        try:
+            self.path = "maps/"
+            self.load_map_img()
+        except:
+            self.path = "../maps/"
+            self.load_map_img()
 
     def load_map_img(self):
         with open(self.path + self.map_name + ".yaml", 'r') as file:
@@ -26,6 +30,8 @@ class MapData:
 
         self.map_img = np.array(Image.open(self.path + map_img_name).transpose(Image.FLIP_TOP_BOTTOM))
         self.map_img = self.map_img.astype(np.float64)
+        if len(self.map_img.shape) > 2:
+            self.map_img = self.map_img[:, :, 0]
 
         self.map_img[self.map_img <= 128.] = 0.
         self.map_img[self.map_img > 128.] = 1.
@@ -43,7 +49,8 @@ class MapData:
     
     def plot_map_img(self):
         self.map_img[self.map_img == 1] = 180
-        self.map_img[self.map_img == 0 ] = 230
+        self.map_img[self.map_img == 0 ] = 180
+        # self.map_img[self.map_img == 0 ] = 230
         self.map_img[0, 1] = 255
         self.map_img[0, 0] = 0
         plt.imshow(self.map_img, origin='lower', cmap='gray')
