@@ -47,8 +47,8 @@ def test_localmap_mpcc():
 
 if __name__ == "__main__":
     # localmap_pp_centre()
-    # test_localmap_pp()
-    test_localmap_mpcc()
+    test_localmap_pp()
+    # test_localmap_mpcc()
 
 
 

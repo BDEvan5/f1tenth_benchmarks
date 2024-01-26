@@ -44,8 +44,8 @@ def test_full_stack_pure_pursuit():
     plot_raceline_tracking(planner.name, test_id)
 
 
-# test_pure_pursuit_planning()
+test_pure_pursuit_planning()
 # test_full_stack_pure_pursuit()
-test_pure_pursuit_planning_frequencies()
+# test_pure_pursuit_planning_frequencies()
 
 
