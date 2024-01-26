@@ -49,7 +49,8 @@ class MapData:
     
     def plot_map_img(self):
         self.map_img[self.map_img == 1] = 180
-        self.map_img[self.map_img == 0 ] = 230
+        self.map_img[self.map_img == 0 ] = 180
+        # self.map_img[self.map_img == 0 ] = 230
         self.map_img[0, 1] = 255
         self.map_img[0, 0] = 0
         plt.imshow(self.map_img, origin='lower', cmap='gray')

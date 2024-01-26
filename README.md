@@ -52,9 +52,9 @@ pip install -e .
 
 **Test scripts:**
 There are several key scripts for running the tests:
-- `classical_racing/GenerateOptimalTrajectory.py`: will generate the racelines in the `raceliones/` directory
+- `classical_racing/RaceTrackGenerator.py`: will generate the racelines in the `racelines/` directory
 - `test_planning_methods.py`: evaluate the pure pursuit and MPCC algorithms. These tests assume that the vehicle has perfect state estimation.
-- `train_drl_agents.py`: this script trains the SAC or TD3 agents on a specified map. Once training is complete, the agent will be tested on all four maps.
+- `drl_racing.py`: this script trains the SAC or TD3 agents on a specified map. Once training is complete, the agent will be tested on all four maps.
 
 **Analysis scripts:**
 - `build_results_df.py`: this script builds a data frame of the results from all the planners.

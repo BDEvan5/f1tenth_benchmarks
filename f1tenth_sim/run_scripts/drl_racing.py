@@ -34,8 +34,9 @@ def train_and_test_agents():
     seed_randomness(11)
     train_map = "mco"
     # test_id = "SACv2"
-    # test_id = "TD3v6"
-    test_id = "TD3rewardP1"
+    # test_id = "TD3v1"
+    test_id = "SACv1"
+    # test_id = "TD3rewardP1"
 
     training_agent = TrainEndToEndAgent(train_map, test_id)
     simulate_training_steps(training_agent, train_map, test_id)
