@@ -39,8 +39,8 @@ class GlobalMPCC(BasePlanner):
 
         self.init_objective()
         self.init_bounds()
-        self.init_solver()
         self.init_bound_limits()
+        self.init_solver()
 
     def init_optimisation(self):
         states = ca.MX.sym('states', NX) # [x, y, psi, s]
