@@ -2,7 +2,8 @@ position_min: -100
 position_max: 100
 heading_max: 20
 local_path_max_length: 300
-max_speed: 8
+max_speed: 4
+# max_speed: 8
 min_speed: 2
 max_steer: 0.4
 local_path_speed_min: 2
@@ -21,10 +22,15 @@ p_max: 4
 # weight_contour: 10
 # weight_steer: 100
 
-weight_progress: 0.1
-weight_lag: 100
-weight_contour: 2
-weight_steer: 10
+weight_progress: 0.02
+weight_lag: 500
+weight_contour: 0.1
+weight_steer: 0.0001
+
+# weight_progress: 0.1
+# weight_lag: 100
+# weight_contour: 2
+# weight_steer: 5
 
 # weight_progress: 0.5
 # weight_lag: 10

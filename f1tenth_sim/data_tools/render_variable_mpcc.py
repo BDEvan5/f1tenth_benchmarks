@@ -13,19 +13,21 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
     root = f"Logs/{planner_name}/"
     mpcc_data_path = root + f"RawData_{test_id}/MPCCData_{test_id}/"
     logs = np.load(root + f"RawData_{test_id}/SimLog_{map_name}_0.npy")
-    mpcc_img_path = root + f"Images_{test_id}/LocalMPCC_{test_id}/"
+    mpcc_img_path = root + f"Images_{test_id}/LocalMPCC_{map_name}_{test_id}/"
     ensure_path_exists(mpcc_img_path)
 
     filename = 'maps/' + map_name + "_centerline.csv"
     track = np.loadtxt(filename, delimiter=',', skiprows=1)
 
     # for i in range(len(logs)-100, len(logs)-50):
-    for i in range(len(logs)-50, len(logs)):
+    for i in range(250, 280):
+    # for i in range(len(logs)-25, len(logs)):
     # for i in range(1, len(logs)):
     #     if i % 3 != 0:
     #         continue
         states = np.load(mpcc_data_path + f"States_{i}.npy")
         controls = np.load(mpcc_data_path + f"Controls_{i}.npy")
+        x0 = np.load(mpcc_data_path + f"x0_{i}.npy")
 
         # fig = plt.figure(1)
         fig = plt.figure(figsize=(15, 10))
@@ -63,11 +65,13 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
         a1.set_xlim([np.min(states[:, 0]) - 2, np.max(states[:, 0]) + 2])
         a1.set_ylim([np.min(states[:, 1]) - 2, np.max(states[:, 1]) + 2])
 
-        t_angle = np.interp(states[:, 3], local_ss, psi) - np.pi/2
-        lag = np.sum(-np.cos(t_angle) * (states[:, 0] - xs) - np.sin(t_angle) * (states[:, 1] - ys)) * 10
-        contour = np.sum(np.sin(t_angle) * (states[:, 0] - xs) - np.cos(t_angle) * (states[:, 1] - ys)) * 20
-        steer = np.sum(controls[:, 0] **2) * 100
-        progress = -np.sum(controls[:, 1]) * 0.001
+        t_angle = np.interp(states[:, 3], local_ss, psi) + np.pi/2
+        lag = np.sum(-np.cos(t_angle) * (states[:, 0] - xs) - np.sin(t_angle) * (states[:, 1] - ys)) * 500
+        contour = np.sum(np.sin(t_angle) * (states[:, 0] - xs) - np.cos(t_angle) * (states[:, 1] - ys)) * 0.02
+        print(f"{i} --> {lag:.2f}, {contour:.2f}")
+        # print(np.sin(t_angle) * (states[:, 0] - xs) - np.cos(t_angle) * (states[:, 1] - ys))
+        steer = np.sum(controls[:, 0] **2) * 0.001
+        progress = -np.sum(controls[:, 1]) * 0.1
 
         ae.bar(np.arange(4), [lag, contour, steer, progress])
         ae.set_xticks(np.arange(4))
@@ -111,11 +115,17 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
         a4.set_ylim([0, 40])
         a4.grid(True)
 
-        dv = np.diff(controls[:, 1])
-        dv = np.insert(dv, 0, controls[0, 1]- logs[i+1, 3])
-        a5.plot(dv, '-o', color='red')
-        a5.set_ylabel('Acceleration')
+
+        a5.set_ylabel('Angle')
+        a5.plot(x0[:, 2], '-o', color='blue')
+        a5.plot(states[:, 2], '-o', color='red')
         a5.grid(True)
+
+        # dv = np.diff(controls[:, 1])
+        # dv = np.insert(dv, 0, controls[0, 1]- logs[i+1, 3])
+        # a5.plot(dv, '-o', color='red')
+        # a5.set_ylabel('Acceleration')
+        # a5.grid(True)
 
         plt.tight_layout()
 
@@ -126,7 +136,9 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
 
 if __name__ == '__main__':
     # render_local_maps("LocalMapPlanner", "r1")
-    render_mpcc_plans("GlobalPlanMPCC", "mu70", "aut")
+    render_mpcc_plans("GlobalPlanMPCC", "mu70", "esp")
+    # render_mpcc_plans("GlobalPlanMPCC", "mu70", "gbr")
+    # render_mpcc_plans("GlobalPlanMPCC", "mu70", "aut")
     # render_mpcc_plans("ConstantMPCC", "mu70", "aut")
     # render_local_maps("LocalMPCC2", "r1", "aut")
     # render_local_maps("FullStackMPCC3", "m3u70", "aut")

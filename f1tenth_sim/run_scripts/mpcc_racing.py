@@ -19,7 +19,8 @@ def test_constant_mpcc_planning():
 def test_mpcc_planning():
     test_id = "mu70"
     # map_name = "aut"
-    map_name = "gbr"
+    # map_name = "gbr"
+    map_name = "esp"
     planner = GlobalMPCC(test_id, True, planner_name="GlobalPlanMPCC")
     test_planning_single_map(planner, map_name, test_id)
     # test_planning_all_maps(planner, test_id)

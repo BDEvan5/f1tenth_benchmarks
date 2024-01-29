@@ -129,10 +129,19 @@ class GlobalMPCC(BasePlanner):
         self.set_path_constraints()
         states, controls, solved_status = self.solve()
 
+        if self.save_data:
+            np.save(self.mpcc_data_path + f"x0_{self.step_counter}.npy", self.X0)
+
+
         action = controls[0, 0:2]
         if not solved_status:
-            self.warm_start = True
+            # self.warm_start = True
+            self.construct_warm_start_soln(self.optimisation_parameters[:NX]) 
             self.set_path_constraints()
+
+            if self.save_data:
+                np.save(self.mpcc_data_path + f"x0_{self.step_counter}.npy", self.X0)
+
             states, controls, solved_status = self.solve()
             action = controls[0, 0:2]
             if not solved_status:
