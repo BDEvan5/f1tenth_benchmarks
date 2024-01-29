@@ -26,8 +26,6 @@ def load_params_and_override(filename, extra_params):
 class F1TenthSimBase:
     def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False, extra_params={}):
         self.params = load_params_and_override("simulator_params", extra_params)
-        print(f"Loaded simulator params: {self.params}")
-        print(extra_params)
         self.planner_name = planner_name
         self.map_name = map_name
         self.path = f"Logs/{planner_name}/"

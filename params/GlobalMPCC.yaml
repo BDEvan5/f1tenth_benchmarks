@@ -21,15 +21,21 @@ p_max: 4
 # weight_contour: 10
 # weight_steer: 100
 
-# weight_progress: 0.001
+weight_progress: 0.1
+weight_lag: 100
+weight_contour: 2
+weight_steer: 10
+
+# weight_progress: 0.5
 # weight_lag: 10
 # weight_contour: 20
-# weight_steer: 100
+# weight_steer: 1
 
-weight_progress: 0.1
-weight_lag: 1
-weight_contour: 10
-weight_steer: 1
+# # Constant MPCC values
+# weight_progress: 0.1
+# weight_lag: 1
+# weight_contour: 10
+# weight_steer: 1
 
 dt: 0.1
 N: 10

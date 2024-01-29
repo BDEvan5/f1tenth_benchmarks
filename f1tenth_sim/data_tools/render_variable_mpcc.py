@@ -19,12 +19,11 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
     filename = 'maps/' + map_name + "_centerline.csv"
     track = np.loadtxt(filename, delimiter=',', skiprows=1)
 
-    # for i in range(1, 10):
-    # for i in range(20, 60):
-    # for i in range(0, 100):
     # for i in range(len(logs)-100, len(logs)-50):
     for i in range(len(logs)-50, len(logs)):
     # for i in range(1, len(logs)):
+    #     if i % 3 != 0:
+    #         continue
         states = np.load(mpcc_data_path + f"States_{i}.npy")
         controls = np.load(mpcc_data_path + f"Controls_{i}.npy")
 
@@ -64,16 +63,11 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
         a1.set_xlim([np.min(states[:, 0]) - 2, np.max(states[:, 0]) + 2])
         a1.set_ylim([np.min(states[:, 1]) - 2, np.max(states[:, 1]) + 2])
 
-        t_angle = np.interp(states[:, 3], local_ss, psi)
+        t_angle = np.interp(states[:, 3], local_ss, psi) - np.pi/2
         lag = np.sum(-np.cos(t_angle) * (states[:, 0] - xs) - np.sin(t_angle) * (states[:, 1] - ys)) * 10
-        contour = np.sum(np.sin(t_angle) * (states[:, 0] - xs) - np.cos(t_angle) * (states[:, 1] - ys)) * 200
-        steer = np.sum(controls[:, 0] **2) * 10
-        progress = -np.sum(controls[:, 1]) * 0.1
-        base = -5
-        # a1.text(3, base, f"Lag o: {lag:.2f}")
-        # a1.text(3,  base - 0.5, f"Contour o: {contour:.2f}")
-        # a1.text(3, base - 1, f"Steer o: {steer:.2f}")
-        # a1.text(3, base - 1.5, f"Progress o: {progress:.2f}")
+        contour = np.sum(np.sin(t_angle) * (states[:, 0] - xs) - np.cos(t_angle) * (states[:, 1] - ys)) * 20
+        steer = np.sum(controls[:, 0] **2) * 100
+        progress = -np.sum(controls[:, 1]) * 0.001
 
         ae.bar(np.arange(4), [lag, contour, steer, progress])
         ae.set_xticks(np.arange(4))
@@ -98,9 +92,10 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
 
         a2.plot(controls[:, 1])
         # a2.plot(controls[:, 2])
+        a2.plot([0, 2], logs[i+1, 3] * np.ones(2), '--', color='red')
         a2.set_ylabel("Speed action")
         a2.grid(True)
-        a2.set_ylim(1.5, 2.5)
+        a2.set_ylim(1.5, 8.5)
 
         a3.plot(controls[:, 0])
         a3.set_ylabel("Steering action")
@@ -108,7 +103,9 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
         a3.set_ylim(-0.4, 0.4)
 
         forces = controls[:, 1] ** 2 / 0.33 * np.tan(np.abs(controls[:, 0])) * 3.71
+        friction_limit = 0.6 * 9.81 * 3.71
 
+        a4.plot([0, 10], [friction_limit, friction_limit], '--', color='black')
         a4.plot(forces, '-o', color='red')
         a4.set_ylabel('Lateral Force')
         a4.set_ylim([0, 40])
@@ -129,7 +126,7 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
 
 if __name__ == '__main__':
     # render_local_maps("LocalMapPlanner", "r1")
-    render_mpcc_plans("ConstantMPCC", "mu70", "gbr")
+    render_mpcc_plans("GlobalPlanMPCC", "mu70", "aut")
     # render_mpcc_plans("ConstantMPCC", "mu70", "aut")
     # render_local_maps("LocalMPCC2", "r1", "aut")
     # render_local_maps("FullStackMPCC3", "m3u70", "aut")
