@@ -11,6 +11,8 @@ from matplotlib.collections import LineCollection
 from f1tenth_sim.utils.MapData import MapData
 from f1tenth_sim.data_tools.plotting_utils import *
 from matplotlib.ticker import MultipleLocator
+from f1tenth_sim.utils.track_utils import CentreLine, TrackLine
+
 
 SAVE_PDF = False
 # SAVE_PDF = True
@@ -61,6 +63,7 @@ class TrajectoryPlotter:
             
             self.plot_analysis()
             self.plot_trajectory()
+            self.plot_path()
 
     def load_lap_data(self):
         data = np.load(f"{self.load_folder}SimLog_{self.test_log_key}.npy")
@@ -136,6 +139,34 @@ class TrajectoryPlotter:
             name = self.pdf_save_folder + f"Trajectory_{self.test_log_key}"
             plt.savefig(name + ".pdf", bbox_inches='tight', pad_inches=0)
 
+    def plot_path(self):
+        plt.figure(1)
+        plt.clf()
+        
+        self.map_data.plot_map_img()
+
+        centre_line = CentreLine(self.map_name)
+        xs, ys = self.map_data.pts2rc(centre_line.path)
+        plt.plot(xs, ys, 'k--', linewidth=1.5)
+
+        xs, ys = self.map_data.pts2rc(self.states[:, 0:2])
+        plt.plot(xs, ys, 'r-', linewidth=1.5)
+
+        plt.gca().set_aspect('equal', adjustable='box')
+
+        plt.xticks([])
+        plt.yticks([])
+        plt.tight_layout()
+        plt.axis('off')
+        
+        name = self.save_folder + f"Path_{self.test_log_key}"
+        # std_img_saving(name)
+        plt.savefig(name + ".svg", bbox_inches='tight', pad_inches=0)
+        
+        if SAVE_PDF:
+            name = self.pdf_save_folder + f"Path_{self.test_log_key}"
+            plt.savefig(name + ".pdf", bbox_inches='tight', pad_inches=0)
+
 
 
 
@@ -150,7 +181,8 @@ if __name__ == '__main__':
     # analyse_folder()
     # plot_trajectory_analysis("LocalMPCC", "mu60")
     # plot_trajectory_analysis("FullStackMPCC", "mu60")
-    plot_trajectory_analysis("GlobalPlanPP", "mu95_steps10")
+    plot_trajectory_analysis("ConstantMPCC", "mu70")
+    # plot_trajectory_analysis("GlobalPlanPP", "mu95_steps10")
     # plot_trajectory_analysis("FullStackPP", "mu60")
     # plot_trajectory_analysis("GlobalPlanMPCC", "mu70")
     # plot_analysis("follow_the_gap")

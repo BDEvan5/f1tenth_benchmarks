@@ -1,15 +1,13 @@
 import numpy as np 
-import matplotlib.pyplot as plt
 import casadi as ca
 
-from f1tenth_sim.classic_racing.ReferencePath import ReferencePath
 from f1tenth_sim.classic_racing.mpcc_utils import *
 from f1tenth_sim.utils.BasePlanner import BasePlanner
 from f1tenth_sim.utils.track_utils import CentreLine, TrackLine
 
-
 NX = 4
 NU = 2
+
 
 class ConstantMPCC(BasePlanner):
     def __init__(self, test_id, save_data=False, planner_name="ConstantMPCC"):
@@ -46,7 +44,10 @@ class ConstantMPCC(BasePlanner):
         states = ca.MX.sym('states', NX) #[x, y, psi, s]
         controls = ca.MX.sym('controls', NU) # [delta, p]
 
-        rhs = ca.vertcat(self.planner_params.vehicle_speed * ca.cos(states[2]), self.planner_params.vehicle_speed * ca.sin(states[2]), (self.planner_params.vehicle_speed / self.vehicle_params.wheelbase) * ca.tan(controls[0]), controls[1])  # dynamic equations of the states
+        rhs = ca.vertcat(self.planner_params.vehicle_speed * ca.cos(states[2]), 
+                         self.planner_params.vehicle_speed * ca.sin(states[2]), 
+                         (self.planner_params.vehicle_speed / self.vehicle_params.wheelbase) * ca.tan(controls[0]), 
+                         controls[1])  # dynamic equations of the states
         self.f = ca.Function('f', [states, controls], [rhs])  # nonlinear mapping function f(x,u)
         
         self.U = ca.MX.sym('U', NU, self.N)
@@ -116,8 +117,9 @@ class ConstantMPCC(BasePlanner):
         p = self.generate_parameters(x0)
         states, controls = self.solve(p)
 
-        np.save(self.mpcc_data_path + f"States_{self.step_counter}.npy", states)
-        np.save(self.mpcc_data_path + f"Controls_{self.step_counter}.npy", controls)
+        if self.save_data:
+            np.save(self.mpcc_data_path + f"States_{self.step_counter}.npy", states)
+            np.save(self.mpcc_data_path + f"Controls_{self.step_counter}.npy", controls)
 
         action = np.array([controls[0, 0], self.planner_params.vehicle_speed])
 
@@ -176,7 +178,7 @@ class ConstantMPCC(BasePlanner):
         self.X0 = ca.reshape(sol['x'][0:NX * (self.N + 1)], NX, self.N + 1).T
         controls = ca.reshape(sol['x'][NX * (self.N + 1):], NU, self.N).T
         states = self.X0# [:, 0:NX].T
-        print(states)
+        # print(states)
 
         if self.solver.stats()['return_status'] != 'Solve_Succeeded':
             print("Solve failed!!!!!")
@@ -205,7 +207,10 @@ class ConstantMPCC(BasePlanner):
                     psi_next -= np.pi * 2
             self.X0[k, :] = np.array([x_next.full()[0, 0], y_next.full()[0, 0], psi_next, s_next])
 
-        print(self.X0)
+        # print(self.X0)
+        if self.save_data:
+            np.save(self.mpcc_data_path + f"x0_{self.step_counter}.npy", self.X0)
+
 
 
 def init_track_interpolants(centre_line, exclusion_width):
@@ -215,7 +220,7 @@ def init_track_interpolants(centre_line, exclusion_width):
     extended_track.init_path()
     extended_track.init_track()
 
-    centre_interpolant = LineInterpolant(extended_track.path, extended_track.s_path, extended_track.psi)
+    centre_interpolant = LineInterpolant(extended_track.path, extended_track.s_path, extended_track.psi + np.pi / 2) # add pi/2 to account for coord frame change
 
     left_path = extended_track.path - extended_track.nvecs * np.clip((widths[:, 0][:, None]  - exclusion_width), 0, np.inf)
     left_interpolant = LineInterpolant(left_path, extended_track.s_path)
@@ -223,6 +228,7 @@ def init_track_interpolants(centre_line, exclusion_width):
     right_interpolant = LineInterpolant(right_path, extended_track.s_path)
 
     return centre_interpolant, left_interpolant, right_interpolant
+
 
 class LineInterpolant:
     def __init__(self, path, s_path, angles=None):
