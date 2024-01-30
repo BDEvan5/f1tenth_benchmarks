@@ -36,6 +36,7 @@ class RaceTrackGenerator(RaceTrack):
         self.params = params
         save_params(params, self.raceline_data_path)
         self.vehicle = load_parameter_file("vehicle_params")
+        self.vehicle = Namespace(**self.vehicle)
         self.prepare_centre_line()
 
         self.pr = cProfile.Profile()
@@ -136,8 +137,9 @@ class Track:
 
 def generate_racelines():
     params = load_parameter_file("RaceTrackGenerator")
+    params = Namespace(**params)
     # params.mu = 0.5
-    params.mu = 0.6
+    params.mu = 0.8
     # raceline_id = f"_drl_training"
     raceline_id = f"mu{int(params.mu*100)}"
     map_list = ['aut', 'esp', 'gbr', 'mco']
@@ -161,7 +163,7 @@ def generate_raceline_set():
 
 
 if __name__ == "__main__":
-    # generate_racelines()
-    generate_raceline_set()
+    generate_racelines()
+    # generate_raceline_set()
 
 

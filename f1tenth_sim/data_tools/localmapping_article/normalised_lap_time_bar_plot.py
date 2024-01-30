@@ -17,7 +17,7 @@ def generate_bar_plot():
                   "FollowTheGap_Std": "Follow the gap", 
                   "FullStackMPCC3_mu70": "Global MPCC", 
                   "FullStackPP_mu70": "Global two-stage", 
-                  "LocalMPCC_mu70": "Local MPCC",
+                  "LocalMPCC_mu60": "Local MPCC", # change this to 60!!!!! fixes error6
                   "LocalMapPP_mu60": "Local two-stage", 
                   }
 
@@ -50,7 +50,7 @@ def generate_bar_plot():
     times_df.plot.bar(rot=0, figsize=(6, 1.8), legend=False, color=color_list, width=0.8)
     
 
-    plt.ylabel("Lap time (s)")
+    plt.ylabel("Normalised lap time")
     plt.xlabel("")
     std = 0.25
     plt.ylim(1-std, 1+std)

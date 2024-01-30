@@ -1,10 +1,10 @@
 
 # use these for TAL reward
-constant_lookahead: 0.8
-variable_lookahead: 0.6
+# constant_lookahead: 0.8
+# variable_lookahead: 0.6
 
-# constant_lookahead: 0.6
-# variable_lookahead: 0.7
+constant_lookahead: 0.6
+variable_lookahead: 0.7
 
 
 
@@ -14,7 +14,7 @@ variable_lookahead: 0.6
 
 constant_speed: 3
 
-racetrack_set: "mu70"
+racetrack_set: "mu80"
 
 friction_limit: 1.2
 max_steer: 0.4

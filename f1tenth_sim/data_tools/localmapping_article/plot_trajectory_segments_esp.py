@@ -25,7 +25,7 @@ def make_trajectory_imgs(planner_name, test_id, map_name, test_lap, name="", cba
     points = points.reshape(-1, 1, 2)
     segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
-    norm = plt.Normalize(0, 8)
+    norm = plt.Normalize(2, 8)
     lc = LineCollection(segments, cmap='jet', norm=norm)
     lc.set_array(speeds)
     lc.set_linewidth(5)
@@ -42,8 +42,9 @@ def make_trajectory_imgs(planner_name, test_id, map_name, test_lap, name="", cba
     plt.tight_layout()
 
     if cbar:
-        cbar = plt.colorbar(line, fraction=0.046, pad=0.04, shrink=0.9)
+        cbar = plt.colorbar(line, fraction=0.046, pad=0.04, shrink=0.9, ticks=[2, 4, 6, 8])
         cbar.ax.tick_params(labelsize=20)
+        cbar.set_label(label='Speed [m/s]', size=18)
         name = f"{planner_name}_{test_id}_ESP_{test_lap}_left"
 
         plt.rcParams['pdf.use14corefonts'] = True

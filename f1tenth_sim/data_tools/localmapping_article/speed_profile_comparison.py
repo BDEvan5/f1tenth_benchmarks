@@ -27,8 +27,8 @@ def plot_speed_profiles(planner1, planner2, test_id, map_name, test_lap, name=""
 
     ax1.grid(True)
     ax1.legend(ncol=2, fontsize=9)
-    ax1.set_xlabel("Track progress (%)", fontsize=9)
-    ax1.set_ylabel("Speed (m/s)", fontsize=9)
+    ax1.set_xlabel("Track progress [%]", fontsize=9)
+    ax1.set_ylabel("Speed [m/s]", fontsize=9)
     # ax1.set_xticks(np.arange(0, 101, 20), fontsize=4)
     ax1.set_xticklabels(np.arange(-20, 101, 20), fontsize=9)
     ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
