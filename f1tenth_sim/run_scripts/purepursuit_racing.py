@@ -33,7 +33,7 @@ def test_pure_pursuit_planning_frequencies():
 
 
 def test_full_stack_pure_pursuit():
-    test_id = "mu80"
+    test_id = "mu60"
     # map_name = "aut"
     # map_name = "mco"
     planner = GlobalPurePursuit(test_id, False, planner_name="FullStackPP")

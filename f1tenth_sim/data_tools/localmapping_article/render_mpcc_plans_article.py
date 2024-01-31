@@ -106,6 +106,7 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         plt.savefig(mpcc_img_path + f"Raceline_{i}.svg", bbox_inches="tight", pad_inches=0.05)
         plt.savefig(f"Data/LocalMapRacing/mpcc_imgs/" + f"Raceline_{i}.svg", bbox_inches="tight", pad_inches=0.05)
         plt.savefig(f"Data/LocalMapRacing/mpcc_imgs/" + f"Raceline_{i}.pdf", bbox_inches="tight", pad_inches=0.05)
+        plt.savefig(f"Data/LocalMapRacing/mpcc_imgs/" + f"Raceline_{i}.jpg", bbox_inches="tight", pad_inches=0.05, dpi=300)
 
         plt.close(fig)
 

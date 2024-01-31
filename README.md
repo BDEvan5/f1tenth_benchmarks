@@ -87,6 +87,7 @@ pip install -e .
 
 The [trajectory_planning_helpers](https://github.com/TUMFTM/trajectory_planning_helpers.git) library, must be installed independantly through the following commands, 
 ```
+git submodule init
 git submodule update
 cd trajectory_planning_helpers
 pip install -e .
