@@ -1,6 +1,5 @@
 import numpy as np
 import yaml
-from argparse import Namespace
 from f1tenth_sim.utils.track_utils import TrackLine
 import casadi as ca
 
@@ -11,12 +10,6 @@ def normalise_psi(psi):
     while psi < -np.pi:
         psi += 2*np.pi
     return psi
-
-def load_mpcc_params():
-    filename = "configurations/mpcc_params.yaml"
-    with open(filename, 'r') as file:
-        params = yaml.load(file, Loader=yaml.FullLoader)
-    return Namespace(**params)
 
 
 def init_track_interpolants(centre_line, exclusion_width):

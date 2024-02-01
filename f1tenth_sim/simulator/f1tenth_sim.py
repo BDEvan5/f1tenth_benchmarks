@@ -4,28 +4,16 @@ from f1tenth_sim.simulator.dynamics_simulator import DynamicsSimulator
 from f1tenth_sim.simulator.laser_models import ScanSimulator2D
 from f1tenth_sim.simulator.utils import SimulatorHistory
 from f1tenth_sim.utils.track_utils import CentreLine
-import yaml
-from argparse import Namespace
+from f1tenth_sim.utils.BasePlanner import load_parameter_file, load_parameter_file_with_extras, ensure_path_exists
 import numpy as np
 import pandas as pd
 import os, datetime
 import cProfile, io, pstats
 
 
-def ensure_path_exists(folder):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
-def load_params_and_override(filename, extra_params):
-    with open(f"params/{filename}.yaml", 'r') as file:
-        params = yaml.load(file, Loader=yaml.FullLoader)
-    for param in extra_params.keys():
-        params[param] = extra_params[param]
-    return Namespace(**params)
-
 class F1TenthSimBase:
     def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False, extra_params={}):
-        self.params = load_params_and_override("simulator_params", extra_params)
+        self.params = load_parameter_file_with_extras("simulator_params", extra_params)
         self.planner_name = planner_name
         self.map_name = map_name
         self.path = f"Logs/{planner_name}/"
