@@ -137,7 +137,7 @@ class Track:
 def generate_racelines():
     params = load_parameter_file("RaceTrackGenerator")
     # params.mu = 0.5
-    params.mu = 0.6
+    params.mu = 0.8
     # raceline_id = f"_drl_training"
     raceline_id = f"mu{int(params.mu*100)}"
     map_list = ['aut', 'esp', 'gbr', 'mco']
@@ -161,7 +161,7 @@ def generate_raceline_set():
 
 
 if __name__ == "__main__":
-    # generate_racelines()
-    generate_raceline_set()
+    generate_racelines()
+    # generate_raceline_set()
 
 

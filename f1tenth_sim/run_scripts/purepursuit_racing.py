@@ -33,9 +33,9 @@ def test_pure_pursuit_planning_frequencies():
 
 
 def test_full_stack_pure_pursuit():
-    test_id = "mu70"
+    test_id = "mu60"
     # map_name = "aut"
-    map_name = "mco"
+    # map_name = "mco"
     planner = GlobalPurePursuit(test_id, False, planner_name="FullStackPP")
     test_full_stack_all_maps(planner, test_id)
     # test_full_stack_single_map(planner, map_name, test_id)
@@ -44,8 +44,8 @@ def test_full_stack_pure_pursuit():
     plot_raceline_tracking(planner.name, test_id)
 
 
-test_pure_pursuit_planning()
-# test_full_stack_pure_pursuit()
+# test_pure_pursuit_planning()
+test_full_stack_pure_pursuit()
 # test_pure_pursuit_planning_frequencies()
 
 

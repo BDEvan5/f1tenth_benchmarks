@@ -3,6 +3,7 @@ import casadi as ca
 
 from f1tenth_sim.utils.BasePlanner import BasePlanner
 from f1tenth_sim.utils.track_utils import CentreLine, TrackLine
+from f1tenth_sim.classic_racing.mpcc_utils import *
 
 
 NX = 4
@@ -14,7 +15,7 @@ class GlobalMPCC(BasePlanner):
         super().__init__(planner_name, test_id, params_name="GlobalMPCC")
         self.save_data = save_data
         if self.save_data: 
-            self.mpcc_data_path = self.data_root_path + "mpcc_data/"
+            self.mpcc_data_path = self.data_root_path + f"MPCCData_{test_id}/"
             self.create_clean_path(self.mpcc_data_path)
         self.track_width = None
         self.centre_interpolant = None
@@ -27,7 +28,6 @@ class GlobalMPCC(BasePlanner):
         self.u0 = np.zeros((self.N, NU))
         self.X0 = np.zeros((self.N + 1, NX))
         self.optimisation_parameters = np.zeros(NX + 2 * self.N + 1)
-        self.warm_start = True # warm start every time
 
         self.init_optimisation()
         self.init_constraints()
@@ -39,8 +39,8 @@ class GlobalMPCC(BasePlanner):
 
         self.init_objective()
         self.init_bounds()
-        self.init_solver()
         self.init_bound_limits()
+        self.init_solver()
 
     def init_optimisation(self):
         states = ca.MX.sym('states', NX) # [x, y, psi, s]
@@ -119,28 +119,36 @@ class GlobalMPCC(BasePlanner):
         self.optimisation_parameters[:NX] = x0
         self.optimisation_parameters[-1] = max(obs["vehicle_speed"], 1) # prevent constraint violation
 
-        if self.warm_start:
-            self.construct_warm_start_soln(x0) 
+        self.construct_warm_start_soln(x0) 
 
     def plan(self, obs):
+        self.step_counter += 1
         self.prepare_input(obs)
         self.set_path_constraints()
+        if self.save_data:
+            np.save(self.mpcc_data_path + f"x0_{self.step_counter}.npy", self.X0)
         states, controls, solved_status = self.solve()
 
+        action = controls[0, 0:2]
         if not solved_status:
-            self.warm_start = True
+            print(f"{self.step_counter} --> Optimisation Retrying with warm start")
+            # self.warm_start = True
+            self.construct_warm_start_soln(self.optimisation_parameters[:NX]) 
             self.set_path_constraints()
+
+            if self.save_data:
+                np.save(self.mpcc_data_path + f"x0_{self.step_counter}.npy", self.X0)
+
             states, controls, solved_status = self.solve()
+            action = controls[0, 0:2]
             if not solved_status:
                 print(f"{self.step_counter} --> Optimisation has not been solved!!!!!!!!")
-                return np.array([0, 1])
+                action = np.array([0, 1])
 
         if self.save_data:
             np.save(self.mpcc_data_path + f"States_{self.step_counter}.npy", states)
             np.save(self.mpcc_data_path + f"Controls_{self.step_counter}.npy", controls)
 
-        self.step_counter += 1
-        action = controls[0, 0:2]
 
         return action 
 
@@ -165,27 +173,17 @@ class GlobalMPCC(BasePlanner):
 
         sol = self.solver(x0=x_init, lbx=self.lbx, ubx=self.ubx, lbg=self.lbg, ubg=self.ubg, p=self.optimisation_parameters)
 
-        # x_result = sol['x'].full()
-        # trajectory = np.reshape(x_result[0:NX * (self.N + 1)], (NX, self.N + 1)).T
-        # inputs = np.reshape(x_result[NX * (self.N + 1):], (NU, self.N)).T
-
         # Get state and control solution
         self.X0 = ca.reshape(sol['x'][0:NX * (self.N + 1)], NX, self.N + 1).T  # get soln trajectory
         u = ca.reshape(sol['x'][NX * (self.N + 1):], NU, self.N).T  # get controls solution
 
         trajectory = self.X0.full()  # size is (N+1,n_states)
         inputs = u.full()
-        # stats = self.solver.stats()
         solved_status = True
         if self.solver.stats()['return_status'] == 'Infeasible_Problem_Detected':
             solved_status = False
 
-        # Shift trajectory and control solution to initialize the next step
-        # self.X0 = np.roll(trajectory, 1, axis=0)
-        # self.u0 = np.roll(inputs, 1, axis=0)
-        # self.X0 = ca.vertcat(trajectory[1:, :], trajectory[trajectory.size1() - 1, :])
         self.X0 = ca.vertcat(self.X0[1:, :], self.X0[self.X0.size1() - 1, :])
-        # self.u0 = ca.vertcat(inputs[1:, :], inputs[inputs.size1() - 1, :])
         self.u0 = ca.vertcat(u[1:, :], u[u.size1() - 1, :])
 
         return trajectory, inputs, solved_status
@@ -216,42 +214,6 @@ class GlobalMPCC(BasePlanner):
         self.u0[:, 1] = self.planner_params.p_initial
         self.u0[:, 2] = self.planner_params.p_initial
 
-        self.warm_start = False
-
-
-def init_track_interpolants(centre_line, exclusion_width):
-    widths = np.row_stack((centre_line.widths, centre_line.widths[1:int(centre_line.widths.shape[0] / 2), :]))
-    path = np.row_stack((centre_line.path, centre_line.path[1:int(centre_line.path.shape[0] / 2), :]))
-    extended_track = TrackLine(path)
-    extended_track.init_path()
-    extended_track.init_track()
-
-    centre_interpolant = LineInterpolant(extended_track.path, extended_track.s_path, extended_track.psi)
-
-    left_path = extended_track.path - extended_track.nvecs * np.clip((widths[:, 0][:, None]  - exclusion_width), 0, np.inf)
-    left_interpolant = LineInterpolant(left_path, extended_track.s_path)
-    right_path = extended_track.path + extended_track.nvecs * np.clip((widths[:, 1][:, None] - exclusion_width), 0, np.inf)
-    right_interpolant = LineInterpolant(right_path, extended_track.s_path)
-
-    return centre_interpolant, left_interpolant, right_interpolant
-
-def normalise_psi(psi):
-    while psi > np.pi:
-        psi -= 2*np.pi
-    while psi < -np.pi:
-        psi += 2*np.pi
-    return psi
-
-
-class LineInterpolant:
-    def __init__(self, path, s_path, angles=None):
-        self.lut_x = ca.interpolant('lut_x', 'bspline', [s_path], path[:, 0])
-        self.lut_y = ca.interpolant('lut_y', 'bspline', [s_path], path[:, 1])
-        if angles is not None:
-            self.lut_angle = ca.interpolant('lut_angle', 'bspline', [s_path], angles)
-
-    def get_point(self, s):
-        return np.array([self.lut_x(s).full()[0, 0], self.lut_y(s).full()[0, 0]])
 
 
 

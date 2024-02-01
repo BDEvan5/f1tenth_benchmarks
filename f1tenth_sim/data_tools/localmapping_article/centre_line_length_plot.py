@@ -104,14 +104,16 @@ def make_length_progress_plot(map_name, test_id):
     ax1.fill_between(progresses, calculated, calculated+projected, color=disco_ball, alpha=0.5, label="Projected")
 
     s_norm = centre.s_path / centre.s_path[-1] * 100
-    ax2.plot(s_norm, abs(centre.kappa), color='black', label="Curvature", linewidth=2)
+    curvature_deg = abs(np.rad2deg(centre.kappa))
+    ax2.plot(s_norm, curvature_deg, color='black', label="Curvature", linewidth=2)
+    ax2.yaxis.set_major_locator(plt.MaxNLocator(3))
 
     ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
     # ax1.set_xticklabels([])
     ax1.set_ylim(-0.5, 23)
-    ax2.set_xlabel("Track progress (%)")
-    ax1.set_ylabel("Centre line \nlength (m)")
-    ax2.set_ylabel("Curvature \n(rad/m)")
+    ax2.set_xlabel("Track progress [%]")
+    ax1.set_ylabel("Centre line \nlength [m]")
+    ax2.set_ylabel("Curvature \n[deg/m]")
     ax1.legend(ncol=2)
     plt.tight_layout()
     ax1.grid()

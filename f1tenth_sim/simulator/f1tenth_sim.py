@@ -4,31 +4,21 @@ from f1tenth_sim.simulator.dynamics_simulator import DynamicsSimulator
 from f1tenth_sim.simulator.laser_models import ScanSimulator2D
 from f1tenth_sim.simulator.utils import SimulatorHistory
 from f1tenth_sim.utils.track_utils import CentreLine
-import yaml
-from argparse import Namespace
+from f1tenth_sim.utils.BasePlanner import load_parameter_file, load_parameter_file_with_extras, ensure_path_exists
 import numpy as np
 import pandas as pd
 import os, datetime
 import cProfile, io, pstats
 
 
-def ensure_path_exists(folder):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
 class F1TenthSimBase:
     def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False, extra_params={}):
-        with open(f"params/simulator_params.yaml", 'r') as file:
-            params = yaml.load(file, Loader=yaml.FullLoader)
-        for param in extra_params.keys():
-            params[param] = extra_params[param]
-        self.params = Namespace(**params)
+        self.params = load_parameter_file_with_extras("simulator_params", extra_params)
         self.planner_name = planner_name
         self.map_name = map_name
         self.path = f"Logs/{planner_name}/"
         self.test_id = test_id
         self.training = training
-
 
         self.scan_simulator = ScanSimulator2D(self.params.num_beams, self.params.fov, map_name, self.params.random_seed)
         self.dynamics_simulator = DynamicsSimulator(self.params)
@@ -187,7 +177,7 @@ class F1TenthSimBase:
 
 class F1TenthSim(F1TenthSimBase):
     def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False, extra_params={}):
-        super().__init__(map_name, planner_name, test_id, save_detail_history, training)
+        super().__init__(map_name, planner_name, test_id, save_detail_history, training, extra_params=extra_params)
         init_pose = np.append(self.current_state[0:2], self.current_state[4])
         self.scan = self.scan_simulator.scan(init_pose)
  

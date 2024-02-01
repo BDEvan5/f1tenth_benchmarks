@@ -33,7 +33,8 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     
     # for i in range(0, 100):
     # for i in range(len(Logs)-50, len(Logs)):
-    for i in [345, 20, 457, 30]:
+    for i in [345, 30]:
+    # for i in [345, 20, 457, 30]:
     # for i in range(len(Logs)):
         local_track = np.load(localmap_data_path + f"local_map_{i}.npy")
         raceline = np.load(raceline_data_path + f"LocalRaceline_{i+1}.npy")
@@ -84,9 +85,10 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         plt.savefig(raceline_img_path + f"Raceline_{i}.svg")
         plt.savefig(data_img_path + f"Raceline_{i}.pdf", bbox_inches="tight", pad_inches=0.05)
         plt.savefig(data_img_path + f"Raceline_{i}.svg", bbox_inches="tight", pad_inches=0.05)
-        cbar = plt.colorbar(line, shrink=0.5)
+        cbar = plt.colorbar(line, shrink=0.43)
         plt.gca().set_aspect('equal', adjustable='box')
-        cbar.ax.tick_params(labelsize=20)
+        cbar.ax.tick_params(labelsize=22)
+        cbar.set_label(label='Speed [m/s]', size=20)
         plt.rcParams['pdf.use14corefonts'] = True
         plt.savefig(raceline_img_path + f"Raceline_{i}_c.svg")
         plt.savefig(data_img_path + f"Raceline_{i}_c.pdf", bbox_inches="tight", pad_inches=0.05)

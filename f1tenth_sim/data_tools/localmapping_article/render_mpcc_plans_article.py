@@ -20,7 +20,8 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
     
     track = CentreLine(map_name)
 
-    for i in range(475, 485):
+    for i in [480]:
+    # for i in range(475, 485):
     # for i in range(35, 45):
     # for i in range(0, 100):
     # for i in range(len(Logs)-100, len(Logs)-50):
@@ -73,22 +74,30 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         lc.set_linewidth(4)
         line = a1.add_collection(lc)
         plt.sca(a1)
-        plt.colorbar(line, shrink=0.6)
+        plt.colorbar(line, shrink=0.6, label="Speed [m/s]", ticks=[2, 4, 6, 8], orientation='horizontal')
         a1.set_aspect('equal', adjustable='box')
 
 
         a2.plot(controls[:, 1], linewidth=2, color=sunset_orange)
         # a2.plot(controls[:, 2])
-        a2.set_ylabel("Speed")
+        # a2.set_ylabel("Speed")
         a2.grid(True)
-        a2.set_ylim(1, 9.5)
+        a2.text(0.2, 7.2, "Speed [m/s]", fontdict={"weight": "bold"}, bbox=dict(facecolor='white', edgecolor='white', pad=0.0))
+        a2.set_ylim(3, 9.5)
         a2.xaxis.set_major_locator(plt.MaxNLocator(5))
+        # a2.yaxis.set_major_locator(plt.MaxNLocator(4))
+        a2.set_yticks([4, 6, 8])
+        a2.set_xticklabels([])
 
         a3.plot(controls[:, 0], linewidth=2, color=sunset_orange)
-        a3.set_ylabel("Steering")
+        # a3.set_ylabel("Steering")
         a3.grid(True)
         a3.set_ylim(-0.4, 0.4)
+        a3.text(0.2, 0.15, "Steering angle [rad]", fontdict={"weight": "bold"}, bbox=dict(facecolor='white', edgecolor='white', pad=0.0))
         a3.xaxis.set_major_locator(plt.MaxNLocator(5))
+        # a2.set_xticklabels([5, 10, 15])
+        a3.yaxis.set_major_locator(plt.MaxNLocator(3))
+        a3.set_xlabel(f"Planning step")
 
 
         plt.tight_layout()
@@ -97,6 +106,7 @@ def render_local_maps(planner_name, test_id, map_name="aut"):
         plt.savefig(mpcc_img_path + f"Raceline_{i}.svg", bbox_inches="tight", pad_inches=0.05)
         plt.savefig(f"Data/LocalMapRacing/mpcc_imgs/" + f"Raceline_{i}.svg", bbox_inches="tight", pad_inches=0.05)
         plt.savefig(f"Data/LocalMapRacing/mpcc_imgs/" + f"Raceline_{i}.pdf", bbox_inches="tight", pad_inches=0.05)
+        plt.savefig(f"Data/LocalMapRacing/mpcc_imgs/" + f"Raceline_{i}.jpg", bbox_inches="tight", pad_inches=0.05, dpi=300)
 
         plt.close(fig)
 
