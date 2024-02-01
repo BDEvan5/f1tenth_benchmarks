@@ -28,7 +28,6 @@ class GlobalMPCC(BasePlanner):
         self.u0 = np.zeros((self.N, NU))
         self.X0 = np.zeros((self.N + 1, NX))
         self.optimisation_parameters = np.zeros(NX + 2 * self.N + 1)
-        self.warm_start = True # warm start every time
 
         self.init_optimisation()
         self.init_constraints()
@@ -120,21 +119,19 @@ class GlobalMPCC(BasePlanner):
         self.optimisation_parameters[:NX] = x0
         self.optimisation_parameters[-1] = max(obs["vehicle_speed"], 1) # prevent constraint violation
 
-        if self.warm_start:
-            self.construct_warm_start_soln(x0) 
+        self.construct_warm_start_soln(x0) 
 
     def plan(self, obs):
         self.step_counter += 1
         self.prepare_input(obs)
         self.set_path_constraints()
-        states, controls, solved_status = self.solve()
-
         if self.save_data:
             np.save(self.mpcc_data_path + f"x0_{self.step_counter}.npy", self.X0)
-
+        states, controls, solved_status = self.solve()
 
         action = controls[0, 0:2]
         if not solved_status:
+            print(f"{self.step_counter} --> Optimisation Retrying with warm start")
             # self.warm_start = True
             self.construct_warm_start_soln(self.optimisation_parameters[:NX]) 
             self.set_path_constraints()
@@ -217,7 +214,6 @@ class GlobalMPCC(BasePlanner):
         self.u0[:, 1] = self.planner_params.p_initial
         self.u0[:, 2] = self.planner_params.p_initial
 
-        self.warm_start = False
 
 
 

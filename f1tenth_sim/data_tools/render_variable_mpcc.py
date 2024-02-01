@@ -20,7 +20,7 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
     track = np.loadtxt(filename, delimiter=',', skiprows=1)
 
     # for i in range(len(logs)-100, len(logs)-50):
-    for i in range(250, 280):
+    for i in range(230, 280):
     # for i in range(len(logs)-25, len(logs)):
     # for i in range(1, len(logs)):
     #     if i % 3 != 0:
@@ -58,7 +58,8 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
         a1.plot(l1[:, 0], l1[:, 1], color='green')
         a1.plot(l2[:, 0], l2[:, 1], color='green')
 
-        a1.plot(0, 0, '*', markersize=10, color='red')
+        a1.plot(x0[:, 0], x0[:, 1], '-o', markersize=5, linewidth=3, color='red')
+
         a1.set_title(f"Action: ({logs[i+1, 7]:.3f}, {logs[i+1, 8]:.1f})")
         a1.axis('off')
 
@@ -116,10 +117,16 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
         a4.grid(True)
 
 
+        angles_guesses = np.interp(x0[:, 3], local_ss, psi) + np.pi/2
         a5.set_ylabel('Angle')
-        a5.plot(x0[:, 2], '-o', color='blue')
-        a5.plot(states[:, 2], '-o', color='red')
+        a5.plot(x0[:, 2], '-o', color='blue', label="Initial x0")
+        a5.plot(states[:, 2], '-o', color='red', label="Final solution")
+        a5.plot(angles_guesses, '-o', color='green', label="Guess")
         a5.grid(True)
+        a5.legend()
+        a5.set_ylim([-2, -0.5])
+        y_lim = -np.pi/2
+        a5.plot([0, 10], [y_lim, y_lim], '--', color='black')
 
         # dv = np.diff(controls[:, 1])
         # dv = np.insert(dv, 0, controls[0, 1]- logs[i+1, 3])

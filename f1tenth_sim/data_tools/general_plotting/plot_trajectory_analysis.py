@@ -168,6 +168,7 @@ class TrajectoryPlotter:
             plt.savefig(name + ".pdf", bbox_inches='tight', pad_inches=0)
 
 
+        plt.close()
 
 
 def plot_trajectory_analysis(vehicle_name, test_id):

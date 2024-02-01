@@ -11,10 +11,13 @@ from f1tenth_sim.run_scripts.run_functions import *
 
 def test_constant_mpcc_planning():
     test_id = "mu70"
-    map_name = "aut"
+    map_name = "esp"
+    # map_name = "aut"
     planner = ConstantMPCC(test_id, False, planner_name="ConstantMPCC")
     test_planning_single_map(planner, map_name, test_id, {"n_sim_steps": 10})
     # test_planning_all_maps(planner, test_id, {"n_sim_steps": 10})
+
+    plot_trajectory_analysis(planner.name, test_id)
 
 def test_mpcc_planning():
     test_id = "mu70"
