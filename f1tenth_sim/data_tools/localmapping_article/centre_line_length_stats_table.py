@@ -11,7 +11,7 @@ def ensure_path_exists(path):
     if not os.path.exists(path): 
         os.mkdir(path)
 
-def load_data(planner_name, test_id, map_name="aut"):
+def load_local_map_lengths(planner_name, test_id, map_name="aut"):
     root = f"Logs/{planner_name}/"
     localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
     try:
@@ -65,7 +65,7 @@ def make_extraction_table(test_id):
     data = {}
     data_dict = []
     for map_name in map_list:
-        lengths = load_data("LocalMapPP", test_id, map_name)
+        lengths = load_local_map_lengths("LocalMapPP", test_id, map_name)
         # data[map_name] = lengths
         for z in lengths:
             data_dict.append({"map": map_name, "length": z})

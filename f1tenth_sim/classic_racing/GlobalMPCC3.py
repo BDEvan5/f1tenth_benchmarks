@@ -14,8 +14,9 @@ NU = 3
 
 
 class GlobalMPCC3(BasePlanner):
-    def __init__(self, test_id, save_data=False, planner_name="MPCC3"):
+    def __init__(self, test_id, save_data=False, planner_name="MPCC3", surpress_output=False):
         super().__init__(planner_name, test_id, params_name="LocalMPCC")
+        self.surpress_output = surpress_output
         self.rp = None
         self.dt = self.planner_params.dt
         self.N = self.planner_params.N
@@ -128,8 +129,9 @@ class GlobalMPCC3(BasePlanner):
             p = self.generate_constraints_and_parameters(x0, vehicle_speed)
             states, controls, solved_status = self.solve(p)
             if not solved_status:
-                print(f"Solve failed: ReWarm Start: New outcome: {solved_status}")
-                print(f"S:{x0[3]:2f} --> Action: {controls[0, 0:2]}")
+                if self.surpress_output:
+                    print(f"Solve failed: ReWarm Start: New outcome: {solved_status}")
+                    print(f"S:{x0[3]:2f} --> Action: {controls[0, 0:2]}")
                 return np.array([0, 1])
             
         action = controls[0, 0:2]
