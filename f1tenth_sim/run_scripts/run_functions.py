@@ -5,7 +5,7 @@ from f1tenth_sim.data_tools.general_plotting.plot_trajectory_analysis import plo
 from f1tenth_sim.data_tools.general_plotting.plot_raceline_tracking import plot_raceline_tracking
 
 
-NUMBER_OF_LAPS = 5
+NUMBER_OF_LAPS = 1
 
 def simulate_laps(sim, planner, n_laps):
     for lap in range(n_laps):
@@ -40,39 +40,39 @@ def simulate_training_steps(planner, train_map, test_id, extra_params={}):
 map_list = ["aut", "esp", "gbr", "mco"]
 # map_list = ["aut", "esp", "gbr"]
 
-def test_planning_all_maps(planner, test_id, extra_params={}):
+def test_planning_all_maps(planner, test_id, extra_params={}, number_of_laps=NUMBER_OF_LAPS):
     # map_list = ["esp", "gbr", "mco"]
     for map_name in map_list:
-        test_planning_single_map(planner, map_name, test_id, extra_params=extra_params)
+        test_planning_single_map(planner, map_name, test_id, extra_params=extra_params, number_of_laps=number_of_laps)
 
-def test_planning_single_map(planner, map_name, test_id, extra_params={}):
+def test_planning_single_map(planner, map_name, test_id, extra_params={}, number_of_laps=NUMBER_OF_LAPS):
     print(f"Testing on {map_name}...")
     simulator = F1TenthSim_TrueLocation(map_name, planner.name, test_id, extra_params=extra_params)
     planner.set_map(map_name)
-    simulate_laps(simulator, planner, NUMBER_OF_LAPS)
+    simulate_laps(simulator, planner, number_of_laps)
 
 
 
-def test_full_stack_all_maps(planner, test_id):
+def test_full_stack_all_maps(planner, test_id, number_of_laps=NUMBER_OF_LAPS):
     for map_name in map_list:
-        test_full_stack_single_map(planner, map_name, test_id)
+        test_full_stack_single_map(planner, map_name, test_id, number_of_laps=number_of_laps)
 
-def test_full_stack_single_map(planner, map_name, test_id, extra_params={}):
+def test_full_stack_single_map(planner, map_name, test_id, extra_params={}, number_of_laps=NUMBER_OF_LAPS):
     print(f"Testing on {map_name}...")
     pf = ParticleFilter(planner.name, test_id)
     simulator = F1TenthSim(map_name, planner.name, test_id, extra_params=extra_params)
     planner.set_map(map_name)
     pf.set_map(map_name)
-    simulate_localisation_laps(simulator, planner, pf, NUMBER_OF_LAPS)
+    simulate_localisation_laps(simulator, planner, pf, number_of_laps)
 
 
 
-def test_mapless_all_maps(planner, test_id, extra_params={}):
+def test_mapless_all_maps(planner, test_id, extra_params={}, number_of_laps=NUMBER_OF_LAPS):
     for map_name in map_list:
-        test_mapless_single_map(planner, map_name, test_id, extra_params)
+        test_mapless_single_map(planner, map_name, test_id, extra_params, number_of_laps=number_of_laps)
 
-def test_mapless_single_map(planner, map_name, test_id, extra_params={}):
+def test_mapless_single_map(planner, map_name, test_id, extra_params={}, number_of_laps=NUMBER_OF_LAPS):
     print(f"Testing on {map_name}...")
     simulator = F1TenthSim(map_name, planner.name, test_id, extra_params=extra_params)
-    simulate_laps(simulator, planner, NUMBER_OF_LAPS)
+    simulate_laps(simulator, planner, number_of_laps)
 
