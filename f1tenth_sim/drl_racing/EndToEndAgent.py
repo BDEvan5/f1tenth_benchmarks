@@ -87,8 +87,8 @@ class EndToEndAgent(BasePlanner):
 
 
 class TrainEndToEndAgent(EndToEndAgent): 
-    def __init__(self, map_name, test_id):
-        BasePlanner.__init__(self, "EndToEnd", test_id) #NOTE: do not call the inherited __init__()
+    def __init__(self, map_name, test_id, extra_params={}):
+        BasePlanner.__init__(self, "EndToEnd", test_id, extra_params=extra_params) #NOTE: do not call the inherited __init__()
 
         # self.reward_generator = ProgressReward(self.planner_params)
         self.reward_generator = TrajectoryAidedLearningReward(map_name, self.planner_params) 

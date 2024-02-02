@@ -13,8 +13,13 @@ class GlobalPurePursuit(BasePlanner):
         self.racetrack = None
         self.use_centre_line = use_centre_line
 
-        self.constant_lookahead = self.planner_params.constant_lookahead
-        self.variable_lookahead = self.planner_params.variable_lookahead
+        if self.planner_params.training:
+            self.constant_lookahead = self.planner_params.constant_lookahead
+            self.variable_lookahead = self.planner_params.variable_lookahead
+
+        else:
+            self.constant_lookahead = self.planner_params.tal_constant_lookahead
+            self.variable_lookahead = self.planner_params.tal_variable_lookahead
 
     def set_map(self, map_name):
         if self.use_centre_line:
@@ -28,8 +33,6 @@ class GlobalPurePursuit(BasePlanner):
         vehicle_speed = obs["vehicle_speed"]
 
         lookahead_distance = self.constant_lookahead + (vehicle_speed/self.vehicle_params.max_speed) * (self.variable_lookahead)
-        # if self.step_counter < 40:
-            # lookahead_distance += (100 - self.step_counter) * 1/40 * 2
         lookahead_point, i = self.get_lookahead_point(pose[:2], lookahead_distance)
 
         if vehicle_speed < 1:
@@ -37,11 +40,9 @@ class GlobalPurePursuit(BasePlanner):
 
         true_lookahead_distance = np.linalg.norm(lookahead_point[:2] - pose[:2])
         steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], true_lookahead_distance, self.vehicle_params.wheelbase)
-        drl_training = False
-        if drl_training:
-            steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], 1.5, self.vehicle_params.wheelbase)
+        if self.planner_params.training:
+            steering_angle = get_actuation(pose[2], lookahead_point, pose[:2], self.planner_params.tal_actuation_distance, self.vehicle_params.wheelbase)
         steering_angle = np.clip(steering_angle, -self.planner_params.max_steer, self.planner_params.max_steer)
-        # steering_angle = np.clip(steering_angle, -self.vehicle_params.max_steer, self.vehicle_params.max_steer)
             
         if self.use_centre_line:
             speed = self.planner_params.constant_speed

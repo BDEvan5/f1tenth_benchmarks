@@ -6,7 +6,7 @@ from f1tenth_sim.classic_racing.GlobalPurePursuit import GlobalPurePursuit
 
 class TrajectoryAidedLearningReward:
     def __init__(self, map_name, params):
-        self.pp = GlobalPurePursuit("_drl_training", init_folder=False)
+        self.pp = GlobalPurePursuit("_drl_training", init_folder=False, extra_params={"training": True})
         self.pp.set_map(map_name) 
 
         self.beta_c = params.reward_tal_constant
