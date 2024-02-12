@@ -60,7 +60,8 @@ class RaceTrackPlotter(RaceTrack):
 
 
 if __name__ == '__main__':
-    map_list = ['aut']
+    map_list = ['esp']
+    # map_list = ['aut']
     # map_list = ['aut', 'esp', 'gbr', 'mco']
     raceline_id = "mu70"
     for map_name in map_list:

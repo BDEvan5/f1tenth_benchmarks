@@ -93,6 +93,8 @@ cd trajectory_planning_helpers
 pip install -e .
 ```
 
+The MPCC algorithms use the [casadi](https://web.casadi.org/python-api/) optimistion package, which relies on the IPOPT library. Instructions to install IPOPT can be found [here]().
+
 ## Docker (optional)
 
 To ensure repeatability and useability, a Dockerfile is provided that can be used to run the code.
