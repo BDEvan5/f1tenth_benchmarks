@@ -49,11 +49,18 @@ class MapData:
     
     def plot_map_img(self):
         self.map_img[self.map_img == 1] = 180
-        # self.map_img[self.map_img == 0 ] = 180
         self.map_img[self.map_img == 0 ] = 230
         self.map_img[0, 1] = 255
         self.map_img[0, 0] = 0
         plt.imshow(self.map_img, origin='lower', cmap='gray')
+
+    def plot_map_img_left_right_flip(self):
+        self.map_img[self.map_img == 1] = 180
+        self.map_img[self.map_img == 0 ] = 230
+        self.map_img[0, 1] = 255
+        self.map_img[0, 0] = 0
+        map_img = np.fliplr(self.map_img)
+        plt.imshow(map_img, origin='lower', cmap='gray')
 
     def plot_map_img_T(self):
         self.map_img[self.map_img == 1] = 180
@@ -68,13 +75,7 @@ class MapData:
         self.map_img[self.map_img == 0 ] = 230
         self.map_img[0, 1] = 255
         self.map_img[0, 0] = 0
-        # map_img = np.transpose(self.map_img)
-        # rotation90 = np.array([[np.cos(angle), -np.sin(angle)],
-        #                         [np.sin(angle), np.cos(angle)]])
-        # map_img = np.matmul(rotation90, self.map_img)
         map_img = np.rot90(self.map_img, k=k)
-        # import imutils
-        # map_img = imutils.rotate(self.map_img, angle=angle)
         plt.imshow(map_img, origin='lower', cmap='gray')
 
     def get_formatted_img(self):

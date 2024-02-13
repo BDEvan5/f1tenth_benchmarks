@@ -55,8 +55,8 @@ def plot_scan(scan_pts, x, y):
 def set_axis_limits(scan_pts):
     plt.gca().axis('off')
     xa = 15
-    yb = 6
-    x_min = np.min(scan_pts[:, 0]) - xa
+    yb = 8
+    x_min = np.min(scan_pts[:, 0]) - xa + 5
     x_max = np.max(scan_pts[:, 0]) + xa
     y_min = np.min(scan_pts[:, 1]) - yb
     y_max = np.max(scan_pts[:, 1]) + yb
@@ -68,13 +68,15 @@ def add_car_picture(x, y, heading_angle):
     img = plt.imread("f1tenth_sim/data_tools/RacingCar.png", format='png')
     img = rotate_bound(img, heading_angle)
     # img = rotate_bound(img, 74)
-    oi = OffsetImage(img, zoom=0.4)
-    ab = AnnotationBbox(oi, (x-10, y-3.), xycoords='data', frameon=False)
+    oi = OffsetImage(img, zoom=0.3)
+    ab = AnnotationBbox(oi, (x+15, y), xycoords='data', frameon=False)
     plt.gca().add_artist(ab)
 
 import matplotlib.cm as cm
 
-inds = [307, 316]
+start = 27
+space = 10
+inds = [start + space, start]
 planner_name = f"LocalMapPP"
 test_id = "mu60"
 map_name = "aut"
@@ -87,7 +89,7 @@ scans = np.load(root + f"RawData_{test_id}/ScanLog_{map_name}_0.npy")
 map_data = MapData(map_name)
 origin = map_data.map_origin[:2]
 
-fig = plt.figure(1, figsize=(5.2, 2))
+fig = plt.figure(1, figsize=(7, 2), clip_on=True, clip_box='round')
 n_graphs = 2
 ax1 = plt.subplot(1, n_graphs, 1)
 ax2 = plt.subplot(1, n_graphs, 2)
@@ -103,8 +105,10 @@ for z in range(2):
 
     position = history[i, 0:2]
     heading = history[i, 4]
-    map_data.plot_map_img_rotate(1)
+    map_data.plot_map_img_left_right_flip()
     x, y = map_data.xy2rc(position[0], position[1])
+    x = map_data.map_width - x
+    # plt.plot(x, y, color='red', marker='o', markersize=10)
 
     angles = np.linspace(-4.7/2, 4.7/2, 1080)
     sines = np.sin(angles)
@@ -119,28 +123,22 @@ for z in range(2):
     scan_pts = scan_pts + position
     scan_pts = (scan_pts - origin) / map_data.map_resolution
 
-    head90 = - np.pi/2
-    rotation90 = np.array([[np.cos(head90), -np.sin(head90)],
-                                [np.sin(head90), np.cos(head90)]])
-    scan_pts = np.matmul(rotation90, scan_pts.T).T
+    scan_pts[:, 0] = map_data.map_width - scan_pts[:, 0]
 
-    offset = map_data.map_width
-    scan_pts[:, 1] = offset + scan_pts[:, 1]
-
-    xs, ys = map_data.pts2rc(history[i-50:i, 0:2])
-    history_pts = np.column_stack((xs, ys))
-    history_pts = np.matmul(rotation90, history_pts.T).T
-    history_pts[:, 1] = offset + history_pts[:, 1]
-    plt.plot(history_pts[:, 0], history_pts[:, 1], color=free_speech, linewidth=2)
+    xs, ys = map_data.pts2rc(history[:i, 0:2])
+    xs = map_data.map_width - xs
+    plt.plot(xs, ys, color=free_speech, linewidth=2)
 
     normalised_scan = np.array(scan / np.max(scan) * 100, dtype=int)
     plt.scatter(scan_pts[:, 0], scan_pts[:, 1], c=normalised_scan, cmap=cm.get_cmap("gist_rainbow"))
     car_pos = np.array([x, y])
-    car_pos = np.matmul(rotation90, car_pos.T).T
-    car_pos[1] = offset + car_pos[1]
     plot_scan(scan_pts, car_pos[0], car_pos[1])
-    car_heading = np.rad2deg(-heading)
+    car_heading = np.rad2deg(heading-np.pi/2)
     add_car_picture(car_pos[0], car_pos[1], car_heading)
+
+    if z == 0:
+        arrow_size = 22
+        plt.arrow(car_pos[0], car_pos[1], arrow_size*np.cos(-heading-np.pi), arrow_size*np.sin(-heading-np.pi), width=2, head_width=8, head_length=6, fc='r', ec='r', zorder=10)
 
     scan_pt_list.append(scan_pts)
 
@@ -149,17 +147,12 @@ set_axis_limits(scan_pts) # change to use same points
 plt.sca(axs[0])
 set_axis_limits(scan_pts) # change to use same points
 
-plt.sca(axs[1])
-arrow_size = 30
-plt.arrow(car_pos[0], car_pos[1], arrow_size*np.cos(heading-np.pi/2), arrow_size*np.sin(heading-np.pi/2), width=2, head_width=8, head_length=6, fc='r', ec='r', zorder=10)
 
-x_txt = car_pos[0] - 60
-y_txt = car_pos[1] + 60
-ax1.text(x=x_txt, y=y_txt, s="Previous timestep", fontsize=11, color='black', fontdict={'weight': 'bold'}, backgroundcolor='white', bbox={'facecolor': 'white', 'alpha': 0.9, "boxstyle": "round", "edgecolor": "white"})
-ax2.text(x=x_txt, y=y_txt, s="Current timestep", fontsize=11, color='black', fontdict={'weight': 'bold'}, backgroundcolor='white', bbox={'facecolor': 'white', 'alpha': 0.9, "boxstyle": "round", "edgecolor": "white"})
-# ax1.text(x=x_txt, y=y_txt, s="Time: $t$", fontsize=15, color='black')
-# ax2.text(x=x_txt, y=y_txt, s="Time: $t-1$", fontsize=15, color='black')
-ax2.text(x=car_pos[0] + 35, y=car_pos[1] + 20, s="Vehicle\nspeed", fontsize=9, color='black', backgroundcolor='white', bbox={'facecolor': 'white', 'alpha': 0.5, "boxstyle": "round", "edgecolor": "white"})
+x_txt = car_pos[0] - 80
+y_txt = car_pos[1] - 45
+ax1.text(x=x_txt, y=y_txt, s="Current timestep", fontsize=11, color='black', fontdict={'weight': 'bold'}, backgroundcolor='white', bbox={'facecolor': 'white', 'alpha': 0.9, "boxstyle": "round", "edgecolor": "white"})
+ax2.text(x=x_txt, y=y_txt, s="Previous timestep", fontsize=11, color='black', fontdict={'weight': 'bold'}, backgroundcolor='white', bbox={'facecolor': 'white', 'alpha': 0.9, "boxstyle": "round", "edgecolor": "white"})
+ax1.text(x=car_pos[0] -95, y=car_pos[1] - 7, s="Vehicle\nspeed", fontsize=9, color='black', backgroundcolor='white', bbox={'facecolor': 'white', 'alpha': 0.5, "boxstyle": "round", "edgecolor": "white"}, va='center', ha='center')
 
 
 plt.tight_layout()
