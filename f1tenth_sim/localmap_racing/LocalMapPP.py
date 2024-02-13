@@ -41,7 +41,9 @@ class LocalMapPP(BasePlanner):
             self.generate_max_speed_profile()
 
             raceline = np.concatenate([self.raceline, self.vs[:, None]], axis=-1)
-            np.save(self.raceline_data_path  + f'LocalRaceline_{self.step_counter}.npy', raceline)
+            np.save(self.raceline_data_path  + f'LocalRaceline_{self.step_counter}.npy', raceline) 
+            #! URGENT: Must fix
+            #! Bug: the racelines are saved from 0...1500000. They should rather be saved with map name and only for the first lap..... 
             action = self.pure_pursuit_racing_line(obs)
         else:
             action = self.pure_pursuit_center_line()
