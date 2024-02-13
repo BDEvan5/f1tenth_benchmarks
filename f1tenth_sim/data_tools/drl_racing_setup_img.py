@@ -54,8 +54,8 @@ def plot_scan(scan_pts, x, y):
 
 def set_axis_limits(scan_pts):
     plt.gca().axis('off')
-    xa = 3
-    yb = 10
+    xa = 15
+    yb = 6
     x_min = np.min(scan_pts[:, 0]) - xa
     x_max = np.max(scan_pts[:, 0]) + xa
     y_min = np.min(scan_pts[:, 1]) - yb
@@ -64,17 +64,17 @@ def set_axis_limits(scan_pts):
     plt.xlim([x_min, x_max])
 
 
-def add_car_picture(x, y):
+def add_car_picture(x, y, heading_angle):
     img = plt.imread("f1tenth_sim/data_tools/RacingCar.png", format='png')
-    img = rotate_bound(img, -14)
+    img = rotate_bound(img, heading_angle)
+    # img = rotate_bound(img, 74)
     oi = OffsetImage(img, zoom=0.4)
-    ab = AnnotationBbox(oi, (x+0.5, y-3.8), xycoords='data', frameon=False)
+    ab = AnnotationBbox(oi, (x-10, y-3.), xycoords='data', frameon=False)
     plt.gca().add_artist(ab)
-from matplotlib.collections import LineCollection
+
 import matplotlib.cm as cm
 
-# inds = [317, 317+8]
-inds = [309, 317]
+inds = [307, 316]
 planner_name = f"LocalMapPP"
 test_id = "mu60"
 map_name = "aut"
@@ -87,12 +87,14 @@ scans = np.load(root + f"RawData_{test_id}/ScanLog_{map_name}_0.npy")
 map_data = MapData(map_name)
 origin = map_data.map_origin[:2]
 
-fig = plt.figure(1, figsize=(7, 2))
+fig = plt.figure(1, figsize=(5.2, 2))
 n_graphs = 2
 ax1 = plt.subplot(1, n_graphs, 1)
 ax2 = plt.subplot(1, n_graphs, 2)
 
 axs = [ax1, ax2]
+
+scan_pt_list = []
 
 for z in range(2):
     plt.sca(axs[z])
@@ -101,7 +103,7 @@ for z in range(2):
 
     position = history[i, 0:2]
     heading = history[i, 4]
-    map_data.plot_map_img()
+    map_data.plot_map_img_rotate(1)
     x, y = map_data.xy2rc(position[0], position[1])
 
     angles = np.linspace(-4.7/2, 4.7/2, 1080)
@@ -112,27 +114,58 @@ for z in range(2):
 
     rotation = np.array([[np.cos(heading), -np.sin(heading)],
                                 [np.sin(heading), np.cos(heading)]])
-
+    
     scan_pts = np.matmul(rotation, scan_pts.T).T
     scan_pts = scan_pts + position
     scan_pts = (scan_pts - origin) / map_data.map_resolution
 
-    xs, ys = map_data.pts2rc(history[:i, 0:2])
-    plt.plot(xs, ys, color=free_speech, linewidth=2)
+    head90 = - np.pi/2
+    rotation90 = np.array([[np.cos(head90), -np.sin(head90)],
+                                [np.sin(head90), np.cos(head90)]])
+    scan_pts = np.matmul(rotation90, scan_pts.T).T
+
+    offset = map_data.map_width
+    scan_pts[:, 1] = offset + scan_pts[:, 1]
+
+    xs, ys = map_data.pts2rc(history[i-50:i, 0:2])
+    history_pts = np.column_stack((xs, ys))
+    history_pts = np.matmul(rotation90, history_pts.T).T
+    history_pts[:, 1] = offset + history_pts[:, 1]
+    plt.plot(history_pts[:, 0], history_pts[:, 1], color=free_speech, linewidth=2)
 
     normalised_scan = np.array(scan / np.max(scan) * 100, dtype=int)
     plt.scatter(scan_pts[:, 0], scan_pts[:, 1], c=normalised_scan, cmap=cm.get_cmap("gist_rainbow"))
-    plot_scan(scan_pts, x, y)
-    add_car_picture(x, y)
+    car_pos = np.array([x, y])
+    car_pos = np.matmul(rotation90, car_pos.T).T
+    car_pos[1] = offset + car_pos[1]
+    plot_scan(scan_pts, car_pos[0], car_pos[1])
+    car_heading = np.rad2deg(-heading)
+    add_car_picture(car_pos[0], car_pos[1], car_heading)
 
-    set_axis_limits(scan_pts) # change to use same points
-    
+    scan_pt_list.append(scan_pts)
+
+scan_pts = np.vstack(scan_pt_list)
+set_axis_limits(scan_pts) # change to use same points
+plt.sca(axs[0])
+set_axis_limits(scan_pts) # change to use same points
+
+plt.sca(axs[1])
+arrow_size = 30
+plt.arrow(car_pos[0], car_pos[1], arrow_size*np.cos(heading-np.pi/2), arrow_size*np.sin(heading-np.pi/2), width=2, head_width=8, head_length=6, fc='r', ec='r', zorder=10)
+
+x_txt = car_pos[0] - 60
+y_txt = car_pos[1] + 60
+ax1.text(x=x_txt, y=y_txt, s="Previous timestep", fontsize=11, color='black', fontdict={'weight': 'bold'}, backgroundcolor='white', bbox={'facecolor': 'white', 'alpha': 0.9, "boxstyle": "round", "edgecolor": "white"})
+ax2.text(x=x_txt, y=y_txt, s="Current timestep", fontsize=11, color='black', fontdict={'weight': 'bold'}, backgroundcolor='white', bbox={'facecolor': 'white', 'alpha': 0.9, "boxstyle": "round", "edgecolor": "white"})
+# ax1.text(x=x_txt, y=y_txt, s="Time: $t$", fontsize=15, color='black')
+# ax2.text(x=x_txt, y=y_txt, s="Time: $t-1$", fontsize=15, color='black')
+ax2.text(x=car_pos[0] + 35, y=car_pos[1] + 20, s="Vehicle\nspeed", fontsize=9, color='black', backgroundcolor='white', bbox={'facecolor': 'white', 'alpha': 0.5, "boxstyle": "round", "edgecolor": "white"})
 
 
 plt.tight_layout()
 plt.rcParams['pdf.use14corefonts'] = True
 
 plt.savefig(save_path + f"drl_racing_setup.svg", bbox_inches='tight', pad_inches=0.01)
-# plt.savefig(save_path + f"drl_racing_setup_{i}.pdf", bbox_inches='tight', pad_inches=0.01)
+plt.savefig(save_path + f"drl_racing_setup.pdf", bbox_inches='tight', pad_inches=0.01)
 
 
