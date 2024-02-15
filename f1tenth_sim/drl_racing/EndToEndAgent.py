@@ -1,7 +1,7 @@
 import numpy as np
 from f1tenth_sim.drl_racing.sac import TrainSAC, TestSAC
 from f1tenth_sim.drl_racing.td3 import TrainTD3, TestTD3
-from f1tenth_sim.drl_racing.reward_functions import TrajectoryAidedLearningReward, ProgressReward
+from f1tenth_sim.drl_racing.reward_functions import create_reward_function
 from f1tenth_sim.utils.BasePlanner import BasePlanner, save_params
 import torch
 
@@ -15,18 +15,6 @@ def create_train_agent(state_dim, algorithm):
     
     return agent
     
-# def create_test_agent(filename, directory):
-#     algorithm = filename[0:3]
-#     if algorithm == "TD3":
-#         agent = TestTD3(filename, directory)
-#     elif algorithm == "SAC":
-#         agent = TestSAC(filename, directory)
-#     else: raise ValueError(f"Algorithm {algorithm} not recognised")
-    
-#     return agent
-    
-
-
 
 
 class EndToEndAgent(BasePlanner):
@@ -90,9 +78,7 @@ class TrainEndToEndAgent(EndToEndAgent):
     def __init__(self, map_name, test_id, extra_params={}):
         BasePlanner.__init__(self, "EndToEnd", test_id, extra_params=extra_params) #NOTE: do not call the inherited __init__()
 
-        # self.reward_generator = ProgressReward(self.planner_params)
-        self.reward_generator = TrajectoryAidedLearningReward(map_name, self.planner_params) 
-        # save_params(self.reward_generator.pp.planner_params, self.data_root_path, "pp_params")
+        self.reward_generator = create_reward_function(self.planner_params, map_name)
         self.state = None
         self.nn_state = None
         self.nn_act = None

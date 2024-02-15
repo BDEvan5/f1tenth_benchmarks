@@ -11,6 +11,7 @@ from f1tenth_sim.utils.track_utils import CentreLine
 from f1tenth_sim.localmap_racing.LocalMap import LocalMap
 from matplotlib.patches import Polygon
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+import matplotlib.cm as cm
 
 
 def ensure_path_exists(path):
@@ -72,7 +73,6 @@ def add_car_picture(x, y, heading_angle):
     ab = AnnotationBbox(oi, (x+15, y), xycoords='data', frameon=False)
     plt.gca().add_artist(ab)
 
-import matplotlib.cm as cm
 
 start = 27
 space = 10
