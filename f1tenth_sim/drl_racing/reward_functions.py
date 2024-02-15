@@ -44,13 +44,10 @@ class TrajectoryAidedLearningReward:
 
 class ProgressReward:
     def __init__(self, params):
-        pass
         self.previous_progress = 0
         self.progress_weight = params.progress_weight
         
     def __call__(self, observation, prev_obs, action):
-        if self.previous_progress == 0: return 0
-
         if observation['lap_complete']:
             self.previous_progress = 0
             return 1  # complete
@@ -59,7 +56,10 @@ class ProgressReward:
             return -1 # crash
         
         progress_diff = observation['progress'] - self.previous_progress
+        self.previous_progress = observation['progress']
         reward = self.progress_weight * progress_diff
+
+        # print(f"Progress: {observation['progress']} --> Diff: {progress_diff} --> reward: {reward}")
 
         return reward
 
