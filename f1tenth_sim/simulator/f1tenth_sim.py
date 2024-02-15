@@ -36,7 +36,7 @@ class F1TenthSimBase:
 
         self.lap_history = []
         if save_detail_history:
-            self.history = SimulatorHistory(self.path, test_id, True)
+            self.history = SimulatorHistory(self.path, test_id, self.params.save_scan_history)
             self.history.set_map_name(map_name)
             
         self.pr = cProfile.Profile()
