@@ -5,12 +5,12 @@ from PIL import Image
 import os 
 from scipy.ndimage import distance_transform_edt as edt
 
-from f1tenth_sim.utils.BasePlanner import load_parameter_file
+from f1tenth_sim.utils.BasePlanner import load_parameter_file_with_extras
 
 
 class ParticleFilter:
-    def __init__(self, planner_name, test_id) -> None:
-        self.params = load_parameter_file("particle_filter_params")
+    def __init__(self, planner_name, test_id, extra_params={}) -> None:
+        self.params = load_parameter_file_with_extras("particle_filter_params", extra_params)
         self.planner_name = planner_name
         self.test_id = test_id
         self.data_path = f"Logs/{planner_name}/RawData_{test_id}/"

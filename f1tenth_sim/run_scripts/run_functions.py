@@ -53,15 +53,15 @@ def test_planning_single_map(planner, map_name, test_id, extra_params={}, number
 
 
 
-def test_full_stack_all_maps(planner, test_id, number_of_laps=NUMBER_OF_LAPS):
+def test_full_stack_all_maps(planner, test_id, extra_params={}, number_of_laps=NUMBER_OF_LAPS):
     for map_name in map_list:
-        test_full_stack_single_map(planner, map_name, test_id, number_of_laps=number_of_laps)
+        test_full_stack_single_map(planner, map_name, test_id, extra_params=extra_params, number_of_laps=number_of_laps)
 
 def test_full_stack_single_map(planner, map_name, test_id, extra_params={}, number_of_laps=NUMBER_OF_LAPS):
     print(f"Testing on {map_name}...")
-    pf = ParticleFilter(planner.name, test_id)
     simulator = F1TenthSim(map_name, planner.name, test_id, extra_params=extra_params)
     planner.set_map(map_name)
+    pf = ParticleFilter(planner.name, test_id, {"dt": simulator.params.timestep * simulator.params.n_sim_steps})
     pf.set_map(map_name)
     simulate_localisation_laps(simulator, planner, pf, number_of_laps)
 

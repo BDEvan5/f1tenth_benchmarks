@@ -19,11 +19,12 @@ def test_pure_pursuit_planning():
 
 def test_pure_pursuit_planning_frequencies():
     # friction_vals = np.linspace(0.8, 1, 5)
-    friction_vals = [0.7, 0.75]
+    # friction_vals = [0.7, 0.75]
+    friction_vals = [0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
     # friction_vals = np.linspace(0.55, 1, 10)
-    simulator_timestep_list = [1, 2, 5, 8, 10, 12]
+    # simulator_timestep_list = [1, 2, 5, 8, 10, 12]
     # simulator_timestep_list = [1, 2, 5, 10, 20]
-    # simulator_timestep_list = [8]
+    simulator_timestep_list = [4, 6]
     for simulator_timesteps in simulator_timestep_list:
         for friction in friction_vals:
             test_id = f"mu{int(friction*100)}_steps{simulator_timesteps}"
@@ -35,11 +36,29 @@ def test_pure_pursuit_planning_frequencies():
     # plot_raceline_tracking(planner.name, test_id)
 
 
+def test_full_stack_pure_pursuit_planning_frequencies():
+    map_name = "aut"
+    # friction_vals = [0.7]
+    friction_vals = [0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
+    simulator_timestep_list = [2]
+    # simulator_timestep_list = [3, 4, 5, 6, 8, 10, 12, 14, 16]
+    for simulator_timesteps in simulator_timestep_list:
+        for friction in friction_vals:
+            test_id = f"mu{int(friction*100)}_steps{simulator_timesteps}"
+            print(f"Testing {test_id}...")
+            planner = GlobalPurePursuit(test_id, False, planner_name="FullStackPP", extra_params={"racetrack_set": f"mu{int(friction*100)}"})
+            test_full_stack_single_map(planner, map_name, test_id, {"n_sim_steps": simulator_timesteps}, 10)
+
+    plot_trajectory_analysis(planner.name, test_id)
+    plot_raceline_tracking(planner.name, test_id)
+
+
+
 def test_full_stack_pure_pursuit():
-    test_id = "mu60"
+    test_id = "mu90"
     # map_name = "aut"
     # map_name = "mco"
-    planner = GlobalPurePursuit(test_id, False, planner_name="FullStackPP")
+    planner = GlobalPurePursuit(test_id, False, planner_name="FullStackPP", extra_params={"racetrack_set": test_id})
     test_full_stack_all_maps(planner, test_id)
     # test_full_stack_single_map(planner, map_name, test_id)
 
@@ -49,6 +68,7 @@ def test_full_stack_pure_pursuit():
 
 # test_pure_pursuit_planning()
 # test_full_stack_pure_pursuit()
-test_pure_pursuit_planning_frequencies()
+# test_pure_pursuit_planning_frequencies()
+test_full_stack_pure_pursuit_planning_frequencies()
 
 
