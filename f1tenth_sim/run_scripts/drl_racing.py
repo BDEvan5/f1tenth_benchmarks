@@ -60,7 +60,7 @@ def run_reward_tests():
                 test_id = f"TD3_{reward}_{seed}_{train_map}"
                 print(f"Training agent: {test_id}")
                 training_agent = TrainEndToEndAgent(train_map, test_id, extra_params={'reward': reward})
-                simulate_training_steps(training_agent, train_map, test_id)
+                simulate_training_steps(training_agent, train_map, test_id, extra_params={'n_sim_steps': 10})
                 plot_drl_training(training_agent.name, test_id)
 
                 testing_agent = EndToEndAgent(test_id)
