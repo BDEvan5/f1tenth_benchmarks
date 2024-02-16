@@ -27,7 +27,7 @@ class F1TenthSimBase:
         # state is [x, y, steer_angle, vel, yaw_angle, yaw_rate, slip_angle]
         self.current_state = np.zeros((7, ))
         self.current_time = 0.0
-        self.progress = 0 
+        self.lap_progress, self.centre_line_progress = 0, 0 
         self.lap_number = -1 # so that it goes to 0 when reset
         self.starting_progress = 0
         self.total_steps = 0
@@ -66,7 +66,7 @@ class F1TenthSimBase:
 
     def step(self, action):
         if self.history is not None:
-            self.history.add_memory_entry(self.current_state, action, self.scan, self.progress)
+            self.history.add_memory_entry(self.current_state, action, self.scan, self.lap_progress)
 
         mini_i = self.params.n_sim_steps
         while mini_i > 0:
@@ -82,14 +82,14 @@ class F1TenthSimBase:
         
         done = self.collision or self.lap_complete
         if done:
-            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.test_id, "Progress": self.progress, "Time": self.current_time, "Steps": self.total_steps, "RecordTime": datetime.datetime.now(), "Planner": self.planner_name, "EntryID": f"{self.map_name}_{self.test_id}_{self.lap_number}"})
+            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.test_id, "Progress": self.lap_progress, "Time": self.current_time, "Steps": self.total_steps, "RecordTime": datetime.datetime.now(), "Planner": self.planner_name, "EntryID": f"{self.map_name}_{self.test_id}_{self.lap_number}"})
             self.save_data_frame()
             if self.history is not None: self.history.save_history()
 
         if self.collision:
-            print(f"{self.lap_number} :: {self.total_steps} COLLISION: Time: {self.current_time:.2f}, Progress: {100*self.progress:.1f}")
+            print(f"{self.lap_number} :: {self.total_steps} COLLISION: Time: {self.current_time:.2f}, Progress: {100*self.lap_progress:.1f}")
         elif self.lap_complete:
-            print(f"{self.lap_number} :: {self.total_steps} LAP COMPLETE: Time: {self.current_time:.2f}, Progress: {(100*self.progress):.1f}")
+            print(f"{self.lap_number} :: {self.total_steps} LAP COMPLETE: Time: {self.current_time:.2f}, Progress: {(100*self.lap_progress):.1f}")
 
 
         return observation, done
@@ -98,16 +98,16 @@ class F1TenthSimBase:
         raise NotImplementedError("The build_observation method has not been implemented")
 
     def check_lap_complete(self, pose):
-        centre_line_progress = self.centre_line.calculate_progress_percent(pose)
-        if centre_line_progress > self.starting_progress:
-            self.progress = centre_line_progress - self.starting_progress
+        self.centre_line_progress = self.centre_line.calculate_progress_percent(pose)
+        if self.centre_line_progress > self.starting_progress:
+            self.lap_progress = self.centre_line_progress - self.starting_progress
         else:
-            self.progress = centre_line_progress - self.starting_progress + 1 
+            self.lap_progress = self.centre_line_progress - self.starting_progress + 1 
         # self.progress = self.center_line.calculate_pose_progress(pose) + 1 - self.starting_progress
-        if self.progress > 0.999: self.progress =0
+        if self.lap_progress > 0.999: self.lap_progress =0
         
         done = False
-        if self.progress > 0.995 and self.current_time > 5: done = True
+        if self.lap_progress > 0.995 and self.current_time > 5: done = True
         if self.current_time > 250: 
             print("Time limit reached --> Lap not complete but no collision")
             done = True
@@ -142,7 +142,7 @@ class F1TenthSimBase:
         self.current_time = 0.0
         action = np.zeros(2)
         obs, done = self.step(action)
-        self.progress = 0
+        self.lap_progress = 0
 
         self.lap_number += 1
         
@@ -205,6 +205,7 @@ class F1TenthSim_TrueLocation(F1TenthSimBase):
                 "collision": self.collision,
                 "lap_complete": self.lap_complete,
                 "laptime": self.current_time,
-                "progress": self.progress}
+                "progress": self.lap_progress,
+                "centre_line_progress": self.centre_line_progress}
         return observation
 

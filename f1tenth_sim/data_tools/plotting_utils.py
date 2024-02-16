@@ -53,6 +53,8 @@ def true_moving_average(data, period):
         ret[-i-1] = t[-1]
     return ret
 
+
+
 def convert_to_min_max_avg(step_list, progress_list, xs):
     """Returns the 3 lines 
         - Minimum line

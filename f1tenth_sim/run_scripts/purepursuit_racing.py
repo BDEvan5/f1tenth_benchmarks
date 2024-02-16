@@ -18,15 +18,18 @@ def test_pure_pursuit_planning():
     plot_raceline_tracking(planner.name, test_id)
 
 def test_pure_pursuit_planning_frequencies():
-    friction_vals = np.linspace(0.55, 1, 10)
+    # friction_vals = np.linspace(0.8, 1, 5)
+    friction_vals = [0.7, 0.75]
+    # friction_vals = np.linspace(0.55, 1, 10)
+    simulator_timestep_list = [1, 2, 5, 8, 10, 12]
     # simulator_timestep_list = [1, 2, 5, 10, 20]
-    simulator_timestep_list = [14]
+    # simulator_timestep_list = [8]
     for simulator_timesteps in simulator_timestep_list:
         for friction in friction_vals:
             test_id = f"mu{int(friction*100)}_steps{simulator_timesteps}"
             print(f"Testing {test_id}...")
             planner = GlobalPurePursuit(test_id, False, planner_name="GlobalPlanPP", extra_params={"racetrack_set": f"mu{int(friction*100)}"})
-            test_planning_all_maps(planner, test_id, {"n_sim_steps": simulator_timesteps})
+            test_planning_all_maps(planner, test_id, {"n_sim_steps": simulator_timesteps}, 10)
 
     # plot_trajectory_analysis(planner.name, test_id)
     # plot_raceline_tracking(planner.name, test_id)
@@ -45,7 +48,7 @@ def test_full_stack_pure_pursuit():
 
 
 # test_pure_pursuit_planning()
-test_full_stack_pure_pursuit()
-# test_pure_pursuit_planning_frequencies()
+# test_full_stack_pure_pursuit()
+test_pure_pursuit_planning_frequencies()
 
 

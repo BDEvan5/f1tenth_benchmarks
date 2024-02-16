@@ -49,15 +49,16 @@ def train_and_test_agents():
 
 def run_reward_tests():
     train_maps = ["mco", "gbr", "esp", "aut"]
-    # seeds = [13, 14]
-    seeds = [12, 13, 14]
-    rewards = ["Progress"]
+    seeds = [99999]
+    # seeds = [12, 13, 14]
+    rewards = ["CTH"]
     # rewards = ["Progress", "CTH", "TAL"]
     for train_map in train_maps:
         for seed in seeds:
             for reward in rewards:
                 seed_randomness(seed)
                 test_id = f"TD3_{reward}_{seed}_{train_map}"
+                print(f"Training agent: {test_id}")
                 training_agent = TrainEndToEndAgent(train_map, test_id, extra_params={'reward': reward})
                 simulate_training_steps(training_agent, train_map, test_id)
                 plot_drl_training(training_agent.name, test_id)

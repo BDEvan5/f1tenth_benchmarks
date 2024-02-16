@@ -21,7 +21,7 @@ def create_reward_function(params, map_name):
 
 class TrajectoryAidedLearningReward:
     def __init__(self, params, map_name):
-        self.pp = GlobalPurePursuit("_drl_training", init_folder=False, extra_params={"training": True})
+        self.pp = GlobalPurePursuit("_drl_training", init_folder=False, extra_params={"training": True, "racetrack_set": params.tal_racetrack_set})
         self.pp.set_map(map_name) 
 
         self.beta_c = params.reward_tal_constant
@@ -75,22 +75,23 @@ class CrossTrackHeadingReward:
 
     def __call__(self, observation, prev_obs, action):        
         if observation['lap_complete']:
-            self.previous_progress = 0
             return 1  # complete
         if observation['collision']:
-            self.previous_progress = 0
             return -1 # crash
         
         state = observation['vehicle_state']
-        pose = self.centre_line.calculate_pose(observation['progress'])
+        pose = self.centre_line.calculate_pose(observation['centre_line_progress']) # this is relative progress, not true track progres......
 
-        distance = np.linalg.norm(pose[:2] - state[:2])
-        d_heading = abs(robust_angle_difference_rad(pose[2], state[4]))
 
-        r_heading  = (state[3] / self.cth_max_speed) * np.cos(d_heading) * self.cth_speed_weight 
-        r_distance = distance * self.cth_distance_weight 
+        cross_track_distance = np.linalg.norm(pose[:2] - state[:2])
+        distance_penalty = cross_track_distance * self.cth_distance_weight 
+        heading_error = abs(robust_angle_difference_rad(pose[2], state[4]))
+        speed_heading_reward  = (state[3] / self.cth_max_speed) * np.cos(heading_error) * self.cth_speed_weight 
 
-        reward = max(r_heading - r_distance, 0)
+        reward = max(speed_heading_reward - distance_penalty, 0)
+
+        # print(f"Prog. {observation['progress']:.2f} --> Distance: {cross_track_distance:.3f} --> Heading: {heading_error:.3f} SHR: {speed_heading_reward:.3f} --> Reward: {reward:.3f}")
+
         return reward
     
 
