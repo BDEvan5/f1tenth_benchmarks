@@ -97,21 +97,21 @@ class GlobalMPCC(BasePlanner):
 
             self.g = ca.vertcat(self.g, self.P[NX + 2 * k] * self.X[0, k + 1] - self.P[NX + 2 * k + 1] * self.X[1, k + 1])  # path boundary constraints
             
-            force_lateral = self.U[1, k] **2 / self.vehicle_params.wheelbase * ca.tan(ca.fabs(self.U[0, k])) *  self.vehicle_params.vehicle_mass
-            self.g = ca.vertcat(self.g, force_lateral) # frictional constraint
+        #     force_lateral = self.U[1, k] **2 / self.vehicle_params.wheelbase * ca.tan(ca.fabs(self.U[0, k])) *  self.vehicle_params.vehicle_mass
+        #     self.g = ca.vertcat(self.g, force_lateral) # frictional constraint
 
-            if k == 0: 
-                self.g = ca.vertcat(self.g, ca.fabs(self.U[1, k] - self.P[-1])) # ensure initial speed matches current speed
-            else:
-                self.g = ca.vertcat(self.g, ca.fabs(self.U[1, k] - self.U[1, k - 1]))  # limit decceleration
+            # if k == 0: 
+            #     self.g = ca.vertcat(self.g, ca.fabs(self.U[1, k] - self.P[-1])) # ensure initial speed matches current speed
+        #     else:
+        #         self.g = ca.vertcat(self.g, ca.fabs(self.U[1, k] - self.U[1, k - 1]))  # limit decceleration
 
     def init_bound_limits(self):
         self.lbg, self.ubg = np.zeros((self.g.shape[0], 1)), np.zeros((self.g.shape[0], 1))
-        for k in range(self.N):  # set the reference controls and path boundary conditions to track
-            self.lbg[NX - 2 + (NX + 3) * (k + 1), 0] = - self.f_max
-            self.ubg[NX - 2 + (NX + 3) * (k + 1) , 0] = self.f_max
-            self.lbg[NX -1 + (NX + 3) * (k + 1), 0] = - self.planner_params.max_decceleration * self.dt
-            self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = ca.inf # do not limit speeding up
+        # for k in range(self.N):  # set the reference controls and path boundary conditions to track
+        #     self.lbg[NX - 2 + (NX + 3) * (k + 1), 0] = - self.f_max
+        #     self.ubg[NX - 2 + (NX + 3) * (k + 1) , 0] = self.f_max
+        #     self.lbg[NX -1 + (NX + 3) * (k + 1), 0] = - self.planner_params.max_decceleration * self.dt
+        #     self.ubg[NX -1 + (NX + 3) * (k + 1) , 0] = ca.inf # do not limit speeding up
 
     def init_solver(self):
         variables = ca.vertcat(ca.reshape(self.X, NX * (self.N + 1), 1),
@@ -173,8 +173,10 @@ class GlobalMPCC(BasePlanner):
             right_bound = delta_point[0] * right_point[0] - delta_point[1] * right_point[1]
             left_bound = delta_point[0] * left_point[0] - delta_point[1] * left_point[1]
 
-            self.lbg[NX - 3 + (NX + 3) * (k + 1), 0] = min(left_bound, right_bound)
-            self.ubg[NX - 3 + (NX + 3) * (k + 1), 0] = max(left_bound, right_bound)
+            self.lbg[NX - 1 + (NX + 1) * (k + 1), 0] = min(left_bound, right_bound)
+            self.ubg[NX - 1 + (NX + 1) * (k + 1), 0] = max(left_bound, right_bound)
+            # self.lbg[NX - 3 + (NX + 3) * (k + 1), 0] = min(left_bound, right_bound)
+            # self.ubg[NX - 3 + (NX + 3) * (k + 1), 0] = max(left_bound, right_bound)
 
     def solve(self):
         x_init = ca.vertcat(ca.reshape(self.X0.T, NX * (self.N + 1), 1),

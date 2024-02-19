@@ -2,15 +2,15 @@ position_min: -100
 position_max: 100
 heading_max: 20
 local_path_max_length: 300
-max_speed: 4
-# max_speed: 8
-min_speed: 2
+# max_speed: 3
+max_speed: 8
+min_speed: 1
 max_steer: 0.4
-local_path_speed_min: 2
+local_path_speed_min: 1
 local_path_speed_max: 12
 max_decceleration: 8.5
 max_acceleration: 8.5
-friction_mu: 0.6
+friction_mu: 0.9
 
 psi_min: -10
 psi_max: 10
@@ -24,19 +24,24 @@ p_max: 4
 
 # Alex Liniger params
 weight_progress: 0.02
+# weight_progress: 0.0
 weight_lag: 500
 weight_contour: 0.1
-weight_steer: 0.0001
+# weight_steer: 0.0001
+weight_steer: 0.00001
+
+weight_steering_acceleration: 0.0000
+weight_acceleration: 0.0000
 
 # weight_progress: 0.1
 # weight_lag: 100
 # weight_contour: 2
 # weight_steer: 5
 
-# weight_progress: 0.5
+# weight_progress: 0.02
 # weight_lag: 10
-# weight_contour: 20
-# weight_steer: 1
+# weight_contour: 10
+# weight_steer: 0.001
 
 # # Constant MPCC values
 # weight_progress: 0.1
@@ -46,7 +51,7 @@ weight_steer: 0.0001
 
 dt: 0.1
 N: 10
-p_initial: 2
+p_initial: 4
 
 exclusion_width: 0.35
 
