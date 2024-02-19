@@ -20,11 +20,12 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
     track = np.loadtxt(filename, delimiter=',', skiprows=1)
 
     # for i in range(len(logs)-100, len(logs)-50):
-    for i in range(230, 280):
+    # for i in range(350, 400):
+    # for i in [381]:
     # for i in range(len(logs)-25, len(logs)):
-    # for i in range(1, len(logs)):
-    #     if i % 3 != 0:
-    #         continue
+    for i in range(1, len(logs)):
+        if i % 3 != 0:
+            continue
         states = np.load(mpcc_data_path + f"States_{i}.npy")
         controls = np.load(mpcc_data_path + f"Controls_{i}.npy")
         x0 = np.load(mpcc_data_path + f"x0_{i}.npy")
@@ -67,14 +68,16 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
         a1.set_ylim([np.min(states[:, 1]) - 2, np.max(states[:, 1]) + 2])
 
         t_angle = np.interp(states[:, 3], local_ss, psi) + np.pi/2
-        lag = np.sum(-np.cos(t_angle) * (states[:, 0] - xs) - np.sin(t_angle) * (states[:, 1] - ys)) * 500
-        contour = np.sum(np.sin(t_angle) * (states[:, 0] - xs) - np.cos(t_angle) * (states[:, 1] - ys)) * 0.02
-        print(f"{i} --> {lag:.2f}, {contour:.2f}")
+        lag_errors = (-np.cos(t_angle) * (states[:, 0] - xs) - np.sin(t_angle) * (states[:, 1] - ys)) **2
+        contour_errors = (np.sin(t_angle) * (states[:, 0] - xs) - np.cos(t_angle) * (states[:, 1] - ys)) **2
+        total_lag = np.sum(lag_errors) * 500
+        total_contour = np.sum(contour_errors) * 0.1
+        print(f"{i} --> {total_lag:.2f}, {total_contour:.2f}")
         # print(np.sin(t_angle) * (states[:, 0] - xs) - np.cos(t_angle) * (states[:, 1] - ys))
         steer = np.sum(controls[:, 0] **2) * 0.001
-        progress = -np.sum(controls[:, 1]) * 0.1
+        progress = -np.sum(controls[:, 1]) * 0.02
 
-        ae.bar(np.arange(4), [lag, contour, steer, progress])
+        ae.bar(np.arange(4), [total_lag, total_contour, steer, progress])
         ae.set_xticks(np.arange(4))
         ae.set_xticklabels(["Lag", "Contour", "Steer", "Progress"])
         # ae.set_ylim([-8, 8])
@@ -92,23 +95,28 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
         plt.sca(a1)
         plt.colorbar(line)
         a1.set_aspect('equal', adjustable='box')
-        a1.plot(logs[i, 0], logs[i, 1], 'X', color='red', markersize=12)
+        a1.plot(logs[i, 0], logs[i, 1], 'x', color='red', markersize=12)
 
 
-        a2.plot(controls[:, 1])
-        # a2.plot(controls[:, 2])
+        a2.plot(controls[:, 1], label="Speed action")
+        a2.plot(controls[:, 2], label="Centre line Speed")
         a2.plot([0, 2], logs[i+1, 3] * np.ones(2), '--', color='red')
         a2.set_ylabel("Speed action")
         a2.grid(True)
-        a2.set_ylim(1.5, 8.5)
+        a2.set_ylim(0.8, 4.2)
+        # a2.set_ylim(1.5, 8.5)
 
         a3.plot(controls[:, 0])
         a3.set_ylabel("Steering action")
         a3.grid(True)
-        a3.set_ylim(-0.4, 0.4)
+        # a3.set_ylim(-0.4, 0.4)
 
         forces = controls[:, 1] ** 2 / 0.33 * np.tan(np.abs(controls[:, 0])) * 3.71
         friction_limit = 0.6 * 9.81 * 3.71
+
+        # print(f"Steering: {controls[:, 0]}")
+        # print(f"Speeds: {controls[:, 1]}")
+        # print(f"Forces: {forces}")
 
         a4.plot([0, 10], [friction_limit, friction_limit], '--', color='black')
         a4.plot(forces, '-o', color='red')
@@ -116,17 +124,26 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
         a4.set_ylim([0, 40])
         a4.grid(True)
 
-
-        angles_guesses = np.interp(x0[:, 3], local_ss, psi) + np.pi/2
-        a5.set_ylabel('Angle')
-        a5.plot(x0[:, 2], '-o', color='blue', label="Initial x0")
-        a5.plot(states[:, 2], '-o', color='red', label="Final solution")
-        a5.plot(angles_guesses, '-o', color='green', label="Guess")
+        a5.plot(lag_errors, '-o', color='blue', label="Lag")
+        a5.plot(contour_errors, '-o', color='red', label="Contour")
         a5.grid(True)
         a5.legend()
-        a5.set_ylim([-2, -0.5])
-        y_lim = -np.pi/2
-        a5.plot([0, 10], [y_lim, y_lim], '--', color='black')
+        a5.set_ylabel('Error')
+        a5.set_ylim(0, 0.4)
+
+
+        # angles_guesses = np.interp(x0[:, 3], local_ss, psi) + np.pi/2
+        # a5.set_ylabel('Angle')
+        # a5.plot(x0[:, 2], '-o', color='blue', label="Initial x0")
+        # a5.plot(states[:, 2], '-o', color='red', label="Final solution")
+        # a5.plot(angles_guesses, '-o', color='green', label="Guess")
+        # a5.grid(True)
+        # a5.legend()
+        # # a5.set_ylim([-2, -0.5])
+        # a5.set_ylim(-3.2, 3.2)
+        # y_lim = -np.pi/2
+        # a5.plot([0, 10], [y_lim, y_lim], '--', color='black')
+
 
         # dv = np.diff(controls[:, 1])
         # dv = np.insert(dv, 0, controls[0, 1]- logs[i+1, 3])
@@ -143,8 +160,11 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
 
 if __name__ == '__main__':
     # render_local_maps("LocalMapPlanner", "r1")
-    render_mpcc_plans("GlobalPlanMPCC", "mu70", "esp")
+    # render_mpcc_plans("GlobalPlanMPCC", "mu70", "esp")
     # render_mpcc_plans("GlobalPlanMPCC", "mu70", "gbr")
+    # render_mpcc_plans("GlobalPlanMPCC", "max4_p0", "aut")
+    render_mpcc_plans("GlobalPlanMPCC", "max4", "aut")
+    # render_mpcc_plans("GlobalPlanMPCC", "max3", "aut")
     # render_mpcc_plans("GlobalPlanMPCC", "mu70", "aut")
     # render_mpcc_plans("ConstantMPCC", "mu70", "aut")
     # render_local_maps("LocalMPCC2", "r1", "aut")

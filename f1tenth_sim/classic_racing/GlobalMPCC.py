@@ -11,8 +11,8 @@ NU = 3
 
 
 class GlobalMPCC(BasePlanner):
-    def __init__(self, test_id, save_data=False, planner_name="GlobalMPCC"):
-        super().__init__(planner_name, test_id, params_name="GlobalMPCC")
+    def __init__(self, test_id, save_data=False, planner_name="GlobalMPCC", extra_params={}):
+        super().__init__(planner_name, test_id, params_name="GlobalMPCC", extra_params=extra_params)
         self.save_data = save_data
         if self.save_data: 
             self.mpcc_data_path = self.data_root_path + f"MPCCData_{test_id}/"
@@ -21,7 +21,8 @@ class GlobalMPCC(BasePlanner):
         self.centre_interpolant = None
         self.left_interpolant, self.right_interpolant = None, None
         self.g, self.obj = None, None
-        self.f_max = self.planner_params.friction_mu * self.vehicle_params.vehicle_mass * self.vehicle_params.gravity
+        self.f_max = 1000
+        # self.f_max = self.planner_params.friction_mu * self.vehicle_params.vehicle_mass * self.vehicle_params.gravity
 
         self.dt = self.planner_params.dt
         self.N = self.planner_params.N
@@ -79,7 +80,13 @@ class GlobalMPCC(BasePlanner):
             self.obj = self.obj + contouring_error **2 * self.planner_params.weight_contour  
             self.obj = self.obj + lag_error **2 * self.planner_params.weight_lag
             self.obj = self.obj - self.U[2, k] * self.planner_params.weight_progress
-            self.obj = self.obj + (self.U[0, k]) ** 2 * self.planner_params.weight_steer
+            self.obj = self.obj + self.U[0, k] ** 2 * self.planner_params.weight_steer
+
+            if k > 0:
+                self.obj = self.obj + (self.U[1, k] - self.U[1, k - 1]) ** 2 * self.planner_params.weight_acceleration
+                self.obj = self.obj + (self.U[0, k] - self.U[0, k - 1]) ** 2 * self.planner_params.weight_steering_acceleration
+
+
 
     def init_bounds(self):
         self.g = []  # constraints vector
@@ -149,6 +156,8 @@ class GlobalMPCC(BasePlanner):
             np.save(self.mpcc_data_path + f"States_{self.step_counter}.npy", states)
             np.save(self.mpcc_data_path + f"Controls_{self.step_counter}.npy", controls)
 
+        if self.step_counter % 10 == 0:
+            print(f"{self.step_counter} --> {action[0]:.3f}, {action[1]:.3f}")
 
         return action 
 
