@@ -23,7 +23,8 @@ def test_mpcc_planning():
     # test_id = "mu70"
     max_speed = 4
     test_id = f"max{max_speed}"
-    map_name = "aut"
+    # map_name = "aut"
+    map_name = "mco"
     # map_name = "gbr"
     # map_name = "esp"
     planner = GlobalMPCC(test_id, True, planner_name="GlobalPlanMPCC", extra_params={"max_speed": max_speed})

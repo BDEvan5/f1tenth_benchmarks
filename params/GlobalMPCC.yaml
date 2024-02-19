@@ -28,10 +28,10 @@ weight_progress: 0.02
 weight_lag: 500
 weight_contour: 0.1
 # weight_steer: 0.0001
-weight_steer: 0.00001
+weight_steer: 0.0001
 
-weight_steering_acceleration: 0.0000
-weight_acceleration: 0.0000
+weight_steering_acceleration: 0.0001
+weight_acceleration: 0.00001
 
 # weight_progress: 0.1
 # weight_lag: 100
