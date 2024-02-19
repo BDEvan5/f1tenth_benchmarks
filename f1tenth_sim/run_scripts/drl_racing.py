@@ -49,9 +49,10 @@ def train_and_test_agents():
 
 def run_reward_tests():
     train_maps = ["mco", "gbr", "esp", "aut"]
-    seeds = [99999]
-    # seeds = [12, 13, 14]
-    rewards = ["CTH"]
+    # seeds = [95]
+    seeds = [12, 13, 14]
+    rewards = ["CTH", "TAL"]
+    # rewards = ["CTH"]
     # rewards = ["Progress", "CTH", "TAL"]
     for train_map in train_maps:
         for seed in seeds:
