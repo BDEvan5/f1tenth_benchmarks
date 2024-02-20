@@ -56,21 +56,21 @@ def test_full_stack_pure_pursuit_planning_frequencies():
 
 
 def test_full_stack_pure_pursuit():
-    test_id = "mu90"
-    # map_name = "aut"
+    test_id = "ts_t1"
+    map_name = "esp"
     # map_name = "mco"
-    planner = GlobalPurePursuit(test_id, False, planner_name="FullStackPP", extra_params={"racetrack_set": test_id})
-    test_full_stack_all_maps(planner, test_id)
-    # test_full_stack_single_map(planner, map_name, test_id)
+    planner = GlobalPurePursuit(test_id, False, planner_name="FullStackPP", extra_params={"racetrack_set": "mu90"})
+    test_full_stack_all_maps(planner, test_id, number_of_laps=5)
+    # test_full_stack_single_map(planner, map_name, test_id, number_of_laps=5)
 
     plot_trajectory_analysis(planner.name, test_id)
-    plot_raceline_tracking(planner.name, test_id)
+    # plot_raceline_tracking(planner.name, test_id)
 
 
 def test_particle_filter_pure_pursuit():
-    test_id = "pf_t1"
+    test_id = "pf_t2"
     planner = GlobalPurePursuit(test_id, True, planner_name="PerceptionTesting", extra_params={"racetrack_set": test_id})
-    test_full_stack_all_maps(planner, test_id)
+    test_full_stack_all_maps(planner, test_id, number_of_laps=5)
     # test_full_stack_single_map(planner, map_name, test_id)
 
     plot_trajectory_analysis(planner.name, test_id)
@@ -92,9 +92,9 @@ def evaluate_particle_filter_particles_pure_pursuit():
 
 
 # test_pure_pursuit_planning()
-# test_full_stack_pure_pursuit()
+test_full_stack_pure_pursuit()
 # test_pure_pursuit_planning_frequencies()
-test_full_stack_pure_pursuit_planning_frequencies()
+# test_full_stack_pure_pursuit_planning_frequencies()
 # test_particle_filter_pure_pursuit()
 # evaluate_particle_filter_particles_pure_pursuit()
 

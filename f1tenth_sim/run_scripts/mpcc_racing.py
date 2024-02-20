@@ -29,7 +29,7 @@ def test_mpcc_planning():
     map_name = "mco"
     # map_name = "gbr"
     # map_name = "esp"
-    planner = GlobalMPCC(test_id, True, planner_name="GlobalPlanMPCC", extra_params={"max_speed": max_speed})
+    planner = GlobalMPCC(test_id, False, planner_name="GlobalPlanMPCC", extra_params={"max_speed": max_speed})
     # test_planning_single_map(planner, map_name, test_id, number_of_laps=3)
     test_planning_all_maps(planner, test_id, number_of_laps=5)
 
@@ -38,10 +38,10 @@ def test_mpcc_planning():
 
 def test_full_stack_mpcc():
 
-    test_id = "t2"
-    planner = GlobalMPCC(test_id, True, planner_name="GlobalPlanMPCC")
+    test_id = "mpcc_t1"
+    planner = GlobalMPCC(test_id, True, planner_name="FullStackMPCC")
     # test_planning_single_map(planner, map_name, test_id, number_of_laps=3)
-    test_full_stack_all_maps(planner, test_id, number_of_laps=5, extra_pf_params={"number_of_particles": 1000})
+    test_full_stack_all_maps(planner, test_id, number_of_laps=5)
 
     plot_trajectory_analysis(planner.name, test_id)
 
