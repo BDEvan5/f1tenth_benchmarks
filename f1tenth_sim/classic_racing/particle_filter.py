@@ -21,6 +21,7 @@ class ParticleFilter:
         self.dt = self.params.dt
         self.num_beams = self.params.number_of_beams
         self.lap_number = 0
+        self.map_name = None
 
         self.particles = None
         self.proposal_distribution = None
@@ -35,6 +36,7 @@ class ParticleFilter:
         return init_pose
 
     def set_map(self, map_name):
+        self.map_name = map_name
         self.scan_simulator = SensorModel(f"maps/{map_name}", self.num_beams, self.params.fov)
 
     def localise(self, action, observation):
@@ -69,7 +71,7 @@ class ParticleFilter:
 
     def lap_complete(self):
         estimates = np.array(self.estimates)
-        np.save(self.data_path + f"pf_estimates_{self.lap_number}.npy", estimates)
+        np.save(self.data_path + f"pf_estimates_{self.map_name}_{self.lap_number}.npy", estimates)
         self.lap_number += 1
 
 

@@ -149,7 +149,9 @@ def generate_racelines():
 
 def generate_raceline_set():
     params = load_parameter_file("RaceTrackGenerator")
-    friction_vals = np.linspace(0.55, 1, 10)
+    friction_vals = np.linspace(55, 8, 5)
+    # friction_vals = np.linspace(0.8, 1.0, 5)
+    # friction_vals = np.linspace(0.55, 1, 10)
     print(friction_vals)
     for friction in friction_vals:
         params.mu = friction
@@ -161,7 +163,7 @@ def generate_raceline_set():
 
 
 if __name__ == "__main__":
-    generate_racelines()
-    # generate_raceline_set()
+    # generate_racelines()
+    generate_raceline_set()
 
 

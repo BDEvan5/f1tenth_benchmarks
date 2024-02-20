@@ -205,11 +205,14 @@ def calculate_tracking_accuracy(planner_name, test_id, centerline=False, racelin
         old_df.at[df_idx, "MeanCT"] = np.mean(cross_track)
         old_df.at[df_idx, "MaxCT"] = np.max(cross_track)
 
-        old_ss = std_track.s_track / std_track.s_track[-1] 
-        raceline_speeds = np.interp(progresses, old_ss, std_track.speeds)
-        speed_diffs = raceline_speeds - states[:, 3]
+        if not centerline:
+            save_data = np.column_stack((progresses, cross_track, points))
+        else:
+            old_ss = std_track.s_path / std_track.s_path[-1] 
+            raceline_speeds = np.interp(progresses, old_ss, std_track.speeds)
+            speed_diffs = raceline_speeds - states[:, 3]
 
-        save_data = np.column_stack((progresses, cross_track, points, speed_diffs, raceline_speeds))
+            save_data = np.column_stack((progresses, cross_track, points, speed_diffs, raceline_speeds))
         np.save(file_name, save_data)
 
     old_df = old_df.sort_values(by=["TestMap", "Lap"])
@@ -239,4 +242,5 @@ def frequency_results():
 
 
 if __name__ == '__main__':
-    frequency_results()
+    # frequency_results()
+    calculate_tracking_accuracy("PerceptionTesting", "pf_t1", centerline=True)

@@ -7,8 +7,7 @@ from f1tenth_sim.utils.BasePlanner import BasePlanner
 
 class GlobalPurePursuit(BasePlanner):
     def __init__(self, test_id, use_centre_line=False, planner_name="GlobalPurePursuit", init_folder=True, extra_params={}):
-        if use_centre_line:
-            test_id = test_id + "_centre"
+        self.use_centre_line = use_centre_line
         super().__init__(planner_name, test_id, params_name="GlobalPurePursuit", init_folder=init_folder, extra_params=extra_params)
         self.racetrack = None
         self.use_centre_line = use_centre_line

@@ -1,8 +1,6 @@
 from f1tenth_sim.simulator import F1TenthSim_TrueLocation, F1TenthSim
 from f1tenth_sim.classic_racing.particle_filter import ParticleFilter
 
-from f1tenth_sim.data_tools.general_plotting.plot_trajectory_analysis import plot_trajectory_analysis
-from f1tenth_sim.data_tools.general_plotting.plot_raceline_tracking import plot_raceline_tracking
 
 
 NUMBER_OF_LAPS = 1
@@ -53,15 +51,17 @@ def test_planning_single_map(planner, map_name, test_id, extra_params={}, number
 
 
 
-def test_full_stack_all_maps(planner, test_id, extra_params={}, number_of_laps=NUMBER_OF_LAPS):
+def test_full_stack_all_maps(planner, test_id, extra_params={}, number_of_laps=NUMBER_OF_LAPS, extra_pf_params={}):
     for map_name in map_list:
-        test_full_stack_single_map(planner, map_name, test_id, extra_params=extra_params, number_of_laps=number_of_laps)
+        test_full_stack_single_map(planner, map_name, test_id, extra_params=extra_params, number_of_laps=number_of_laps, extra_pf_params=extra_pf_params)
 
-def test_full_stack_single_map(planner, map_name, test_id, extra_params={}, number_of_laps=NUMBER_OF_LAPS):
+def test_full_stack_single_map(planner, map_name, test_id, extra_params={}, number_of_laps=NUMBER_OF_LAPS, extra_pf_params={}):
     print(f"Testing on {map_name}...")
     simulator = F1TenthSim(map_name, planner.name, test_id, extra_params=extra_params)
     planner.set_map(map_name)
-    pf = ParticleFilter(planner.name, test_id, {"dt": simulator.params.timestep * simulator.params.n_sim_steps})
+    extra_pf_params["dt"] = simulator.params.timestep * simulator.params.n_sim_steps
+    pf = ParticleFilter(planner.name, test_id, extra_pf_params)
+    # pf = ParticleFilter(planner.name, test_id, {"dt": simulator.params.timestep * simulator.params.n_sim_steps})
     pf.set_map(map_name)
     simulate_localisation_laps(simulator, planner, pf, number_of_laps)
 
