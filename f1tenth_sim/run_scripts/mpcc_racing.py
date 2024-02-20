@@ -21,15 +21,17 @@ def test_constant_mpcc_planning():
 
 def test_mpcc_planning():
     # test_id = "mu70"
-    max_speed = 4
-    test_id = f"max{max_speed}"
+    max_speed = 8
+    # test_id = f"max{max_speed}"
+    # test_id = "params_t2"
+    test_id = "t2"
     # map_name = "aut"
     map_name = "mco"
     # map_name = "gbr"
     # map_name = "esp"
     planner = GlobalMPCC(test_id, True, planner_name="GlobalPlanMPCC", extra_params={"max_speed": max_speed})
-    test_planning_single_map(planner, map_name, test_id)
-    # test_planning_all_maps(planner, test_id)
+    # test_planning_single_map(planner, map_name, test_id, number_of_laps=3)
+    test_planning_all_maps(planner, test_id, number_of_laps=5)
 
 
     plot_trajectory_analysis(planner.name, test_id)

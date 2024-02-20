@@ -37,9 +37,9 @@ def test_pure_pursuit_planning_frequencies():
 
 
 def test_full_stack_pure_pursuit_planning_frequencies():
-    map_name = "aut"
-    # friction_vals = [0.7]
-    friction_vals = [0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
+    map_name = "mco"
+    friction_vals = [0.7]
+    # friction_vals = [0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
     simulator_timestep_list = [2]
     # simulator_timestep_list = [3, 4, 5, 6, 8, 10, 12, 14, 16]
     for simulator_timesteps in simulator_timestep_list:
