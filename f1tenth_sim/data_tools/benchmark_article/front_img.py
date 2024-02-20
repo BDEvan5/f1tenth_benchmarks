@@ -73,7 +73,9 @@ def add_car_picture(x, y, heading_angle):
 
 planner_name = f"LocalMapPP"
 test_id = "mu60"
-map_name = "esp"
+map_name = "aut"
+# map_name = "mco"
+# map_name = "esp"
 
 root = f"Logs/{planner_name}/"
 localmap_data_path = root + f"RawData_{test_id}/LocalMapData_{test_id}/"
@@ -91,7 +93,9 @@ ax1 = plt.subplot(1, n_graphs, 1)
 
 scan_pt_list = []
 
-i = 878
+i=220
+# i = 780
+# i = 878
 scan = scans[i]
 
 position = history[i, 0:2]
@@ -126,9 +130,9 @@ add_car_picture(car_pos[0], car_pos[1], -car_heading)
 
 set_axis_limits(scan_pts) # change to use same points
 
-x_txt = car_pos[0] + 35
-y_txt = car_pos[1] - 15
-plt.text(x=x_txt, y=y_txt, s="Racing car\non a track", fontsize=11, color='black', fontdict={'weight': 'bold'}, backgroundcolor='white', bbox={'facecolor': 'white', 'alpha': 0.9, "boxstyle": "round", "edgecolor": "white"})
+x_txt = car_pos[0] + 10
+y_txt = car_pos[1] + 50
+plt.text(x=x_txt, y=y_txt, s="Racing car\non a track", fontsize=12, color='black', fontdict={'weight': 'bold'}, backgroundcolor='white', bbox={'facecolor': 'white', 'alpha': 0.9, "boxstyle": "round", "edgecolor": "white"})
 
 # plt.gca().set_aspect('auto')
 
