@@ -14,6 +14,9 @@ import cProfile, io, pstats
 class F1TenthSimBase:
     def __init__(self, map_name, planner_name, test_id, save_detail_history=True, training=False, extra_params={}):
         self.params = load_parameter_file_with_extras("simulator_params", extra_params)
+        np.random.seed(self.params.random_seed)
+        self.start_pose_rands = np.random.random((100))
+        print(self.start_pose_rands[:10])
         self.planner_name = planner_name
         self.map_name = map_name
         self.path = f"Logs/{planner_name}/"
@@ -132,8 +135,7 @@ class F1TenthSimBase:
 
     def reset(self):
         if self.params.use_random_starts and self.lap_number > -1:
-            self.starting_progress = np.random.random()
-            start_pose = self.centre_line.calculate_pose(self.starting_progress)
+            start_pose = self.centre_line.calculate_pose(self.start_pose_rands[self.lap_number])
         else:
             self.starting_progress = 0
             start_pose = np.zeros(3)
