@@ -37,11 +37,12 @@ def test_mpcc_planning():
     plot_trajectory_analysis(planner.name, test_id)
 
 def test_full_stack_mpcc():
+    map_name = "aut"
 
     test_id = "mpcc_t1"
     planner = GlobalMPCC(test_id, True, planner_name="FullStackMPCC")
-    # test_planning_single_map(planner, map_name, test_id, number_of_laps=3)
-    test_full_stack_all_maps(planner, test_id, number_of_laps=5)
+    test_planning_single_map(planner, map_name, test_id, number_of_laps=3)
+    # test_full_stack_all_maps(planner, test_id, number_of_laps=5)
 
     plot_trajectory_analysis(planner.name, test_id)
 
