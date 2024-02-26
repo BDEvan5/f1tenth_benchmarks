@@ -42,8 +42,8 @@ def test_full_stack_mpcc():
     # map_name = "esp"
     map_name = "gbr"
 
-    test_id = "mpcc_f90_v2"
-    # test_id = "mpcc_f100"
+    # test_id = "mpcc_f90_v2"
+    test_id = "mpcc_f100"
     planner = GlobalMPCC(test_id, True, planner_name="FullStackMPCC")
     # test_planning_single_map(planner, map_name, test_id, number_of_laps=1)
     # test_full_stack_all_maps(planner, test_id, number_of_laps=10)
@@ -53,13 +53,29 @@ def test_full_stack_mpcc():
     plot_trajectory_analysis(planner.name, test_id)
 
 
+def run_friction_mpcc_tests():
+    friction_mus = [0.5, 0.6]
+    # friction_mus = [0.7, 0.8, 0.9, 1]
+
+    for mu in friction_mus:
+        test_id = f"fs_mpcc_mu{int(mu*100)}"
+        planner = GlobalMPCC(test_id, False, planner_name="FullStackMPCC", extra_params={"friction_mu": mu})
+        test_full_stack_all_maps(planner, test_id, number_of_laps=10)
+
+        # test_id = f"fs_mpcc_mu{int(mu*100)}"
+        # planner = GlobalMPCC(test_id, False, planner_name="GlobalPlanMPCC", extra_params={"friction_mu": mu})
+        # test_planning_all_maps(planner, test_id, number_of_laps=10)
+
+
 
 
 
 if __name__ == "__main__":
     # test_constant_mpcc_planning()
     # test_mpcc_planning()
-    test_full_stack_mpcc()
+    # test_full_stack_mpcc()
+
+    run_friction_mpcc_tests()
 
 
 
