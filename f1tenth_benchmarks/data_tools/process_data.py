@@ -5,7 +5,7 @@ import os
 
 
 
-def build_main_df():
+def process_data():
     folders = glob.glob("Logs/*")
     full_df = []
     summary_df = []
@@ -32,6 +32,7 @@ def build_main_df():
     summary_df['VehicleID'] = summary_df['Vehicle'] + "_" + summary_df['TestID']
     summary_df = summary_df.sort_values(by=["Vehicle", "MapName"])
     summary_df.to_csv("Logs/Summary.csv", index=False, float_format='%.4f')
+    print("Complied Full.csv and Summary.csv.")
 
-
-build_main_df()
+if __name__ == "__main__":
+    process_data()

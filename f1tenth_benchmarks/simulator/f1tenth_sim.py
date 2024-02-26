@@ -16,7 +16,6 @@ class F1TenthSimBase:
         self.params = load_parameter_file_with_extras("simulator_params", extra_params)
         np.random.seed(self.params.random_seed)
         self.start_pose_rands = np.random.random((100))
-        print(self.start_pose_rands[:10])
         self.planner_name = planner_name
         self.map_name = map_name
         self.path = f"Logs/{planner_name}/"
