@@ -23,11 +23,11 @@ def render_mpcc_plans(planner_name, test_id, map_name="aut"):
     # for i in range(350, 400):
     # for i in [381]:
     # for i in range(len(logs)-25, len(logs)):
-    for i in range(44, 55):
+    # for i in range(44, 55):
     # for i in range(1, 500):
-    # for i in range(1, len(logs)):
-        # if i % 3 != 0:
-        #     continue
+    for i in range(1, len(logs)):
+        if i % 3 != 0:
+            continue
         states = np.load(mpcc_data_path + f"States_{i}.npy")
         controls = np.load(mpcc_data_path + f"Controls_{i}.npy")
         x0 = np.load(mpcc_data_path + f"x0_{i}.npy")
@@ -166,7 +166,8 @@ if __name__ == '__main__':
     # render_mpcc_plans("GlobalPlanMPCC", "mu70", "gbr")
     # render_mpcc_plans("GlobalPlanMPCC", "max4_p0", "aut")
     # render_mpcc_plans("GlobalPlanMPCC", "max4", "aut")
-    render_mpcc_plans("GlobalPlanMPCC", "max8", "aut")
+    render_mpcc_plans("FullStackMPCC", "mpcc_t3", "aut")
+    # render_mpcc_plans("GlobalPlanMPCC", "max8", "aut")
     # render_mpcc_plans("GlobalPlanMPCC", "mu70", "aut")
     # render_mpcc_plans("ConstantMPCC", "mu70", "aut")
     # render_local_maps("LocalMPCC2", "r1", "aut")

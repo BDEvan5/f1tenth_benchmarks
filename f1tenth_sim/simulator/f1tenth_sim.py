@@ -85,7 +85,7 @@ class F1TenthSimBase:
         
         done = self.collision or self.lap_complete
         if done:
-            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.test_id, "Progress": self.lap_progress, "Time": self.current_time, "Steps": self.total_steps, "RecordTime": datetime.datetime.now(), "Planner": self.planner_name, "EntryID": f"{self.map_name}_{self.test_id}_{self.lap_number}"})
+            self.lap_history.append({"Lap": self.lap_number, "TestMap": self.map_name, "TestID": self.test_id, "Progress": self.lap_progress, "Time": self.current_time, "Steps": self.total_steps, "RecordTime": datetime.datetime.now(), "Planner": self.planner_name, "EntryID": f"{self.map_name}_{self.test_id}_{self.lap_number}", "Collision": self.collision, "LapComplete": self.lap_complete, "StartingProgress": self.starting_progress})
             self.save_data_frame()
             if self.history is not None: self.history.save_history()
 
@@ -107,7 +107,7 @@ class F1TenthSimBase:
         else:
             self.lap_progress = self.centre_line_progress - self.starting_progress + 1 
         # self.progress = self.center_line.calculate_pose_progress(pose) + 1 - self.starting_progress
-        if self.lap_progress > 0.999: self.lap_progress =0
+        if self.lap_progress > 0.999: self.lap_progress = 0
         
         done = False
         if self.lap_progress > 0.995 and self.current_time > 5: done = True
@@ -121,9 +121,9 @@ class F1TenthSimBase:
         rotation_mtx = np.array([[np.cos(pose[2]), -np.sin(pose[2])], [np.sin(pose[2]), np.cos(pose[2])]])
 
         pts = np.array([[self.params.vehicle_length/2, self.params.vehicle_width/2], 
-                        [self.params.vehicle_length, -self.params.vehicle_width/2], 
-                        [-self.params.vehicle_length, self.params.vehicle_width/2], 
-                        [-self.params.vehicle_length, -self.params.vehicle_width/2]])
+                        [self.params.vehicle_length/2, -self.params.vehicle_width/2], 
+                        [-self.params.vehicle_length/2, self.params.vehicle_width/2], 
+                        [-self.params.vehicle_length/2, -self.params.vehicle_width/2]])
         pts = np.matmul(pts, rotation_mtx.T) + pose[0:2]
 
         for i in range(4):
@@ -136,6 +136,7 @@ class F1TenthSimBase:
     def reset(self):
         if self.params.use_random_starts and self.lap_number > -1:
             start_pose = self.centre_line.calculate_pose(self.start_pose_rands[self.lap_number])
+            self.starting_progress = self.centre_line.calculate_progress_percent(start_pose)
         else:
             self.starting_progress = 0
             start_pose = np.zeros(3)

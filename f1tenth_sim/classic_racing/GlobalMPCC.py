@@ -83,11 +83,8 @@ class GlobalMPCC(BasePlanner):
 
             if k > 0:
                 self.obj = self.obj + (self.U[1, k] - self.U[1, k - 1]) ** 2 * self.planner_params.weight_acceleration
-                self.obj = self.obj + ca.fabs(self.U[0, k] - self.U[0, k - 1]) * self.planner_params.weight_steering_acceleration
-                # self.obj = self.obj + (self.U[0, k] - self.U[0, k - 1]) ** 2 * self.planner_params.weight_steering_acceleration
-
-
-
+                # self.obj = self.obj + ca.fabs(self.U[0, k] - self.U[0, k - 1]) * self.planner_params.weight_steering_acceleration
+                self.obj = self.obj + ((self.U[0, k] - self.U[0, k - 1]) ** 2)* self.planner_params.weight_steering_acceleration
 
     def init_bounds(self):
         self.g = []  # constraints vector

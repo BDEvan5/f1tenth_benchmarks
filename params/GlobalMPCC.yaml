@@ -10,8 +10,8 @@ local_path_speed_min: 1
 local_path_speed_max: 12
 max_decceleration: 8.
 max_acceleration: 8.
-friction_mu: 0.6
-
+# friction_mu: 1
+friction_mu: 0.9
 psi_min: -10
 psi_max: 10
 p_min: 0
@@ -28,8 +28,6 @@ p_max: 4
 # weight_contour: 0.5
 # weight_steer: 0.0001
 
-weight_steering_acceleration: 0.001
-weight_acceleration: 0.00001
 
 # weight_progress: 0.1
 # weight_lag: 100
@@ -40,6 +38,15 @@ weight_progress: 0.001
 weight_lag: 10
 weight_contour: 20
 weight_steer: 100
+weight_steering_acceleration: 0.001
+weight_acceleration: 0.00001
+
+# weight_progress: 1
+# weight_lag: 10
+# weight_contour: 10
+# weight_steer: 10
+# weight_steering_acceleration: 0.1
+# weight_acceleration: 0.01
 
 # # Constant MPCC values
 # weight_progress: 0.1
