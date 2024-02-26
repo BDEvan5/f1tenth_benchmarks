@@ -1,8 +1,8 @@
 version: '3'
 services:
   sim:
-    image: f1tenth_sim
+    image: f1tenth_benchmarks
     volumes: 
-      - .:/home/f1tenth_sim/
+      - .:/home/f1tenth_benchmarks/
     stdin_open: true
     tty: true 

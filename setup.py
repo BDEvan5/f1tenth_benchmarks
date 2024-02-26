@@ -7,7 +7,7 @@ LONG_DESCRIPTION = 'Simulates the dynamics of a racing car and LiDAR scanner'
 # Setting up
 setup(
        # the name must match the folder name 'verysimplemodule'
-        name="f1tenth_sim", 
+        name="f1tenth_benchmarks", 
         version=VERSION,
         author="Benjamin Evans",
         author_email="<bdevans@sun.ac.za>",

@@ -100,13 +100,13 @@ The MPCC algorithms use the [casadi](https://web.casadi.org/python-api/) optimis
 To ensure repeatability and useability, a Dockerfile is provided that can be used to run the code.
 
 ```
-sudo docker build -t f1tenth_sim -f Dockerfile .                 # build the docker file
+sudo docker build -t f1tenth_benchmarks -f Dockerfile .                 # build the docker file
 sudo docker compose up                                           # start the docker image
 ```
 
 Enter the docker container using,
 ```
-sudo docker exec -it f1tenth_sim-sim-1 /bin/bash
+sudo docker exec -it f1tenth_benchmarks-sim-1 /bin/bash
 ```
 Doing this mounts the current folder as a volume. 
 You can now run commands in the interactive shell.
