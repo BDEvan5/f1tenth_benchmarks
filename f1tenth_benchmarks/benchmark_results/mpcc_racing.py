@@ -12,20 +12,25 @@ from f1tenth_benchmarks.run_scripts.run_functions import *
 
 def run_planning_mpcc_tests():
     friction_mus = [0.5, 0.6, 0.7, 0.8, 0.9, 1]
+    # friction_mus = [0.8, 0.9, 1]
 
     for mu in friction_mus:
-        test_id = f"mpcc_mu{int(mu*100)}"
+        test_id = f"mu{int(mu*100)}_steps4"
         planner = GlobalMPCC(test_id, False, planner_name="GlobalPlanMPCC", extra_params={"friction_mu": mu})
-        test_planning_all_maps(planner, test_id, number_of_laps=10)
+        test_planning_single_map(planner, "aut", test_id, number_of_laps=10)
+        # test_planning_all_maps(planner, test_id, number_of_laps=10)
 
 
 def run_full_stack_mpcc_tests():
-    friction_mus = [0.5, 0.6, 0.7]
+    # friction_mus = [0.7]
+    friction_mus = [0.5, 0.6, 0.7, 0.8, 0.9, 1]
+    # friction_mus = [0.5, 0.6, 0.7, 0.8]
 
     for mu in friction_mus:
-        test_id = f"mpcc_mu{int(mu*100)}"
+        test_id = f"mu{int(mu*100)}_steps4"
         planner = GlobalMPCC(test_id, False, planner_name="FullStackMPCC", extra_params={"friction_mu": mu})
-        test_full_stack_all_maps(planner, test_id, number_of_laps=10)
+        # test_full_stack_all_maps(planner, test_id, number_of_laps=10)
+        test_full_stack_single_map(planner, "aut", test_id, number_of_laps=10)
 
 
 

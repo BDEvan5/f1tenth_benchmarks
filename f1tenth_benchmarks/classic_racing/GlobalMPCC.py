@@ -144,8 +144,8 @@ class GlobalMPCC(BasePlanner):
             np.save(self.mpcc_data_path + f"States_{self.step_counter}.npy", states)
             np.save(self.mpcc_data_path + f"Controls_{self.step_counter}.npy", controls)
 
-        if self.step_counter % 10 == 0:
-            print(f"{self.step_counter} --> {action[0]:.3f}, {action[1]:.3f}")
+        # if self.step_counter % 10 == 0:
+        #     print(f"{self.step_counter} --> {action[0]:.3f}, {action[1]:.3f}")
 
         return action 
 

@@ -11,25 +11,29 @@ import numpy as np
 
 def test_pure_pursuit_planning_frequencies():
     map_name = "aut"
-    friction_vals = [0.7, 0.8, 0.9, 1]
-    simulator_timestep_list = [2, 4, 6, 8, 10, 12, 14]
+    # friction_vals = [0.7, 0.8, 0.9, 1]
+    friction_vals = [0.5, 0.6, 0.7, 0.8, 0.9, 1]
+    # simulator_timestep_list = [2, 4, 6, 8, 10, 12, 14]
+    simulator_timestep_list = [4]
     for simulator_timesteps in simulator_timestep_list:
         for friction in friction_vals:
             test_id = f"mu{int(friction*100)}_steps{simulator_timesteps}"
             print(f"Testing {test_id}...")
             planner = GlobalPurePursuit(test_id, False, planner_name="GlobalPlanPP", extra_params={"racetrack_set": f"mu{int(friction*100)}"})
-            test_planning_single_map(planner, map_name, test_id, {"n_sim_steps": simulator_timesteps}, 10)
+            test_planning_single_map(planner, map_name, test_id, {"n_sim_steps": simulator_timesteps}, 1)
 
 def test_pure_pursuit_full_stack_frequencies():
     map_name = "aut"
-    friction_vals = [0.7, 0.8, 0.9, 1]
-    simulator_timestep_list = [2, 4, 6, 8, 10, 12, 14]
+    # friction_vals = [0.7, 0.8, 0.9, 1]
+    friction_vals = [0.5, 0.6, 0.7, 0.8, 0.9, 1]
+    # simulator_timestep_list = [2, 4, 6, 8, 10, 12, 14]
+    simulator_timestep_list = [4]
     for simulator_timesteps in simulator_timestep_list:
         for friction in friction_vals:
             test_id = f"mu{int(friction*100)}_steps{simulator_timesteps}"
             print(f"Testing {test_id}...")
-            planner = GlobalPurePursuit(test_id, False, planner_name="FullStackPP1000", extra_params={"racetrack_set": f"mu{int(friction*100)}"})
-            test_full_stack_single_map(planner, map_name, test_id, {"n_sim_steps": simulator_timesteps}, 10)
+            planner = GlobalPurePursuit(test_id, False, planner_name="FullStackPP", extra_params={"racetrack_set": f"mu{int(friction*100)}"})
+            test_full_stack_single_map(planner, map_name, test_id, {"n_sim_steps": simulator_timesteps}, 1)
             # test_full_stack_single_map(planner, map_name, test_id, {"n_sim_steps": simulator_timesteps}, 10, {"number_of_particles": 300})
 
 
@@ -47,6 +51,6 @@ def evaluate_filter_particles_pure_pursuit():
 
 
 
-# test_pure_pursuit_full_stack_frequencies()
-test_pure_pursuit_planning_frequencies()
+test_pure_pursuit_full_stack_frequencies()
+# test_pure_pursuit_planning_frequencies()
 # evaluate_filter_particles_pure_pursuit()

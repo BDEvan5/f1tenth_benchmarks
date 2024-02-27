@@ -9,7 +9,8 @@ from f1tenth_benchmarks.data_tools.specific_plotting.plot_drl_training import pl
 def run_reward_tests():
     train_maps = ["mco", "gbr", "esp", "aut"]
     seeds = [12, 13, 14]
-    rewards = ["TAL", "Progress", "CTH"]
+    rewards = ["Progress", "CTH"]
+    # rewards = ["TAL", "Progress", "CTH"]
     for train_map in train_maps:
         for seed in seeds:
             for reward in rewards:

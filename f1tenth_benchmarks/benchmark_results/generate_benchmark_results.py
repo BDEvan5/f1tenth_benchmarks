@@ -14,7 +14,7 @@ NUMBER_OF_LAPS = 10
 def generate_racelines():
     map_list = ["aut", "esp", "gbr", "mco"]
     params = load_parameter_file_with_extras("RaceTrackGenerator", extra_params={"mu": 0.9})
-    raceline_id = "mu90"
+    raceline_id = f"mu{int(params.mu*100)}"
     for map_name in map_list:
         RaceTrackGenerator(map_name, raceline_id, params, plot_raceline=True)
 
@@ -26,12 +26,14 @@ def optimisation_and_tracking():
 
     plot_trajectory_analysis(planner.name, test_id)
 
+
 def mpcc():
     test_id = f"benchmark"
     planner = GlobalMPCC(test_id, False, planner_name="GlobalPlanMPCC", extra_params={"friction_mu": 0.9})
     test_planning_all_maps(planner, test_id, number_of_laps=10)
 
     plot_trajectory_analysis(planner.name, test_id)
+
 
 def follow_the_gap():
     test_id = "benchmark"
@@ -40,11 +42,18 @@ def follow_the_gap():
 
     plot_trajectory_analysis(planner.name, test_id)
 
+
 def end_to_end_drl():
+    # map_list = ["aut", "esp", "gbr", "mco"]
+    # params = load_parameter_file_with_extras("RaceTrackGenerator", extra_params={"mu": 0.95})
+    # raceline_id = f"mu{int(params.mu*100)}"
+    # for map_name in map_list:
+    #     RaceTrackGenerator(map_name, raceline_id, params, plot_raceline=True)
+
     seed_randomness(13)
     test_id = "benchmark"
     print(f"Training DRL agent: {test_id}")
-    training_agent = TrainEndToEndAgent("mco", test_id, extra_params={'reward': "TAL"})
+    training_agent = TrainEndToEndAgent("mco", test_id, extra_params={'reward': "TAL", 'tal_racetrack_set': "mu95"}) # TODO: possibly include autogeneration in the TAL reward for if the files do not exist.
     simulate_training_steps(training_agent, "mco", test_id, extra_params={'n_sim_steps': 10})
     plot_drl_training(training_agent.name, test_id)
 
@@ -55,11 +64,11 @@ def end_to_end_drl():
 
 
 if __name__ == "__main__":
-    generate_racelines()
+    # generate_racelines()
+    # optimisation_and_tracking()
+    # mpcc()
+    # follow_the_gap()
     end_to_end_drl()
-    optimisation_and_tracking()
-    mpcc()
-    follow_the_gap()
 
 
 
