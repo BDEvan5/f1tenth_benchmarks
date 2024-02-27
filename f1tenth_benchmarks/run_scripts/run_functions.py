@@ -1,6 +1,7 @@
 from f1tenth_benchmarks.simulator import F1TenthSim_TrueLocation, F1TenthSim
 from f1tenth_benchmarks.classic_racing.particle_filter import ParticleFilter
-
+import torch
+import numpy as np
 
 
 NUMBER_OF_LAPS = 1
@@ -75,4 +76,12 @@ def test_mapless_single_map(planner, map_name, test_id, extra_params={}, number_
     print(f"Testing on {map_name}...")
     simulator = F1TenthSim(map_name, planner.name, test_id, extra_params=extra_params)
     simulate_laps(simulator, planner, number_of_laps)
+
+
+
+def seed_randomness(random_seed):
+    np.random.seed(random_seed)
+    torch.use_deterministic_algorithms(True)
+    torch.manual_seed(random_seed)
+    
 

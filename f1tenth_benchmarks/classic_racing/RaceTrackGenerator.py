@@ -17,7 +17,7 @@ np.printoptions(precision=3, suppress=True)
 
 
 class RaceTrackGenerator(RaceTrack):
-    def __init__(self, map_name, raceline_id, params, load_mincurve=False) -> None:
+    def __init__(self, map_name, raceline_id, params, load_mincurve=False, plot_raceline=True) -> None:
         super().__init__(map_name, load=False)
         self.raceline_id = raceline_id
         try:
@@ -47,6 +47,9 @@ class RaceTrackGenerator(RaceTrack):
             self.generate_minimum_curvature_path()
         self.generate_velocity_profile()
         self.save_raceline()
+
+        if plot_raceline:
+            RaceTrackPlotter(map_name, raceline_id)
 
     def load_mincurve(self):
         min_curve_line = np.loadtxt(f"Data/min_curve_lines/{self.map_name}_min_curve_line.csv", delimiter=',')
@@ -137,14 +140,14 @@ class Track:
 def generate_racelines():
     params = load_parameter_file("RaceTrackGenerator")
     # params.mu = 0.5
-    params.mu = 0.8
+    params.mu = 0.95
     # raceline_id = f"_drl_training"
     raceline_id = f"mu{int(params.mu*100)}"
     map_list = ['aut', 'esp', 'gbr', 'mco']
     # map_list = ['mco']
     # map_list = ['aut']
     for map_name in map_list: 
-        RaceTrackGenerator(map_name, raceline_id, params)
+        RaceTrackGenerator(map_name, raceline_id, params, plot_raceline=True)
         RaceTrackPlotter(map_name, raceline_id)
 
 def generate_raceline_set():
@@ -163,7 +166,7 @@ def generate_raceline_set():
 
 
 if __name__ == "__main__":
-    # generate_racelines()
-    generate_raceline_set()
+    generate_racelines()
+    # generate_raceline_set()
 
 

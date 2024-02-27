@@ -5,16 +5,11 @@ from f1tenth_benchmarks.drl_racing.EndToEndAgent import EndToEndAgent, TrainEndT
 from f1tenth_benchmarks.data_tools.specific_plotting.plot_drl_training import plot_drl_training
 
 
-def seed_randomness(random_seed):
-    np.random.seed(random_seed)
-    torch.use_deterministic_algorithms(True)
-    torch.manual_seed(random_seed)
-    
 
 def run_reward_tests():
     train_maps = ["mco", "gbr", "esp", "aut"]
     seeds = [12, 13, 14]
-    rewards = ["Progress", "CTH", "TAL"]
+    rewards = ["TAL", "Progress", "CTH"]
     for train_map in train_maps:
         for seed in seeds:
             for reward in rewards:
