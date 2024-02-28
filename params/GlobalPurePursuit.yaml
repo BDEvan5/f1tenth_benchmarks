@@ -14,5 +14,5 @@ constant_speed: 3
 
 racetrack_set: "mu60"
 
-friction_limit: 1.0
+friction_limit: 1.5
 max_steer: 0.4

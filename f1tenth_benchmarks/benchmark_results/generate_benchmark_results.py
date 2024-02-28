@@ -65,10 +65,10 @@ def end_to_end_drl():
 
 if __name__ == "__main__":
     # generate_racelines()
-    # optimisation_and_tracking()
-    # mpcc()
+    optimisation_and_tracking()
+    mpcc()
     # follow_the_gap()
-    end_to_end_drl()
+    # end_to_end_drl()
 
 
 
