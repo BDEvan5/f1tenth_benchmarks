@@ -1,8 +1,8 @@
 from f1tenth_benchmarks.classic_racing.GlobalPurePursuit import GlobalPurePursuit
 
 from f1tenth_benchmarks.data_tools.specific_plotting.plot_pf_errors import plot_pf_errors
-from f1tenth_benchmarks.data_tools.general_plotting.plot_trajectory_analysis import plot_trajectory_analysis
-from f1tenth_benchmarks.data_tools.general_plotting.plot_raceline_tracking import plot_raceline_tracking
+from f1tenth_benchmarks.data_tools.plot_trajectory_analysis import plot_trajectory_analysis
+from f1tenth_benchmarks.data_tools.plot_raceline_tracking import plot_raceline_tracking
 
 from f1tenth_benchmarks.run_scripts.run_functions import *
 import numpy as np

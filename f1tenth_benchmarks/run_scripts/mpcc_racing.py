@@ -2,8 +2,8 @@
 from f1tenth_benchmarks.classic_racing.ConstantMPCC import ConstantMPCC
 from f1tenth_benchmarks.classic_racing.GlobalMPCC import GlobalMPCC
 
-from f1tenth_benchmarks.data_tools.general_plotting.plot_trajectory_analysis import plot_trajectory_analysis
-from f1tenth_benchmarks.data_tools.general_plotting.plot_raceline_tracking import plot_raceline_tracking
+from f1tenth_benchmarks.data_tools.plot_trajectory_analysis import plot_trajectory_analysis
+from f1tenth_benchmarks.data_tools.plot_raceline_tracking import plot_raceline_tracking
 
 from f1tenth_benchmarks.run_scripts.run_functions import *
 

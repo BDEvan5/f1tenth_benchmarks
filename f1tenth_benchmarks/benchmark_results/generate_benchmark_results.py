@@ -5,7 +5,7 @@ from f1tenth_benchmarks.mapless_racing.FollowTheGap import FollowTheGap
 from f1tenth_benchmarks.drl_racing.EndToEndAgent import EndToEndAgent, TrainEndToEndAgent
 
 from f1tenth_benchmarks.data_tools.specific_plotting.plot_drl_training import plot_drl_training
-from f1tenth_benchmarks.data_tools.general_plotting.plot_trajectory_analysis import plot_trajectory_analysis
+from f1tenth_benchmarks.data_tools.plot_trajectory_analysis import plot_trajectory_analysis
 from f1tenth_benchmarks.run_scripts.run_functions import *
 
 NUMBER_OF_LAPS = 10
