@@ -82,9 +82,9 @@ if __name__ == "__main__":
     planning_mpcc_frictions()
     full_stack_mpcc_frictions()
 
-    # planning_pure_puresuit_frictions()
-    # full_stack_pure_pursuit_frictions()
+    planning_pure_puresuit_frictions()
+    full_stack_pure_pursuit_frictions()
 
-    # planning_pure_puresuit_frequencies()
-    # full_stack_pure_puresuit_frequencies()
+    planning_pure_puresuit_frequencies()
+    full_stack_pure_puresuit_frequencies()
 
