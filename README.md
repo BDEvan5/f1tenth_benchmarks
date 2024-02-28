@@ -1,6 +1,6 @@
 # F1Tenth Autonomous Racing Benchmarks
 
-
+![](media/f1tenth_platform.png)
 
 This repository contains code to run benchmark algorithms for F1Tenth autonomous racing. 
 The follow methods are implemented.
@@ -11,7 +11,6 @@ The follow methods are implemented.
 
 Jump to [**Installation**](#usage)
 
-![](media/example_trajectories.png)
 
 ## Overview
 
@@ -21,6 +20,15 @@ To run an algorithm, execute one of the Python scrips in the `run_scripts/` fold
 - The parameters for algorithm are in the relevant `.yaml` file in the `params/` directory
 - There are functions to test the planner on one of the maps, or all the maps available.
 - The files are maintained in such a way that they can be run and will generate results
+
+### Result recreation
+
+To recreate the results in the paper, "**Unifying F1TENTH Autonomous Racing: Survey, Methods and Benchmarks**":
+- run the scripts in the `benchmark_results/` folder
+- run all the cells in the `.ipynb` files
+
+![](media/example_trajectories.png)
+
 
 ## Algorithm description
 
@@ -32,9 +40,8 @@ The classic racing stack has several key parts:
 - **Pure Pursuit Path Tracking:** the pure pursuit path tracker uses a geometric vehicle model to follow the optimal trajectory.
 - **Model predictive contouring control:** the MPCC algorithm maximises progress along the center line (not requiring an optimal trajectory) using an receeding horizon optimisation approach.
 
-**Note:** that you must generate an optimal raceline before you use the pure pursuit path tracking method.
 
-![](media/classic_pipeline.png)
+![](media/classic_pipeline.jpg)
 
 ### End-to-end learning agents
 
@@ -61,12 +68,6 @@ The classic racing stack has several key parts:
 > The classical methods are tested with particle filter localisation and with the vehicle's true location. 
 > This is done by providing two simulator classes; `F1TenthSim`, which only has the LiDAR scan and `F1TenthSim_TrueLocation` which includes the entire vehicle state.
 
-### General notes
-
-- The Notebooks folder contains `.ipynb` files that generate the results used in papers.
-- The MPCC algorithm is still under development and not stable
-- The `data_tools/` folder contains tools to manipulate and plot the result data\
-- An important tool is the `build_results_df.py` script, which works through all the logs and builds a summary csv file with the data.
 
 
 # Installation
@@ -93,23 +94,15 @@ cd trajectory_planning_helpers
 pip install -e .
 ```
 
-## Docker (optional)
+The MPCC algorithms use the [casadi](https://web.casadi.org/python-api/) optimistion package, which relies on the IPOPT library. Instructions to install IPOPT can be found [here]().
 
-To ensure repeatability and useability, a Dockerfile is provided that can be used to run the code.
+## Citation
+
+If you found our work helpful, please consider citing.
+
+```latex
 
 ```
-sudo docker build -t f1tenth_sim -f Dockerfile .                 # build the docker file
-sudo docker compose up                                           # start the docker image
-```
-
-Enter the docker container using,
-```
-sudo docker exec -it f1tenth_sim-sim-1 /bin/bash
-```
-Doing this mounts the current folder as a volume. 
-You can now run commands in the interactive shell.
-
-
 
 
 
