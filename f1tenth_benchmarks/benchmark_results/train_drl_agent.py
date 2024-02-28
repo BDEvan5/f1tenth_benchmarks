@@ -7,17 +7,14 @@ from f1tenth_benchmarks.data_tools.specific_plotting.plot_drl_training import pl
 
 
 def run_reward_tests():
-    train_maps = ["esp", "aut"]
-    # train_maps = ["mco", "gbr", "esp", "aut"]
+    train_maps = ["mco", "gbr", "esp", "aut"]
     seeds = [12, 13, 14]
-    rewards = ["TAL"]
-    # rewards = ["TAL", "Progress", "CTH"]
+    rewards = ["TAL", "Progress", "CTH"]
     for train_map in train_maps:
         for seed in seeds:
             for reward in rewards:
                 seed_randomness(seed)
-                test_id = f"TD3_{reward}95_{seed}_{train_map}"
-                # test_id = f"TD3_{reward}_{seed}_{train_map}"
+                test_id = f"TD3_{reward}_{seed}_{train_map}"
                 print(f"Training agent: {test_id}")
                 training_agent = TrainEndToEndAgent(train_map, test_id, extra_params={'reward': reward})
                 simulate_training_steps(training_agent, train_map, test_id, extra_params={'n_sim_steps': 10})

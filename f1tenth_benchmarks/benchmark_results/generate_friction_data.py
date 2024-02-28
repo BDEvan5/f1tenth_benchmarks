@@ -1,9 +1,16 @@
 from f1tenth_benchmarks.classic_racing.GlobalMPCC import GlobalMPCC
 from f1tenth_benchmarks.classic_racing.GlobalPurePursuit import GlobalPurePursuit
+from f1tenth_benchmarks.classic_racing.RaceTrackGenerator import RaceTrackGenerator, load_parameter_file_with_extras
 
 from f1tenth_benchmarks.run_scripts.run_functions import *
 
-
+def generate_racelines():
+    friction_mus = [0.5, 0.6, 0.7, 0.8, 0.9, 1]
+    test_map = "aut"
+    for friction in friction_mus:
+        params = load_parameter_file_with_extras("RaceTrackGenerator", extra_params={"mu": friction})
+        raceline_id = f"mu{int(params.mu*100)}"
+        RaceTrackGenerator(test_map, raceline_id, params, plot_raceline=True)
 
 """
 Run the MPCC tests to generate the lap times graph
@@ -79,6 +86,8 @@ def full_stack_pure_puresuit_frequencies():
 
 
 if __name__ == "__main__":
+    generate_racelines()
+    
     planning_mpcc_frictions()
     full_stack_mpcc_frictions()
 

@@ -20,7 +20,7 @@ def generate_racelines():
 
 
 def optimisation_and_tracking():
-    test_id = "benchmark"
+    test_id = "benchmark_pp"
     planner = GlobalPurePursuit(test_id, False, planner_name="GlobalPlanPP", extra_params={"racetrack_set": "mu90"})
     test_planning_all_maps(planner, test_id, number_of_laps=NUMBER_OF_LAPS)
 
@@ -28,7 +28,7 @@ def optimisation_and_tracking():
 
 
 def mpcc():
-    test_id = f"benchmark"
+    test_id = f"benchmark_mpcc"
     planner = GlobalMPCC(test_id, False, planner_name="GlobalPlanMPCC", extra_params={"friction_mu": 0.9})
     test_planning_all_maps(planner, test_id, number_of_laps=10)
 
@@ -36,7 +36,7 @@ def mpcc():
 
 
 def follow_the_gap():
-    test_id = "benchmark"
+    test_id = "benchmark_ftg"
     planner = FollowTheGap(test_id)
     test_mapless_all_maps(planner, test_id, number_of_laps=NUMBER_OF_LAPS)
 
@@ -44,17 +44,12 @@ def follow_the_gap():
 
 
 def end_to_end_drl():
-    # map_list = ["aut", "esp", "gbr", "mco"]
-    # params = load_parameter_file_with_extras("RaceTrackGenerator", extra_params={"mu": 0.95})
-    # raceline_id = f"mu{int(params.mu*100)}"
-    # for map_name in map_list:
-    #     RaceTrackGenerator(map_name, raceline_id, params, plot_raceline=True)
-
-    seed_randomness(13)
-    test_id = "benchmark"
+    test_id = "benchmark_drl"
+    training_map = "gbr"
+    seed_randomness(12)
     print(f"Training DRL agent: {test_id}")
-    training_agent = TrainEndToEndAgent("mco", test_id, extra_params={'reward': "TAL", 'tal_racetrack_set': "mu95"}) # TODO: possibly include autogeneration in the TAL reward for if the files do not exist.
-    simulate_training_steps(training_agent, "mco", test_id, extra_params={'n_sim_steps': 10})
+    training_agent = TrainEndToEndAgent(training_map, test_id, extra_params={'reward': "TAL", 'tal_racetrack_set': "mu90"}) 
+    simulate_training_steps(training_agent, training_map, test_id, extra_params={'n_sim_steps': 10})
     plot_drl_training(training_agent.name, test_id)
 
     testing_agent = EndToEndAgent(test_id)
@@ -65,7 +60,7 @@ def end_to_end_drl():
 
 if __name__ == "__main__":
     # generate_racelines()
-    optimisation_and_tracking()
+    # optimisation_and_tracking()
     mpcc()
     # follow_the_gap()
     # end_to_end_drl()
