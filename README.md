@@ -103,7 +103,7 @@ If you found our work helpful, please consider citing.
 ```bibtex
 @article{evans2024unifying,
   title={Unifying F1TENTH Autonomous Racing: Survey, Methods and Benchmarks},
-  author={Evans, Benjamin David and Trumpp, Raphael and Caccamo, Marco and Jordaan, Hendrik Willem and Engelbrecht, Herman Arnold},
+  author={Benjamin David Evans and Raphael Trumpp and Marco Caccamo and Felix Jahncke and Johannes Betz and Hendrik Willem Jordaan and Herman Arnold Engelbrecht},
   journal={arXiv preprint arXiv:2402.18558},
   year={2024}
 }
